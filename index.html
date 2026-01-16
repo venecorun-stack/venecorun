@@ -15,9 +15,34 @@
         input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; background: #222; color: white; }
         .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; }
         .share-btn { background: #000; color: white; border: 2px solid #555; padding: 12px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        
+        /* UI SUPERIOR IZQUIERDA */
         #ui { position: absolute; top: 20px; left: 20px; z-index: 850; display: none; pointer-events: none; }
-        .score-text { font-size: 40px; color: white; text-shadow: 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; margin: 0; }
+        .score-text { font-size: 40px; color: white; text-shadow: 3px 3px 0 #000; margin: 0; }
         .record-ui { color: #ffcc00; font-size: 20px; text-shadow: 2px 2px 0 #000; margin: 0; }
+        
+        /* NIVEL CENTRADO GRANDE */
+        #levelContainer {
+            position: absolute;
+            top: 15%; /* Un poco arriba del centro para no tapar al chigüire */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 800;
+            text-align: center;
+            width: 100%;
+            display: none;
+            pointer-events: none;
+        }
+        #levelText { 
+            font-size: 55px; /* Tamaño grande */
+            color: #ffcc00; 
+            font-weight: bold; 
+            text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+            margin: 0;
+            letter-spacing: 2px;
+            opacity: 0.8;
+        }
+
         canvas { display: none; image-rendering: -webkit-optimize-contrast; }
     </style>
 </head>
@@ -44,6 +69,10 @@
         <p class="record-ui">RECORD: <span id="highScoreText">0</span></p>
     </div>
 
+    <div id="levelContainer">
+        <p id="levelText">PRINCIPIANTE</p>
+    </div>
+
     <div id="gameOverScreen">
         <h1 style="color:#ff4444; font-size:45px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
         <div style="display:flex; align-items:center; gap:20px; justify-content:center; margin-bottom:15px;">
@@ -63,13 +92,11 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // Carga de imágenes
         const imgC = new Image(); imgC.src = 'chiguire.png';
         const imgD = new Image(); imgD.src = 'derrota.png';
         const imgB = new Image(); imgB.src = 'barril.png';
         const imgF = new Image(); imgF.src = 'fondo.png';
 
-        // Sonidos - CORREGIDO: musicafondo.mp3 en minúsculas para GitHub
         const sndClick = new Audio('click.mp3');
         const sndSalto = new Audio('salto.mp3');
         const sndPerder = new Audio('perder.mp3');
@@ -79,14 +106,15 @@
         let activo = false, score = 0, vel = 11, obst = [], bgX = 0;
         let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
         let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
+        let estela = [];
+        let nivelActual = "";
 
         if(localStorage.getItem('venecoUser')) document.getElementById("logoutBtn").style.display = "block";
 
         function cerrarSesion() { localStorage.clear(); location.reload(); }
 
         function clicPortada() { 
-            sndClick.play(); 
-            sndIntro.play(); 
+            sndClick.play(); sndIntro.play(); 
             document.getElementById("introScreen").style.display = "none"; 
             if(localStorage.getItem('venecoUser')) {
                 document.getElementById("logoutBtn").style.display = "none";
@@ -110,11 +138,10 @@
         }
 
         function prepararJuego() { 
-            sndIntro.pause(); 
-            // Aseguramos que el audio inicie tras la interacción
-            musFondo.play().catch(e => console.log("Error audio:", e)); 
+            sndIntro.pause(); musFondo.play(); 
             canvas.style.display = "block"; 
             document.getElementById("ui").style.display = "block"; 
+            document.getElementById("levelContainer").style.display = "block"; // Mostrar nivel centrado
             document.getElementById("displayUser").innerText = localStorage.getItem('venecoUser');
             document.getElementById("highScoreText").innerText = recordGlobal;
             ajustar(); iniciar(); 
@@ -128,43 +155,26 @@
             chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
         }
 
-        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; bucle(); spawn(); }
+        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = []; bucle(); spawn(); }
 
         async function enviarDatosExcel(puntos) {
             const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyb83SGQoXgHh_eWtJzEr39FmnnoiM__y7fH_GEytH5uAqVCczOUufe523OnXhRcSYzYw/exec";
-            const datos = {
-                usuario: localStorage.getItem('venecoUser'),
-                wallet: localStorage.getItem('venecoWallet'),
-                puntaje: puntos
-            };
-            try {
-                fetch(URL_SCRIPT, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(datos)
-                });
-            } catch (e) { console.error("Error de red"); }
+            const datos = { usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoWallet'), puntaje: puntos };
+            try { fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) }); } catch (e) {}
         }
 
         function morir() { 
-            activo = false; chig.vivo = false; 
-            musFondo.pause(); 
-            musFondo.currentTime = 0; // Reinicia la música para la próxima vez
-            sndPerder.play(); 
-            if(score > recordGlobal) { 
-                recordGlobal = score; 
-                localStorage.setItem('venecoRunHighScore', recordGlobal); 
-            }
+            activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play(); 
+            if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); }
             enviarDatosExcel(score);
             document.getElementById("finalScore").innerText = score; 
             document.getElementById("finalBest").innerText = recordGlobal;
+            document.getElementById("levelContainer").style.display = "none"; // Ocultar nivel al morir
             document.getElementById("gameOverScreen").style.display = "flex"; 
         }
 
         function compartirX() {
-            const user = localStorage.getItem('venecoUser') || "Jugador";
-            const msg = `🏆 ¡He conseguido ${score} puntos en Veneco Run! 🚀 Mi récord es ${recordGlobal}. ¿Podrás superarme? 🇻🇪🐹 %0A%0A #VenecoRun #Solana`;
+            const msg = `🏆 ¡He conseguido ${score} puntos en Veneco Run! 🚀 Récord: ${recordGlobal}. #VenecoRun #Solana`;
             window.open(`https://twitter.com/intent/tweet?text=${msg}`, '_blank');
         }
 
@@ -176,8 +186,16 @@
 
         function spawn() {
             if(!activo) return;
-            obst.push({ x: window.innerWidth, w: 80, h: 90 });
-            setTimeout(spawn, Math.max(1100 / (vel * 0.08), 800));
+            let esDoble = score >= 200 && Math.random() > 0.6;
+            obst.push({ x: window.innerWidth, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
+
+            let baseFreq = 1100 / (vel * 0.07);
+            if (score > 800) {
+                let randomFactor = 0.7 + (Math.random() * 0.5);
+                baseFreq = baseFreq * randomFactor;
+            }
+            let delay = Math.max(baseFreq, esDoble ? 1100 : 700); 
+            setTimeout(spawn, delay);
         }
 
         function bucle() {
@@ -188,22 +206,68 @@
             ctx.drawImage(imgF, bgX, 0, window.innerWidth, window.innerHeight);
             ctx.drawImage(imgF, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
 
+            let shadowOpacity = Math.max(0.1, 0.5 - (chig.suelo - chig.y) / 400);
+            ctx.fillStyle = `rgba(0,0,0,${shadowOpacity})`;
+            ctx.beginPath();
+            ctx.ellipse(chig.x + 55, chig.suelo + 105, 40, 15, 0, 0, Math.PI * 2);
+            ctx.fill();
+
             if(activo) {
                 chig.dy += chig.g; chig.y += chig.dy;
                 if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
+
+                if(score >= 1000) {
+                    estela.push({x: chig.x, y: chig.y, o: 0.4});
+                    if(estela.length > 5) estela.shift();
+                }
+
+                estela.forEach((p, i) => {
+                    ctx.globalAlpha = p.o * (i / estela.length);
+                    ctx.drawImage(imgC, p.x - (estela.length - i) * 10, p.y, chig.w, chig.h);
+                    ctx.globalAlpha = 1;
+                });
+
+                // LÓGICA DE NIVELES CENTRADOS
+                let nuevoLvl = "PRINCIPIANTE";
+                if(score >= 2000) nuevoLvl = "NIVEL CAOS";
+                else if(score >= 1000) nuevoLvl = "NIVEL AREPA";
+                else if(score >= 500) nuevoLvl = "NIVEL MANGO";
+                else if(score >= 200) nuevoLvl = "NIVEL GUACAMAYA";
+
+                if (nuevoLvl !== nivelActual) {
+                    nivelActual = nuevoLvl;
+                    let el = document.getElementById("levelText");
+                    el.innerText = nivelActual;
+                    // Efecto de parpadeo al cambiar de nivel
+                    el.style.color = "#ffffff";
+                    setTimeout(() => { el.style.color = "#ffcc00"; }, 200);
+                }
+
+                if(score >= 2000) vel += 0.005;
+                else if(score >= 1000) vel += 0.004;
+                else if(score >= 500) vel += 0.003;
+                else if(score >= 200) vel += 0.002;
+
                 for(let i = obst.length - 1; i >= 0; i--) {
                     obst[i].x -= vel;
                     let bY = chig.suelo + (chig.h - obst[i].h);
-                    ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
+                    
+                    if(obst[i].doble) {
+                        ctx.drawImage(imgB, obst[i].x, bY, 80, obst[i].h);
+                        ctx.drawImage(imgB, (obst[i].x + 80) - 35, bY, 80, obst[i].h);
+                    } else {
+                        ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
+                    }
                     
                     if (chig.x + 35 < obst[i].x + obst[i].w - 35 && 
                         chig.x + chig.w - 35 > obst[i].x + 35 && 
                         chig.y + 35 < bY + obst[i].h && 
                         chig.y + chig.h - 15 > bY) morir();
 
-                    if(obst[i].x < -100) { 
+                    if(obst[i].x < -160) { 
                         obst.splice(i, 1); score += 10; 
-                        document.getElementById("score").innerText = score; vel += 0.18;
+                        document.getElementById("score").innerText = score; 
+                        vel += 0.15;
                     }
                 }
             }
