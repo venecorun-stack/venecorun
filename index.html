@@ -13,7 +13,7 @@
             background: #000 url('portada.png') no-repeat center; 
             background-size: cover;
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            z-index: 3000; pointer-events: all;
+            z-index: 3000;
         }
         #loadingScreen::before {
             content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -49,9 +49,9 @@
         .record-ui { color: #ffcc00; font-size: 20px; text-shadow: 2px 2px 0 #000; margin: 0; }
         
         #levelContainer { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 800; text-align: center; width: 100%; display: none; pointer-events: none; }
-        #levelText { font-size: 55px; color: #ffcc00; font-weight: bold; text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; margin: 0; opacity: 0.8; }
+        #levelText { font-size: 55px; color: #ffcc00; font-weight: bold; text-shadow: 4px 4px 0 #000; margin: 0; opacity: 0.8; }
         
-        canvas { display: none; image-rendering: -webkit-optimize-contrast; }
+        canvas { display: none; image-rendering: -webkit-optimize-contrast; position: absolute; top: 0; left: 0; }
     </style>
 </head>
 <body>
@@ -102,7 +102,6 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // IMÁGENES Y SONIDOS
         const imgC = new Image(); imgC.src = 'chiguire.png';
         const imgD = new Image(); imgD.src = 'derrota.png';
         const imgB = new Image(); imgB.src = 'barril.png';
@@ -114,7 +113,11 @@
         const musFondo = new Audio('musicafondo.mp3'); musFondo.loop = true;
         const sndIntro = new Audio('intro.mp3'); sndIntro.loop = true;
 
-        // CARGA FORZADA DE 4 SEGUNDOS
+        let activo = false, score = 0, vel = 11, obst = [], bgX = 0, estela = [], nivelActual = "";
+        let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
+        let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
+
+        // --- CARGA FORZADA ---
         let loadProgress = 0;
         const interval = setInterval(() => {
             loadProgress += 2;
@@ -122,22 +125,13 @@
             document.getElementById("percent").innerText = loadProgress + "%";
             if(loadProgress >= 100) {
                 clearInterval(interval);
-                document.getElementById("loadingScreen").style.opacity = "0";
-                setTimeout(() => {
-                    document.getElementById("loadingScreen").style.display = "none";
-                    document.getElementById("loadingScreen").style.pointerEvents = "none";
-                    document.getElementById("introScreen").style.display = "flex";
-                }, 500);
+                document.getElementById("loadingScreen").style.display = "none";
+                document.getElementById("introScreen").style.display = "flex";
             }
         }, 80);
 
-        let activo = false, score = 0, vel = 11, obst = [], bgX = 0, estela = [], nivelActual = "";
-        let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
-        let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
-
         if(localStorage.getItem('venecoUser')) document.getElementById("logoutBtn").style.display = "block";
 
-        // FUNCIÓN CLAVE PARA MÓVIL
         function clicPortada() {
             sndClick.play().catch(()=>{}); 
             sndIntro.play().catch(()=>{});
@@ -158,57 +152,64 @@
         }
 
         function prepararJuego() {
-            sndIntro.pause(); musFondo.play().catch(()=>{});
-            canvas.style.display = "block";
-            document.getElementById("ui").style.display = "block";
+            sndIntro.pause(); 
+            musFondo.play().catch(()=>{});
+            canvas.style.display = "block"; 
+            document.getElementById("ui").style.display = "block"; 
             document.getElementById("levelContainer").style.display = "block";
             document.getElementById("displayUser").innerText = localStorage.getItem('venecoUser');
             document.getElementById("highScoreText").innerText = recordGlobal;
-            ajustar(); iniciar();
+            ajustar(); 
+            iniciar(); 
         }
 
         function ajustar() {
             const dpr = window.devicePixelRatio || 1;
-            canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr;
-            canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
             ctx.scale(dpr, dpr);
-            chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
+            chig.suelo = window.innerHeight - 220;
+            chig.y = chig.suelo;
             chig.x = (window.innerWidth < 600) ? 25 : 100;
         }
 
-        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = []; bucle(); spawn(); }
+        function iniciar() { 
+            activo = true; 
+            chig.vivo = true; 
+            score = 0; 
+            vel = 11; 
+            obst = []; 
+            estela = []; 
+            requestAnimationFrame(bucle); // Iniciamos el dibujo AQUÍ
+            spawn(); 
+        }
 
         const saltar = () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.currentTime = 0; sndSalto.play().catch(()=>{}); } };
 
-        // CONTROLES SEPARADOS DE LA LÓGICA DE MENÚ
         window.addEventListener("keydown", (e) => { if(e.code === "Space" && activo) { e.preventDefault(); saltar(); } });
         window.addEventListener("mousedown", () => { if(activo) saltar(); });
-        window.addEventListener("touchstart", (e) => { 
-            if(activo) {
-                e.preventDefault(); 
-                saltar(); 
-            }
-        }, {passive: false});
-
-        window.onresize = ajustar;
+        window.addEventListener("touchstart", (e) => { if(activo) { e.preventDefault(); saltar(); } }, {passive: false});
 
         function spawn() {
             if(!activo) return;
             let esDoble = score >= 200 && Math.random() > 0.6;
             obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
             let baseFreq = 1100 / (vel * 0.07);
-            if (score > 800) baseFreq *= (0.7 + Math.random() * 0.5);
             setTimeout(spawn, Math.max(baseFreq, esDoble ? 1100 : 700));
         }
 
         function bucle() {
             if(!activo && !chig.vivo) return;
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            
             let imgBg = (window.innerWidth < 600) ? imgFM : imgF;
             bgX -= vel * 0.4; if(bgX <= -window.innerWidth) bgX = 0;
             ctx.drawImage(imgBg, bgX, 0, window.innerWidth, window.innerHeight);
             ctx.drawImage(imgBg, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
 
+            // Sombra
             let sOp = Math.max(0.1, 0.5 - (chig.suelo - chig.y) / 400);
             ctx.fillStyle = `rgba(0,0,0,${sOp})`; ctx.beginPath();
             ctx.ellipse(chig.x + 55, chig.suelo + 105, 40, 15, 0, 0, Math.PI * 2); ctx.fill();
