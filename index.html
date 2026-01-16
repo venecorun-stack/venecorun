@@ -3,196 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run Pro</title>
+    <title>Veneco Run - Master Edition</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Estilos base para asegurar visibilidad */
-        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial', sans-serif; color: white; }
+        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
         
-        .screen { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            display: flex; flex-direction: column; justify-content: center; 
-            align-items: center; z-index: 1000; text-align: center;
-            background-color: #000; /* Fondo negro por defecto */
-        }
-
-        /* Si la imagen existe, se pone encima del negro */
-        #introScreen { 
-            background-image: url('portada.png'); 
-            background-size: cover; 
-            background-position: center;
-        }
-
-        #loginMenu { background: rgba(0,0,0,0.95); display: none; }
-        #gameOverScreen { background: rgba(0,0,0,0.9); display: none; }
-
-        .box { 
-            background: #1a1a1a; padding: 30px; border: 4px solid #ffcc00; 
-            border-radius: 20px; width: 85%; max-width: 320px; 
-        }
-        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px; background: #fff; color: #000; }
-        .btn { padding: 15px 35px; background: #ffcc00; color: #000; border: none; border-radius: 50px; font-weight: bold; font-size: 20px; cursor: pointer; margin-top: 10px; }
-
-        canvas { display: none; position: absolute; top: 0; left: 0; }
-        #ui { position: absolute; top: 20px; left: 20px; z-index: 500; display: none; font-size: 28px; font-weight: bold; color: #ffcc00; }
+        /* Botón cerrar sesión siempre visible arriba */
+        #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 9999; background: #ff4444; color: white; border: 2px solid white; padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: none; }
+        
+        /* Capas de menús */
+        .screen { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9000; text-align: center; background-size: cover; background-position: center; }
+        
+        #introScreen { background-image: url('portada.png'); cursor: pointer; justify-content: flex-end; }
+        #loginMenu { background-image: url('portada.png'); display: none; }
+        #gameOverScreen { background: rgba(0,0,0,0.95); display: none; }
+        
+        .login-box { background: rgba(0,0,0,0.9); padding: 30px; border: 3px solid #ffcc00; border-radius: 20px; width: 85%; max-width: 350px; pointer-events: auto; }
+        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; background: #fff; color: #000; font-weight: bold; }
+        
+        .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; }
+        .share-btn { background: #000; color: white; border: 2px solid #555; padding: 12px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        
+        #ui { position: absolute; top: 20px; left: 20px; z-index: 8500; display: none; pointer-events: none; }
+        .score-text { font-size: 32px; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
+        .record-ui { color: #ffcc00; font-size: 18px; text-shadow: 2px 2px 0 #000; margin: 0; }
+        
+        canvas { display: none; image-rendering: -webkit-optimize-contrast; position: absolute; top: 0; left: 0; z-index: 10; }
     </style>
 </head>
 <body>
 
-    <div id="introScreen" class="screen" onclick="irAlRegistro()">
-        <div style="background: rgba(0,0,0,0.7); padding: 20px; border-radius: 15px; border: 2px solid #ffcc00;">
-            <h1 style="color:#ffcc00; margin:0;">VENECO RUN</h1>
-            <p>TOCA LA PANTALLA</p>
-        </div>
+    <button id="logoutBtn" onclick="cerrarSesion()">CERRAR SESIÓN ✖</button>
+
+    <div id="introScreen" class="screen" onclick="clicPortada()">
+        <div style="font-size:24px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00; background: rgba(0,0,0,0.5); padding: 10px;">TOCA PARA EMPEZAR</div>
     </div>
 
     <div id="loginMenu" class="screen">
-        <div class="box">
+        <div class="login-box">
             <h2 style="color:#ffcc00; margin-top:0;">REGISTRO</h2>
-            <input type="text" id="tgUser" placeholder="@Usuario">
+            <input type="text" id="tgUser" placeholder="@tu_usuario">
             <input type="text" id="solWallet" placeholder="Wallet Solana">
-            <button class="btn" onclick="empezarJuego()">¡A CORRER!</button>
+            <button class="btn" onclick="guardarYEntrar()">LISTO</button>
         </div>
     </div>
 
+    <div id="ui">
+        <div id="displayUser" style="color:#00ffff; font-size:18px; text-shadow: 2px 2px 0 #000;"></div>
+        <p class="score-text">PTS: <span id="score">0</span></p>
+        <p class="record-ui">RÉCORD: <span id="highScoreText">0</span></p>
+    </div>
+
     <div id="gameOverScreen" class="screen">
-        <h1 style="color:#ff4444; font-size: 45px;">FIN DEL VIAJE</h1>
-        <p style="font-size: 24px;">PUNTOS: <span id="finalScore">0</span></p>
+        <h1 style="color:#ff4444; font-size:40px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
+        <img src="derrota.png" style="width:100px; border-radius:15px; margin-bottom:10px;">
+        <p style="font-size:24px; margin:0;">Puntos: <span id="finalScore">0</span></p>
+        <button class="share-btn" onclick="compartirX()">𝕏 Compartir</button>
         <button class="btn" onclick="location.reload()">REINTENTAR</button>
     </div>
 
-    <div id="ui">PTS: <span id="score">0</span></div>
     <canvas id="gameCanvas"></canvas>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // --- ASSETS ---
-        const img = { f: new Image(), c: new Image(), b: new Image(), d: new Image() };
-        img.f.src = 'fondo.png'; 
-        img.c.src = 'chiguire.png'; 
-        img.b.src = 'barril.png'; 
-        img.d.src = 'derrota.png';
+        // Imágenes
+        const imgC = new Image(); imgC.src = 'chiguire.png';
+        const imgD = new Image(); imgD.src = 'derrota.png';
+        const imgB = new Image(); imgB.src = 'barril.png';
+        const imgF = new Image(); imgF.src = 'fondo.png';
 
-        const musica = new Audio('musicaFondo.mp3');
-        musica.loop = true;
+        // Sonidos con manejo de error
+        const sndClick = new Audio('click.mp3');
+        const sndSalto = new Audio('salto.mp3');
+        const sndPerder = new Audio('perder.mp3');
+        const musFondo = new Audio('musicaFondo.mp3'); musFondo.loop = true;
+        const sndIntro = new Audio('intro.mp3'); sndIntro.loop = true;
 
-        let activo = false, score = 0, vel = 8, bgX = 0, obst = [];
-        let pj = { x: 50, y: 0, w: 75, h: 75, dy: 0, g: 0.9, salto: -17, suelo: 0, vivo: true };
+        let activo = false, score = 0, vel = 10, obst = [], bgX = 0;
+        let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
+        let chig = { x: 50, y: 0, w: 80, h: 80, dy: 0, g: 1.5, salto: -18, suelo: 0, vivo: true };
 
-        function ajustar() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            pj.suelo = canvas.height - 130;
-            pj.y = pj.suelo;
-        }
-        window.onresize = ajustar;
-        ajustar();
+        if(localStorage.getItem('venecoUser')) document.getElementById("logoutBtn").style.display = "block";
 
-        // 1. PRIMER PASO: Ir al registro y activar audio
-        function irAlRegistro() {
-            musica.play().catch(() => console.log("Audio esperando interacción extra"));
-            document.getElementById("introScreen").style.display = "none";
-            
+        function cerrarSesion() { localStorage.clear(); location.reload(); }
+
+        function clicPortada() { 
+            sndClick.play().catch(()=>{}); sndIntro.play().catch(()=>{}); 
+            document.getElementById("introScreen").style.display = "none"; 
             if(localStorage.getItem('venecoUser')) {
-                empezarJuego();
+                prepararJuego(); 
             } else {
-                document.getElementById("loginMenu").style.display = "flex";
+                document.getElementById("loginMenu").style.display = "flex"; 
             }
         }
 
-        // 2. SEGUNDO PASO: Iniciar el canvas
-        function empezarJuego() {
+        function guardarYEntrar() {
             const u = document.getElementById("tgUser").value;
-            if(!localStorage.getItem('venecoUser') && u.length < 2) return alert("Escribe un usuario");
-            
-            if(u) localStorage.setItem('venecoUser', u);
-            localStorage.setItem('venecoWallet', document.getElementById("solWallet").value);
-
-            document.getElementById("loginMenu").style.display = "none";
-            document.getElementById("ui").style.display = "block";
-            canvas.style.display = "block";
-            
-            musica.play().catch(()=>{}); 
-            activo = true;
-            spawn();
-            bucle();
+            const w = document.getElementById("solWallet").value;
+            if(u.length > 2) {
+                localStorage.setItem('venecoUser', u);
+                localStorage.setItem('venecoWallet', w);
+                document.getElementById("loginMenu").style.display = "none";
+                prepararJuego();
+            }
         }
+
+        function prepararJuego() { 
+            sndIntro.pause(); musFondo.play().catch(()=>{}); 
+            canvas.style.display = "block"; 
+            document.getElementById("ui").style.display = "block"; 
+            document.getElementById("displayUser").innerText = localStorage.getItem('venecoUser');
+            document.getElementById("highScoreText").innerText = recordGlobal;
+            ajustar(); iniciar(); 
+        }
+
+        function ajustar() { 
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            ctx.scale(dpr, dpr); 
+
+            // Adaptación móvil
+            if(window.innerHeight > window.innerWidth) {
+                chig.w = 70; chig.h = 70; chig.x = 30;
+                chig.suelo = window.innerHeight - 150;
+            } else {
+                chig.w = 100; chig.h = 100; chig.x = 80;
+                chig.suelo = window.innerHeight - 180;
+            }
+            chig.y = chig.suelo;
+        }
+
+        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 10; obst = []; bucle(); spawn(); }
+
+        async function enviarDatosExcel(puntos) {
+            const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyb83SGQoXgHh_eWtJzEr39FmnnoiM__y7fH_GEytH5uAqVCczOUufe523OnXhRcSYzYw/exec";
+            const datos = { usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoWallet'), puntaje: puntos };
+            fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) });
+        }
+
+        function morir() { 
+            activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play().catch(()=>{}); 
+            if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); }
+            enviarDatosExcel(score);
+            document.getElementById("finalScore").innerText = score; 
+            document.getElementById("gameOverScreen").style.display = "flex"; 
+            document.getElementById("ui").style.display = "none";
+        }
+
+        function compartirX() {
+            const msg = `🏆 ¡Hice ${score} puntos en Veneco Run! 🐹 Mi récord es ${recordGlobal}. ¿Superas esto? #VenecoRun`;
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        const saltar = (e) => { 
+            if(e && e.cancelable) e.preventDefault();
+            if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.currentTime = 0; sndSalto.play().catch(()=>{}); } 
+        };
+        window.addEventListener("mousedown", saltar);
+        window.addEventListener("touchstart", saltar, {passive: false});
+        window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
+        window.onresize = ajustar;
 
         function spawn() {
             if(!activo) return;
-            obst.push({ x: canvas.width, w: 55, h: 60 });
-            setTimeout(spawn, Math.max(900, 2000 - (vel * 60)));
+            obst.push({ x: window.innerWidth, w: 50, h: 60 });
+            setTimeout(spawn, Math.max(1000, 2500 - (vel * 80)));
         }
 
         function bucle() {
-            if(!activo && !pj.vivo) return;
-            ctx.fillStyle = "#000";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Fondo (solo si cargó la imagen)
-            bgX -= vel * 0.5;
-            if(bgX <= -canvas.width) bgX = 0;
-            if(img.f.complete) {
-                ctx.drawImage(img.f, bgX, 0, canvas.width, canvas.height);
-                ctx.drawImage(img.f, bgX + canvas.width, 0, canvas.width, canvas.height);
-            }
+            if(!activo && !chig.vivo) return;
+            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            bgX -= vel * 0.4;
+            if(bgX <= -window.innerWidth) bgX = 0;
+            ctx.drawImage(imgF, bgX, 0, window.innerWidth, window.innerHeight);
+            ctx.drawImage(imgF, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
 
             if(activo) {
-                pj.dy += pj.g; pj.y += pj.dy;
-                if(pj.y > pj.suelo) { pj.y = pj.suelo; pj.dy = 0; }
-
+                chig.dy += chig.g; chig.y += chig.dy;
+                if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
                 for(let i = obst.length - 1; i >= 0; i--) {
-                    let o = obst[i];
-                    o.x -= vel;
-                    
-                    // Barril (Imagen o rectángulo si no carga)
-                    if(img.b.complete) {
-                        ctx.drawImage(img.b, o.x, pj.suelo + 15, o.w, o.h);
-                    } else {
-                        ctx.fillStyle = "red";
-                        ctx.fillRect(o.x, pj.suelo + 15, o.w, o.h);
-                    }
-
-                    // Colisión
-                    if (pj.x < o.x + o.w - 10 && pj.x + pj.w > o.x + 10 && 
-                        pj.y < pj.suelo + 15 + o.h && pj.y + pj.h > pj.suelo + 15) {
-                        morir();
-                    }
-
-                    if(o.x < -100) {
-                        obst.splice(i, 1);
-                        score += 10;
-                        document.getElementById("score").innerText = score;
-                        vel += 0.1;
-                    }
+                    obst[i].x -= vel;
+                    let bY = chig.suelo + (chig.h - obst[i].h);
+                    ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
+                    if (chig.x + 20 < obst[i].x + obst[i].w - 20 && chig.x + chig.w - 20 > obst[i].x + 20 && chig.y + 20 < bY + obst[i].h && chig.y + chig.h - 10 > bY) morir();
+                    if(obst[i].x < -100) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.12; }
                 }
             }
-
-            // Chigüire (Imagen o rectángulo si no carga)
-            if(img.c.complete) {
-                ctx.drawImage(pj.vivo ? img.c : img.d, pj.x, pj.y, pj.w, pj.h);
-            } else {
-                ctx.fillStyle = "yellow";
-                ctx.fillRect(pj.x, pj.y, pj.w, pj.h);
-            }
-
+            ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
             requestAnimationFrame(bucle);
         }
-
-        function morir() {
-            activo = false; pj.vivo = false;
-            document.getElementById("finalScore").innerText = score;
-            document.getElementById("gameOverScreen").style.display = "flex";
-        }
-
-        function saltar(e) {
-            if(e && e.cancelable) e.preventDefault();
-            if(activo && pj.y >= pj.suelo - 10) pj.dy = pj.salto;
-        }
-
-        window.addEventListener("touchstart", saltar, {passive: false});
-        window.addEventListener("mousedown", saltar);
     </script>
 </body>
 </html>
