@@ -4,42 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Veneco Run - Master Edition</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
-        
-        /* Botón cerrar sesión siempre visible arriba */
-        #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 9999; background: #ff4444; color: white; border: 2px solid white; padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: none; }
-        
-        /* Capas de menús */
-        .screen { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9000; text-align: center; background-size: cover; background-position: center; }
-        
+        #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: #ff4444; color: white; border: 2px solid white; padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: none; }
+        #introScreen, #loginMenu, #gameOverScreen { position: absolute; width: 100%; height: 100%; background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 900; text-align: center; }
         #introScreen { background-image: url('portada.png'); cursor: pointer; justify-content: flex-end; }
         #loginMenu { background-image: url('portada.png'); display: none; }
         #gameOverScreen { background: rgba(0,0,0,0.95); display: none; }
-        
-        .login-box { background: rgba(0,0,0,0.9); padding: 30px; border: 3px solid #ffcc00; border-radius: 20px; width: 85%; max-width: 350px; pointer-events: auto; }
-        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; background: #fff; color: #000; font-weight: bold; }
-        
+        .login-box { background: rgba(0,0,0,0.9); padding: 30px; border: 3px solid #ffcc00; border-radius: 20px; width: 85%; max-width: 350px; }
+        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; background: #222; color: white; }
         .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; }
         .share-btn { background: #000; color: white; border: 2px solid #555; padding: 12px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; margin-top: 10px; font-weight: bold; }
-        
-        #ui { position: absolute; top: 20px; left: 20px; z-index: 8500; display: none; pointer-events: none; }
-        .score-text { font-size: 32px; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
-        .record-ui { color: #ffcc00; font-size: 18px; text-shadow: 2px 2px 0 #000; margin: 0; }
-        
-        canvas { display: none; image-rendering: -webkit-optimize-contrast; position: absolute; top: 0; left: 0; z-index: 10; }
+        #ui { position: absolute; top: 20px; left: 20px; z-index: 850; display: none; pointer-events: none; }
+        .score-text { font-size: 40px; color: white; text-shadow: 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; margin: 0; }
+        .record-ui { color: #ffcc00; font-size: 20px; text-shadow: 2px 2px 0 #000; margin: 0; }
+        canvas { display: none; image-rendering: -webkit-optimize-contrast; }
     </style>
 </head>
 <body>
 
     <button id="logoutBtn" onclick="cerrarSesion()">CERRAR SESIÓN ✖</button>
 
-    <div id="introScreen" class="screen" onclick="clicPortada()">
-        <div style="font-size:24px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00; background: rgba(0,0,0,0.5); padding: 10px;">TOCA PARA EMPEZAR</div>
+    <div id="introScreen" onclick="clicPortada()">
+        <div style="font-size:24px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00;">TOCA PARA EMPEZAR</div>
     </div>
 
-    <div id="loginMenu" class="screen">
+    <div id="loginMenu">
         <div class="login-box">
             <h2 style="color:#ffcc00; margin-top:0;">REGISTRO</h2>
             <input type="text" id="tgUser" placeholder="@tu_usuario">
@@ -49,16 +39,21 @@
     </div>
 
     <div id="ui">
-        <div id="displayUser" style="color:#00ffff; font-size:18px; text-shadow: 2px 2px 0 #000;"></div>
-        <p class="score-text">PTS: <span id="score">0</span></p>
-        <p class="record-ui">RÉCORD: <span id="highScoreText">0</span></p>
+        <div id="displayUser" style="color:#00ffff; font-size:22px; text-shadow: 2px 2px 0 #000;"></div>
+        <p class="score-text">PUNTOS: <span id="score">0</span></p>
+        <p class="record-ui">RECORD: <span id="highScoreText">0</span></p>
     </div>
 
-    <div id="gameOverScreen" class="screen">
-        <h1 style="color:#ff4444; font-size:40px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
-        <img src="derrota.png" style="width:100px; border-radius:15px; margin-bottom:10px;">
-        <p style="font-size:24px; margin:0;">Puntos: <span id="finalScore">0</span></p>
-        <button class="share-btn" onclick="compartirX()">𝕏 Compartir</button>
+    <div id="gameOverScreen">
+        <h1 style="color:#ff4444; font-size:45px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
+        <div style="display:flex; align-items:center; gap:20px; justify-content:center; margin-bottom:15px;">
+            <div>
+                <p style="font-size:28px; margin:0;">Puntos: <span id="finalScore">0</span></p>
+                <p style="font-size:20px; color:#ffcc00; margin:0;">Récord: <span id="finalBest">0</span></p>
+            </div>
+            <img src="derrota.png" style="width:120px; border-radius:15px;">
+        </div>
+        <button class="share-btn" onclick="compartirX()">𝕏 Compartir en Twitter</button>
         <button class="btn" onclick="location.reload()">REINTENTAR</button>
     </div>
 
@@ -68,31 +63,32 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // Imágenes
+        // Carga de imágenes
         const imgC = new Image(); imgC.src = 'chiguire.png';
         const imgD = new Image(); imgD.src = 'derrota.png';
         const imgB = new Image(); imgB.src = 'barril.png';
         const imgF = new Image(); imgF.src = 'fondo.png';
 
-        // Sonidos con manejo de error
+        // Sonidos
         const sndClick = new Audio('click.mp3');
         const sndSalto = new Audio('salto.mp3');
         const sndPerder = new Audio('perder.mp3');
         const musFondo = new Audio('musicaFondo.mp3'); musFondo.loop = true;
         const sndIntro = new Audio('intro.mp3'); sndIntro.loop = true;
 
-        let activo = false, score = 0, vel = 10, obst = [], bgX = 0;
+        let activo = false, score = 0, vel = 11, obst = [], bgX = 0;
         let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
-        let chig = { x: 50, y: 0, w: 80, h: 80, dy: 0, g: 1.5, salto: -18, suelo: 0, vivo: true };
+        let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
 
         if(localStorage.getItem('venecoUser')) document.getElementById("logoutBtn").style.display = "block";
 
         function cerrarSesion() { localStorage.clear(); location.reload(); }
 
         function clicPortada() { 
-            sndClick.play().catch(()=>{}); sndIntro.play().catch(()=>{}); 
+            sndClick.play(); sndIntro.play(); 
             document.getElementById("introScreen").style.display = "none"; 
             if(localStorage.getItem('venecoUser')) {
+                document.getElementById("logoutBtn").style.display = "none";
                 prepararJuego(); 
             } else {
                 document.getElementById("loginMenu").style.display = "flex"; 
@@ -100,18 +96,20 @@
         }
 
         function guardarYEntrar() {
+            sndClick.play();
             const u = document.getElementById("tgUser").value;
             const w = document.getElementById("solWallet").value;
             if(u.length > 2) {
                 localStorage.setItem('venecoUser', u);
                 localStorage.setItem('venecoWallet', w);
                 document.getElementById("loginMenu").style.display = "none";
+                document.getElementById("logoutBtn").style.display = "none";
                 prepararJuego();
             }
         }
 
         function prepararJuego() { 
-            sndIntro.pause(); musFondo.play().catch(()=>{}); 
+            sndIntro.pause(); musFondo.play(); 
             canvas.style.display = "block"; 
             document.getElementById("ui").style.display = "block"; 
             document.getElementById("displayUser").innerText = localStorage.getItem('venecoUser');
@@ -121,56 +119,64 @@
 
         function ajustar() { 
             const dpr = window.devicePixelRatio || 1;
-            canvas.width = window.innerWidth * dpr;
-            canvas.height = window.innerHeight * dpr;
+            canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr;
+            canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
             ctx.scale(dpr, dpr); 
-
-            // Adaptación móvil
-            if(window.innerHeight > window.innerWidth) {
-                chig.w = 70; chig.h = 70; chig.x = 30;
-                chig.suelo = window.innerHeight - 150;
-            } else {
-                chig.w = 100; chig.h = 100; chig.x = 80;
-                chig.suelo = window.innerHeight - 180;
-            }
-            chig.y = chig.suelo;
+            chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
         }
 
-        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 10; obst = []; bucle(); spawn(); }
+        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; bucle(); spawn(); }
 
         async function enviarDatosExcel(puntos) {
             const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyb83SGQoXgHh_eWtJzEr39FmnnoiM__y7fH_GEytH5uAqVCczOUufe523OnXhRcSYzYw/exec";
-            const datos = { usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoWallet'), puntaje: puntos };
-            fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) });
+            const datos = {
+                usuario: localStorage.getItem('venecoUser'),
+                wallet: localStorage.getItem('venecoWallet'),
+                puntaje: puntos
+            };
+            try {
+                // El modo 'no-cors' permite enviar datos aunque Google no responda con las cabeceras CORS
+                fetch(URL_SCRIPT, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(datos)
+                });
+                console.log("Registro enviado");
+            } catch (e) { console.error("Error de red"); }
         }
 
         function morir() { 
-            activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play().catch(()=>{}); 
-            if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); }
+            activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play(); 
+            if(score > recordGlobal) { 
+                recordGlobal = score; 
+                localStorage.setItem('venecoRunHighScore', recordGlobal); 
+            }
+            
+            // Enviar datos al Excel
             enviarDatosExcel(score);
+
             document.getElementById("finalScore").innerText = score; 
+            document.getElementById("finalBest").innerText = recordGlobal;
             document.getElementById("gameOverScreen").style.display = "flex"; 
-            document.getElementById("ui").style.display = "none";
         }
 
         function compartirX() {
-            const msg = `🏆 ¡Hice ${score} puntos en Veneco Run! 🐹 Mi récord es ${recordGlobal}. ¿Superas esto? #VenecoRun`;
-            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}`, '_blank');
+            const user = localStorage.getItem('venecoUser') || "Jugador";
+            const msg = `🏆 ¡He conseguido ${score} puntos en Veneco Run! 🚀 Mi récord es ${recordGlobal}. ¿Podrás superarme? 🇻🇪🐹 %0A%0A #VenecoRun #Solana`;
+            window.open(`https://twitter.com/intent/tweet?text=${msg}`, '_blank');
         }
 
-        const saltar = (e) => { 
-            if(e && e.cancelable) e.preventDefault();
-            if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.currentTime = 0; sndSalto.play().catch(()=>{}); } 
-        };
+        const saltar = () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.currentTime = 0; sndSalto.play(); } };
         window.addEventListener("mousedown", saltar);
-        window.addEventListener("touchstart", saltar, {passive: false});
+        window.addEventListener("touchstart", saltar);
         window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
         window.onresize = ajustar;
 
         function spawn() {
             if(!activo) return;
-            obst.push({ x: window.innerWidth, w: 50, h: 60 });
-            setTimeout(spawn, Math.max(1000, 2500 - (vel * 80)));
+            obst.push({ x: window.innerWidth, w: 80, h: 90 });
+            setTimeout(spawn, Math.max(1100 / (vel * 0.08), 800));
         }
 
         function bucle() {
@@ -188,8 +194,16 @@
                     obst[i].x -= vel;
                     let bY = chig.suelo + (chig.h - obst[i].h);
                     ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
-                    if (chig.x + 20 < obst[i].x + obst[i].w - 20 && chig.x + chig.w - 20 > obst[i].x + 20 && chig.y + 20 < bY + obst[i].h && chig.y + chig.h - 10 > bY) morir();
-                    if(obst[i].x < -100) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.12; }
+                    
+                    if (chig.x + 35 < obst[i].x + obst[i].w - 35 && 
+                        chig.x + chig.w - 35 > obst[i].x + 35 && 
+                        chig.y + 35 < bY + obst[i].h && 
+                        chig.y + chig.h - 15 > bY) morir();
+
+                    if(obst[i].x < -100) { 
+                        obst.splice(i, 1); score += 10; 
+                        document.getElementById("score").innerText = score; vel += 0.18;
+                    }
                 }
             }
             ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
