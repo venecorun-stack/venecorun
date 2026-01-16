@@ -6,6 +6,7 @@
     <title>Veneco Run - Master Edition</title>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
+        
         #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: #ff4444; color: white; border: 2px solid white; padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: none; }
         
         /* PANTALLAS DE MENÚ */
@@ -16,7 +17,6 @@
             background-color: #000;
             background-position: center; 
             background-repeat: no-repeat;
-            background-size: contain; /* Para que no se estire ninguna */
             display: flex; 
             flex-direction: column; 
             justify-content: center; 
@@ -25,22 +25,22 @@
             text-align: center; 
         }
 
-        /* PORTADA POR DEFECTO (Horizontal/PC) */
+        /* PORTADA PARA PC Y HORIZONTAL */
         #introScreen { 
             background-image: url('portada.png'); 
+            background-size: contain;
             cursor: pointer; 
-            justify-content: flex-end; 
         }
 
-        /* DETECCIÓN DE PANTALLA VERTICAL PARA LA PORTADA */
-        @media (max-orientation: portrait) {
+        /* PORTADA PARA MÓVIL VERTICAL */
+        @media screen and (max-width: 600px) {
             #introScreen {
-                background-image: url('portada_mobile.png'); /* Usa esta para vertical */
-                background-size: cover; /* En móvil vertical, cover suele verse mejor si la imagen está diseñada para ello */
+                background-image: url('portada_mobile.png') !important; 
+                background-size: cover !important; 
             }
         }
 
-        #loginMenu { background-image: url('portada.png'); display: none; }
+        #loginMenu { background-image: url('portada.png'); background-size: contain; display: none; }
         #gameOverScreen { background: rgba(0,0,0,0.95); display: none; }
         
         .login-box { background: rgba(0,0,0,0.9); padding: 30px; border: 3px solid #ffcc00; border-radius: 20px; width: 85%; max-width: 350px; }
@@ -52,6 +52,7 @@
         .score-text { font-size: 40px; color: white; text-shadow: 3px 3px 0 #000; margin: 0; }
         .record-ui { color: #ffcc00; font-size: 20px; text-shadow: 2px 2px 0 #000; margin: 0; }
         
+        /* NIVEL CENTRADO */
         #levelContainer {
             position: absolute;
             top: 15%;
@@ -80,7 +81,7 @@
     <button id="logoutBtn" onclick="cerrarSesion()">CERRAR SESIÓN ✖</button>
 
     <div id="introScreen" onclick="clicPortada()">
-        <div style="font-size:24px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00; background: rgba(0,0,0,0.5); width:100%;">TOCA PARA EMPEZAR</div>
+        <div style="font-size:24px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00; background: rgba(0,0,0,0.5); width:100%; padding: 10px 0;">TOCA PARA EMPEZAR</div>
     </div>
 
     <div id="loginMenu">
@@ -121,10 +122,12 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
+        // CARGA DE IMÁGENES
         const imgC = new Image(); imgC.src = 'chiguire.png';
         const imgD = new Image(); imgD.src = 'derrota.png';
         const imgB = new Image(); imgB.src = 'barril.png';
         const imgF = new Image(); imgF.src = 'fondo.png';
+        const imgFMovil = new Image(); imgFMovil.src = 'fondo_mobile.png'; // Fondo Vertical
 
         const sndClick = new Audio('click.mp3');
         const sndSalto = new Audio('salto.mp3');
@@ -183,11 +186,11 @@
             ctx.scale(dpr, dpr); 
             chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
 
-            // AJUSTE DE POSICIÓN PARA MÓVIL
+            // POSICIÓN DINÁMICA DEL CHIGÜIRE
             if(window.innerWidth < 600) {
-                chig.x = 25; // Súper a la izquierda en vertical para ganar tiempo
+                chig.x = 25; // Más a la izquierda en móvil vertical
             } else {
-                chig.x = 100; // Normal en PC
+                chig.x = 100; // PC
             }
         }
 
@@ -223,7 +226,6 @@
         function spawn() {
             if(!activo) return;
             let esDoble = score >= 200 && Math.random() > 0.6;
-            // Spawneamos el barril un poco más afuera de la pantalla (+150) para dar tiempo
             obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
 
             let baseFreq = 1100 / (vel * 0.07);
@@ -238,10 +240,14 @@
         function bucle() {
             if(!activo && !chig.vivo) return;
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            
+            // ELECCIÓN DE FONDO SEGÚN ORIENTACIÓN
+            let imagenFondo = (window.innerWidth < 600) ? imgFMovil : imgF;
+            
             bgX -= vel * 0.4;
             if(bgX <= -window.innerWidth) bgX = 0;
-            ctx.drawImage(imgF, bgX, 0, window.innerWidth, window.innerHeight);
-            ctx.drawImage(imgF, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
+            ctx.drawImage(imagenFondo, bgX, 0, window.innerWidth, window.innerHeight);
+            ctx.drawImage(imagenFondo, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
 
             let shadowOpacity = Math.max(0.1, 0.5 - (chig.suelo - chig.y) / 400);
             ctx.fillStyle = `rgba(0,0,0,${shadowOpacity})`;
