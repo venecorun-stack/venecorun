@@ -3,134 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run Debug</title>
+    <title>Veneco Run Pro</title>
     <style>
-        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5000; text-align: center; }
-        #introScreen { background: #111; cursor: pointer; border: 5px solid #ffcc00; box-sizing: border-box; }
-        #loginMenu { background: #000; display: none; }
+        /* Estilos base para asegurar visibilidad */
+        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial', sans-serif; color: white; }
+        
+        .screen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            display: flex; flex-direction: column; justify-content: center; 
+            align-items: center; z-index: 1000; text-align: center;
+            background-color: #000; /* Fondo negro por defecto */
+        }
+
+        /* Si la imagen existe, se pone encima del negro */
+        #introScreen { 
+            background-image: url('portada.png'); 
+            background-size: cover; 
+            background-position: center;
+        }
+
+        #loginMenu { background: rgba(0,0,0,0.95); display: none; }
         #gameOverScreen { background: rgba(0,0,0,0.9); display: none; }
-        .box { background: #222; padding: 30px; border: 3px solid #ffcc00; border-radius: 20px; width: 80%; max-width: 300px; }
-        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; }
-        .btn { padding: 15px 30px; background: #ffcc00; color: #000; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; }
-        canvas { display: none; position: absolute; top: 0; left: 0; z-index: 10; width: 100%; height: 100%; }
-        #ui { position: absolute; top: 20px; left: 20px; z-index: 100; display: none; font-size: 24px; }
+
+        .box { 
+            background: #1a1a1a; padding: 30px; border: 4px solid #ffcc00; 
+            border-radius: 20px; width: 85%; max-width: 320px; 
+        }
+        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px; background: #fff; color: #000; }
+        .btn { padding: 15px 35px; background: #ffcc00; color: #000; border: none; border-radius: 50px; font-weight: bold; font-size: 20px; cursor: pointer; margin-top: 10px; }
+
+        canvas { display: none; position: absolute; top: 0; left: 0; }
+        #ui { position: absolute; top: 20px; left: 20px; z-index: 500; display: none; font-size: 28px; font-weight: bold; color: #ffcc00; }
     </style>
 </head>
 <body>
 
-    <div id="introScreen" class="screen" onclick="irALogin()">
-        <h1 style="color:#ffcc00;">VENECO RUN</h1>
-        <p>TAP PARA CONTINUAR</p>
-        <p style="font-size: 12px; color: #555;">(Si ves esto, la imagen de portada no cargó)</p>
+    <div id="introScreen" class="screen" onclick="irAlRegistro()">
+        <div style="background: rgba(0,0,0,0.7); padding: 20px; border-radius: 15px; border: 2px solid #ffcc00;">
+            <h1 style="color:#ffcc00; margin:0;">VENECO RUN</h1>
+            <p>TOCA LA PANTALLA</p>
+        </div>
     </div>
 
     <div id="loginMenu" class="screen">
         <div class="box">
-            <h2>REGISTRO</h2>
+            <h2 style="color:#ffcc00; margin-top:0;">REGISTRO</h2>
             <input type="text" id="tgUser" placeholder="@Usuario">
             <input type="text" id="solWallet" placeholder="Wallet Solana">
-            <button class="btn" onclick="guardarYJugar()">ENTRAR</button>
+            <button class="btn" onclick="empezarJuego()">¡A CORRER!</button>
         </div>
     </div>
 
     <div id="gameOverScreen" class="screen">
-        <h1>¡FIN!</h1>
+        <h1 style="color:#ff4444; font-size: 45px;">FIN DEL VIAJE</h1>
+        <p style="font-size: 24px;">PUNTOS: <span id="finalScore">0</span></p>
         <button class="btn" onclick="location.reload()">REINTENTAR</button>
     </div>
 
-    <div id="ui">PUNTOS: <span id="score">0</span></div>
+    <div id="ui">PTS: <span id="score">0</span></div>
     <canvas id="gameCanvas"></canvas>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // Forzamos que el juego sepa que GitHub es estricto
+        // --- ASSETS ---
         const img = { f: new Image(), c: new Image(), b: new Image(), d: new Image() };
         img.f.src = 'fondo.png'; 
         img.c.src = 'chiguire.png'; 
         img.b.src = 'barril.png'; 
         img.d.src = 'derrota.png';
 
-        const mus = new Audio('musicaFondo.mp3'); 
-        mus.loop = true;
+        const musica = new Audio('musicaFondo.mp3');
+        musica.loop = true;
 
         let activo = false, score = 0, vel = 8, bgX = 0, obst = [];
-        let pj = { x: 50, y: 0, w: 70, h: 70, dy: 0, g: 1, salto: -17, suelo: 0, vivo: true };
+        let pj = { x: 50, y: 0, w: 75, h: 75, dy: 0, g: 0.9, salto: -17, suelo: 0, vivo: true };
 
-        function irALogin() {
-            console.log("Clic detectado");
-            document.getElementById("introScreen").style.display = "none";
-            document.getElementById("loginMenu").style.display = "flex";
-            mus.play().catch(e => console.log("Audio bloqueado"));
+        function ajustar() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            pj.suelo = canvas.height - 130;
+            pj.y = pj.suelo;
         }
+        window.onresize = ajustar;
+        ajustar();
 
-        function guardarYJugar() {
-            const u = document.getElementById("tgUser").value;
-            if(u.length > 1) {
-                localStorage.setItem('venecoUser', u);
-                document.getElementById("loginMenu").style.display = "none";
-                iniciarJuego();
+        // 1. PRIMER PASO: Ir al registro y activar audio
+        function irAlRegistro() {
+            musica.play().catch(() => console.log("Audio esperando interacción extra"));
+            document.getElementById("introScreen").style.display = "none";
+            
+            if(localStorage.getItem('venecoUser')) {
+                empezarJuego();
+            } else {
+                document.getElementById("loginMenu").style.display = "flex";
             }
         }
 
-        function iniciarJuego() {
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = window.innerWidth * dpr;
-            canvas.height = window.innerHeight * dpr;
-            ctx.scale(dpr, dpr);
+        // 2. SEGUNDO PASO: Iniciar el canvas
+        function empezarJuego() {
+            const u = document.getElementById("tgUser").value;
+            if(!localStorage.getItem('venecoUser') && u.length < 2) return alert("Escribe un usuario");
             
-            pj.suelo = window.innerHeight - 120;
-            pj.y = pj.suelo;
-            
-            activo = true;
+            if(u) localStorage.setItem('venecoUser', u);
+            localStorage.setItem('venecoWallet', document.getElementById("solWallet").value);
+
+            document.getElementById("loginMenu").style.display = "none";
             document.getElementById("ui").style.display = "block";
             canvas.style.display = "block";
+            
+            musica.play().catch(()=>{}); 
+            activo = true;
             spawn();
             bucle();
         }
 
         function spawn() {
             if(!activo) return;
-            obst.push({ x: window.innerWidth, w: 50, h: 60 });
-            setTimeout(spawn, 1500);
+            obst.push({ x: canvas.width, w: 55, h: 60 });
+            setTimeout(spawn, Math.max(900, 2000 - (vel * 60)));
         }
 
         function bucle() {
-            if(!activo) return;
-            ctx.clearRect(0,0, window.innerWidth, window.innerHeight);
+            if(!activo && !pj.vivo) return;
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // Fondo (solo si cargó la imagen)
             bgX -= vel * 0.5;
-            if(bgX <= -window.innerWidth) bgX = 0;
-            
-            // Dibujamos solo si la imagen cargó, si no, un color para que no se trabe
+            if(bgX <= -canvas.width) bgX = 0;
             if(img.f.complete) {
-                ctx.drawImage(img.f, bgX, 0, window.innerWidth, window.innerHeight);
-                ctx.drawImage(img.f, bgX + window.innerWidth, 0, window.innerWidth, window.innerHeight);
-            } else {
-                ctx.fillStyle = "#333";
-                ctx.fillRect(0,0, canvas.width, canvas.height);
+                ctx.drawImage(img.f, bgX, 0, canvas.width, canvas.height);
+                ctx.drawImage(img.f, bgX + canvas.width, 0, canvas.width, canvas.height);
             }
 
-            pj.dy += pj.g; pj.y += pj.dy;
-            if(pj.y > pj.suelo) { pj.y = pj.suelo; pj.dy = 0; }
+            if(activo) {
+                pj.dy += pj.g; pj.y += pj.dy;
+                if(pj.y > pj.suelo) { pj.y = pj.suelo; pj.dy = 0; }
 
-            for(let o of obst) {
-                o.x -= vel;
-                if(img.b.complete) ctx.drawImage(img.b, o.x, pj.suelo + 10, o.w, o.h);
-                if (pj.x < o.x + o.w && pj.x + pj.w > o.x && pj.y < pj.suelo + 10 + o.h && pj.y + pj.h > pj.suelo + 10) {
-                    activo = false;
-                    document.getElementById("gameOverScreen").style.display = "flex";
+                for(let i = obst.length - 1; i >= 0; i--) {
+                    let o = obst[i];
+                    o.x -= vel;
+                    
+                    // Barril (Imagen o rectángulo si no carga)
+                    if(img.b.complete) {
+                        ctx.drawImage(img.b, o.x, pj.suelo + 15, o.w, o.h);
+                    } else {
+                        ctx.fillStyle = "red";
+                        ctx.fillRect(o.x, pj.suelo + 15, o.w, o.h);
+                    }
+
+                    // Colisión
+                    if (pj.x < o.x + o.w - 10 && pj.x + pj.w > o.x + 10 && 
+                        pj.y < pj.suelo + 15 + o.h && pj.y + pj.h > pj.suelo + 15) {
+                        morir();
+                    }
+
+                    if(o.x < -100) {
+                        obst.splice(i, 1);
+                        score += 10;
+                        document.getElementById("score").innerText = score;
+                        vel += 0.1;
+                    }
                 }
             }
 
-            if(img.c.complete) ctx.drawImage(img.c, pj.x, pj.y, pj.w, pj.h);
+            // Chigüire (Imagen o rectángulo si no carga)
+            if(img.c.complete) {
+                ctx.drawImage(pj.vivo ? img.c : img.d, pj.x, pj.y, pj.w, pj.h);
+            } else {
+                ctx.fillStyle = "yellow";
+                ctx.fillRect(pj.x, pj.y, pj.w, pj.h);
+            }
+
             requestAnimationFrame(bucle);
         }
 
-        window.addEventListener("touchstart", () => { if(activo && pj.y >= pj.suelo - 5) pj.dy = pj.salto; });
-        window.addEventListener("mousedown", () => { if(activo && pj.y >= pj.suelo - 5) pj.dy = pj.salto; });
+        function morir() {
+            activo = false; pj.vivo = false;
+            document.getElementById("finalScore").innerText = score;
+            document.getElementById("gameOverScreen").style.display = "flex";
+        }
+
+        function saltar(e) {
+            if(e && e.cancelable) e.preventDefault();
+            if(activo && pj.y >= pj.suelo - 10) pj.dy = pj.salto;
+        }
+
+        window.addEventListener("touchstart", saltar, {passive: false});
+        window.addEventListener("mousedown", saltar);
     </script>
 </body>
 </html>
