@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Veneco Run - Master Edition</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
         #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: #ff4444; color: white; border: 2px solid white; padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: none; }
@@ -16,8 +17,8 @@
         .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; }
         .share-btn { background: #000; color: white; border: 2px solid #555; padding: 12px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; margin-top: 10px; font-weight: bold; }
         #ui { position: absolute; top: 20px; left: 20px; z-index: 850; display: none; pointer-events: none; }
-        .score-text { font-size: 40px; color: white; text-shadow: 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; margin: 0; }
-        .record-ui { color: #ffcc00; font-size: 20px; text-shadow: 2px 2px 0 #000; margin: 0; }
+        .score-text { font-size: 32px; color: white; text-shadow: 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; margin: 0; }
+        .record-ui { color: #ffcc00; font-size: 18px; text-shadow: 2px 2px 0 #000; margin: 0; }
         canvas { display: none; image-rendering: -webkit-optimize-contrast; }
     </style>
 </head>
@@ -39,21 +40,21 @@
     </div>
 
     <div id="ui">
-        <div id="displayUser" style="color:#00ffff; font-size:22px; text-shadow: 2px 2px 0 #000;"></div>
-        <p class="score-text">PUNTOS: <span id="score">0</span></p>
-        <p class="record-ui">RECORD: <span id="highScoreText">0</span></p>
+        <div id="displayUser" style="color:#00ffff; font-size:18px; text-shadow: 2px 2px 0 #000;"></div>
+        <p class="score-text">PTS: <span id="score">0</span></p>
+        <p class="record-ui">RÉCORD: <span id="highScoreText">0</span></p>
     </div>
 
     <div id="gameOverScreen">
-        <h1 style="color:#ff4444; font-size:45px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
-        <div style="display:flex; align-items:center; gap:20px; justify-content:center; margin-bottom:15px;">
+        <h1 style="color:#ff4444; font-size:40px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:10px; justify-content:center; margin-bottom:15px;">
+            <img src="derrota.png" style="width:100px; border-radius:15px;">
             <div>
-                <p style="font-size:28px; margin:0;">Puntos: <span id="finalScore">0</span></p>
-                <p style="font-size:20px; color:#ffcc00; margin:0;">Récord: <span id="finalBest">0</span></p>
+                <p style="font-size:24px; margin:0;">Puntos: <span id="finalScore">0</span></p>
+                <p style="font-size:18px; color:#ffcc00; margin:0;">Mejor: <span id="finalBest">0</span></p>
             </div>
-            <img src="derrota.png" style="width:120px; border-radius:15px;">
         </div>
-        <button class="share-btn" onclick="compartirX()">𝕏 Compartir en Twitter</button>
+        <button class="share-btn" onclick="compartirX()">𝕏 Compartir</button>
         <button class="btn" onclick="location.reload()">REINTENTAR</button>
     </div>
 
@@ -76,8 +77,10 @@
         const musFondo = new Audio('musicaFondo.mp3'); musFondo.loop = true;
         const sndIntro = new Audio('intro.mp3'); sndIntro.loop = true;
 
-        let activo = false, score = 0, vel = 11, obst = [], bgX = 0;
+        let activo = false, score = 0, vel = 10, obst = [], bgX = 0;
         let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
+        
+        // Valores iniciales (se ajustarán en ajustar())
         let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
 
         if(localStorage.getItem('venecoUser')) document.getElementById("logoutBtn").style.display = "block";
@@ -85,7 +88,8 @@
         function cerrarSesion() { localStorage.clear(); location.reload(); }
 
         function clicPortada() { 
-            sndClick.play(); sndIntro.play(); 
+            // Play con catch para evitar errores de bloqueo de navegador
+            sndClick.play().catch(()=>{}); sndIntro.play().catch(()=>{}); 
             document.getElementById("introScreen").style.display = "none"; 
             if(localStorage.getItem('venecoUser')) {
                 document.getElementById("logoutBtn").style.display = "none";
@@ -96,7 +100,7 @@
         }
 
         function guardarYEntrar() {
-            sndClick.play();
+            sndClick.play().catch(()=>{});
             const u = document.getElementById("tgUser").value;
             const w = document.getElementById("solWallet").value;
             if(u.length > 2) {
@@ -109,23 +113,43 @@
         }
 
         function prepararJuego() { 
-            sndIntro.pause(); musFondo.play(); 
+            sndIntro.pause(); 
+            musFondo.play().catch(()=>{}); 
             canvas.style.display = "block"; 
             document.getElementById("ui").style.display = "block"; 
             document.getElementById("displayUser").innerText = localStorage.getItem('venecoUser');
             document.getElementById("highScoreText").innerText = recordGlobal;
-            ajustar(); iniciar(); 
+            ajustar(); 
+            iniciar(); 
         }
 
         function ajustar() { 
             const dpr = window.devicePixelRatio || 1;
-            canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr;
-            canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
+            canvas.width = window.innerWidth * dpr; 
+            canvas.height = window.innerHeight * dpr;
+            canvas.style.width = window.innerWidth + 'px'; 
+            canvas.style.height = window.innerHeight + 'px';
             ctx.scale(dpr, dpr); 
-            chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
+
+            // DISEÑO PARA MÓVIL (Vertical)
+            if(window.innerHeight > window.innerWidth) {
+                chig.w = 80; chig.h = 80; // Más pequeño
+                chig.x = 40;              // Más a la izquierda para dar tiempo de reacción
+                chig.salto = -19;         // Salto más bajo para pantalla pequeña
+                chig.g = 1.8;             // Gravedad ajustada
+                chig.suelo = window.innerHeight - 150; 
+            } else { 
+                // DISEÑO PARA PC (Horizontal)
+                chig.w = 110; chig.h = 110; 
+                chig.x = 80; 
+                chig.salto = -23; 
+                chig.g = 2.1;
+                chig.suelo = window.innerHeight - 200;
+            }
+            chig.y = chig.suelo;
         }
 
-        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; bucle(); spawn(); }
+        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 10; obst = []; bucle(); spawn(); }
 
         async function enviarDatosExcel(puntos) {
             const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyb83SGQoXgHh_eWtJzEr39FmnnoiM__y7fH_GEytH5uAqVCczOUufe523OnXhRcSYzYw/exec";
@@ -134,54 +158,61 @@
                 wallet: localStorage.getItem('venecoWallet'),
                 puntaje: puntos
             };
-            try {
-                // El modo 'no-cors' permite enviar datos aunque Google no responda con las cabeceras CORS
-                fetch(URL_SCRIPT, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(datos)
-                });
-                console.log("Registro enviado");
-            } catch (e) { console.error("Error de red"); }
+            fetch(URL_SCRIPT, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(datos)
+            });
         }
 
         function morir() { 
-            activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play(); 
+            activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play().catch(()=>{}); 
             if(score > recordGlobal) { 
                 recordGlobal = score; 
                 localStorage.setItem('venecoRunHighScore', recordGlobal); 
             }
-            
-            // Enviar datos al Excel
             enviarDatosExcel(score);
-
             document.getElementById("finalScore").innerText = score; 
             document.getElementById("finalBest").innerText = recordGlobal;
             document.getElementById("gameOverScreen").style.display = "flex"; 
         }
 
         function compartirX() {
-            const user = localStorage.getItem('venecoUser') || "Jugador";
             const msg = `🏆 ¡He conseguido ${score} puntos en Veneco Run! 🚀 Mi récord es ${recordGlobal}. ¿Podrás superarme? 🇻🇪🐹 %0A%0A #VenecoRun #Solana`;
             window.open(`https://twitter.com/intent/tweet?text=${msg}`, '_blank');
         }
 
-        const saltar = () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.currentTime = 0; sndSalto.play(); } };
+        const saltar = (e) => { 
+            if(e && e.cancelable) e.preventDefault();
+            if(activo && chig.y >= chig.suelo - 10) { 
+                chig.dy = chig.salto; 
+                sndSalto.currentTime = 0; 
+                sndSalto.play().catch(()=>{}); 
+            } 
+        };
+
         window.addEventListener("mousedown", saltar);
-        window.addEventListener("touchstart", saltar);
+        window.addEventListener("touchstart", saltar, {passive: false});
         window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
         window.onresize = ajustar;
 
         function spawn() {
             if(!activo) return;
-            obst.push({ x: window.innerWidth, w: 80, h: 90 });
-            setTimeout(spawn, Math.max(1100 / (vel * 0.08), 800));
+            // Barriles proporcionales al tamaño de pantalla
+            let bw = (window.innerHeight > window.innerWidth) ? 60 : 80;
+            let bh = (window.innerHeight > window.innerWidth) ? 70 : 90;
+            obst.push({ x: window.innerWidth, w: bw, h: bh });
+            
+            let tiempo = Math.max(1200 / (vel * 0.09), 850);
+            setTimeout(spawn, tiempo);
         }
 
         function bucle() {
             if(!activo && !chig.vivo) return;
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            
+            // Fondo infinito
             bgX -= vel * 0.4;
             if(bgX <= -window.innerWidth) bgX = 0;
             ctx.drawImage(imgF, bgX, 0, window.innerWidth, window.innerHeight);
@@ -190,22 +221,28 @@
             if(activo) {
                 chig.dy += chig.g; chig.y += chig.dy;
                 if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
+                
                 for(let i = obst.length - 1; i >= 0; i--) {
                     obst[i].x -= vel;
                     let bY = chig.suelo + (chig.h - obst[i].h);
                     ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
                     
-                    if (chig.x + 35 < obst[i].x + obst[i].w - 35 && 
-                        chig.x + chig.w - 35 > obst[i].x + 35 && 
-                        chig.y + 35 < bY + obst[i].h && 
+                    // Colisión ajustada
+                    if (chig.x + 30 < obst[i].x + obst[i].w - 30 && 
+                        chig.x + chig.w - 30 > obst[i].x + 30 && 
+                        chig.y + 30 < bY + obst[i].h && 
                         chig.y + chig.h - 15 > bY) morir();
 
                     if(obst[i].x < -100) { 
-                        obst.splice(i, 1); score += 10; 
-                        document.getElementById("score").innerText = score; vel += 0.18;
+                        obst.splice(i, 1); 
+                        score += 10; 
+                        document.getElementById("score").innerText = score; 
+                        vel += 0.16; // Aumenta dificultad gradualmente
                     }
                 }
             }
+            
+            // Dibujar Chigüire o Derrota
             ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
             requestAnimationFrame(bucle);
         }
