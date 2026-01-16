@@ -69,11 +69,11 @@
         const imgB = new Image(); imgB.src = 'barril.png';
         const imgF = new Image(); imgF.src = 'fondo.png';
 
-        // Sonidos
+        // Sonidos - CORREGIDO: musicafondo.mp3 en minúsculas para GitHub
         const sndClick = new Audio('click.mp3');
         const sndSalto = new Audio('salto.mp3');
         const sndPerder = new Audio('perder.mp3');
-        const musFondo = new Audio('musicaFondo.mp3'); musFondo.loop = true;
+        const musFondo = new Audio('musicafondo.mp3'); musFondo.loop = true;
         const sndIntro = new Audio('intro.mp3'); sndIntro.loop = true;
 
         let activo = false, score = 0, vel = 11, obst = [], bgX = 0;
@@ -85,7 +85,8 @@
         function cerrarSesion() { localStorage.clear(); location.reload(); }
 
         function clicPortada() { 
-            sndClick.play(); sndIntro.play(); 
+            sndClick.play(); 
+            sndIntro.play(); 
             document.getElementById("introScreen").style.display = "none"; 
             if(localStorage.getItem('venecoUser')) {
                 document.getElementById("logoutBtn").style.display = "none";
@@ -109,7 +110,9 @@
         }
 
         function prepararJuego() { 
-            sndIntro.pause(); musFondo.play(); 
+            sndIntro.pause(); 
+            // Aseguramos que el audio inicie tras la interacción
+            musFondo.play().catch(e => console.log("Error audio:", e)); 
             canvas.style.display = "block"; 
             document.getElementById("ui").style.display = "block"; 
             document.getElementById("displayUser").innerText = localStorage.getItem('venecoUser');
@@ -135,27 +138,25 @@
                 puntaje: puntos
             };
             try {
-                // El modo 'no-cors' permite enviar datos aunque Google no responda con las cabeceras CORS
                 fetch(URL_SCRIPT, {
                     method: "POST",
                     mode: "no-cors",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(datos)
                 });
-                console.log("Registro enviado");
             } catch (e) { console.error("Error de red"); }
         }
 
         function morir() { 
-            activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play(); 
+            activo = false; chig.vivo = false; 
+            musFondo.pause(); 
+            musFondo.currentTime = 0; // Reinicia la música para la próxima vez
+            sndPerder.play(); 
             if(score > recordGlobal) { 
                 recordGlobal = score; 
                 localStorage.setItem('venecoRunHighScore', recordGlobal); 
             }
-            
-            // Enviar datos al Excel
             enviarDatosExcel(score);
-
             document.getElementById("finalScore").innerText = score; 
             document.getElementById("finalBest").innerText = recordGlobal;
             document.getElementById("gameOverScreen").style.display = "flex"; 
