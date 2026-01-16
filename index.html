@@ -5,92 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Veneco Run - Master Edition</title>
     <style>
-        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; }
+        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; width: 100vw; height: 100vh; }
         
-        /* AVISO DE ROTACIÓN PARA MÓVIL */
+        /* AVISO DE ROTACIÓN */
         #rotateMessage {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 5000; flex-direction: column; justify-content: center; align-items: center; text-align: center;
         }
-        @media screen and (orientation: portrait) and (max-width: 900px) {
-            #rotateMessage { display: flex; }
-        }
+        @media screen and (orientation: portrait) { #rotateMessage { display: flex; } }
 
-        /* PANTALLA DE CARGA 4 SEGUNDOS */
+        /* PANTALLA DE CARGA */
         #loadingScreen {
             position: absolute; width: 100%; height: 100%; 
             background: #000 url('portada.png') no-repeat center; 
-            background-size: cover;
-            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            z-index: 3000;
+            background-size: cover; z-index: 3000; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
         }
-        #loadingScreen::before {
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); z-index: -1;
-        }
+        #loadingScreen::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: -1; }
+        .loader-container { width: 70%; max-width: 300px; height: 15px; background: rgba(255,255,255,0.1); border: 2px solid #ffcc00; border-radius: 10px; margin-bottom: 50px; overflow: hidden; }
+        #progressBar { width: 0%; height: 100%; background: #ffcc00; transition: width 0.1s linear; }
 
-        .loader-container {
-            width: 80%; max-width: 400px; height: 25px;
-            background: rgba(255,255,255,0.1);
-            border: 3px solid #ffcc00; border-radius: 15px;
-            margin-bottom: 80px; overflow: hidden;
-        }
-        #progressBar { width: 0%; height: 100%; background: #ffcc00; box-shadow: 0 0 15px #ffcc00; transition: width 0.1s linear; }
+        /* INTERFAZ (RESTAURADA Y ESCALADA) */
+        #ui { position: absolute; top: 10px; left: 15px; z-index: 850; display: none; pointer-events: none; }
+        .score-text { font-size: clamp(24px, 6vw, 40px); color: white; text-shadow: 3px 3px 0 #000; margin: 0; }
+        .record-ui { color: #ffcc00; font-size: clamp(14px, 3vw, 20px); text-shadow: 2px 2px 0 #000; margin: 0; }
+        #displayUser { color: #00ffff; font-size: clamp(16px, 3vw, 22px); text-shadow: 2px 2px 0 #000; }
 
-        /* MENÚS ORIGINALES */
-        #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: #ff4444; color: white; border: 2px solid white; padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: none; }
-        #introScreen, #loginMenu, #gameOverScreen { 
-            position: absolute; width: 100%; height: 100%; background-color: #000; 
-            background-position: center; background-repeat: no-repeat; 
-            display: none; flex-direction: column; justify-content: center; align-items: center; 
-            z-index: 900; text-align: center; 
-        }
-        #introScreen { background-image: url('portada.png'); background-size: contain; cursor: pointer; }
+        #levelContainer { position: absolute; top: 12%; width: 100%; text-align: center; z-index: 800; display: none; pointer-events: none; }
+        #levelText { font-size: clamp(28px, 9vw, 55px); color: #ffcc00; font-weight: bold; text-shadow: 4px 4px 0 #000; margin: 0; opacity: 0.9; }
+
+        /* MENÚS */
+        #introScreen, #loginMenu, #gameOverScreen { position: absolute; width: 100%; height: 100%; background: #000; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 900; }
+        #introScreen { background: url('portada.png') no-repeat center; background-size: contain; cursor: pointer; }
+        .login-box { background: rgba(0,0,0,0.9); padding: 25px; border: 3px solid #ffcc00; border-radius: 20px; width: 80%; max-width: 320px; text-align: center; }
+        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; background: #222; color: white; }
+        .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; }
         
-        .login-box { background: rgba(0,0,0,0.9); padding: 30px; border: 3px solid #ffcc00; border-radius: 20px; width: 85%; max-width: 350px; }
-        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; background: #222; color: white; font-size: 16px; }
-        .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; }
-        
-        #ui { position: absolute; top: 20px; left: 20px; z-index: 850; display: none; pointer-events: none; }
-        .score-text { font-size: 40px; color: white; text-shadow: 3px 3px 0 #000; margin: 0; }
-        .record-ui { color: #ffcc00; font-size: 20px; text-shadow: 2px 2px 0 #000; margin: 0; }
-        
-        #levelContainer { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 800; text-align: center; width: 100%; display: none; pointer-events: none; }
-        #levelText { font-size: 55px; color: #ffcc00; font-weight: bold; text-shadow: 4px 4px 0 #000; margin: 0; opacity: 0.8; }
-        
-        canvas { display: none; background: #333; }
+        canvas { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
     </style>
 </head>
 <body>
 
     <div id="rotateMessage">
-        <img src="chiguire.png" width="100" style="margin-bottom:20px;">
         <h2 style="color:#ffcc00;">GIRA EL TELÉFONO</h2>
-        <p>Este juego se disfruta mejor en horizontal</p>
+        <p>Para jugar, mantén el móvil en horizontal</p>
     </div>
 
     <div id="loadingScreen">
-        <p style="color: #ffcc00; margin-bottom: 10px; letter-spacing: 2px;">CARGANDO RECURSOS... <span id="percent">0%</span></p>
         <div class="loader-container"><div id="progressBar"></div></div>
     </div>
 
-    <button id="logoutBtn" onclick="localStorage.clear(); location.reload();">CERRAR SESIÓN ✖</button>
-
     <div id="introScreen" onclick="clicPortada()">
-        <div style="font-size:24px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00; background: rgba(0,0,0,0.5); width:100%; padding: 15px 0;">TOCA PARA EMPEZAR</div>
+        <div style="background:rgba(0,0,0,0.6); padding:15px; width:100%; text-align:center; position:absolute; bottom:20%; font-size:20px;">TOCA PARA EMPEZAR</div>
     </div>
 
     <div id="loginMenu">
         <div class="login-box">
-            <h2 style="color:#ffcc00; margin-top:0;">REGISTRO</h2>
-            <input type="text" id="tgUser" placeholder="@tu_usuario">
+            <h2 style="color:#ffcc00; margin:0 0 15px 0;">REGISTRO</h2>
+            <input type="text" id="tgUser" placeholder="@Usuario_Telegram">
             <input type="text" id="solWallet" placeholder="Wallet Solana">
             <button class="btn" onclick="guardarYEntrar()">LISTO</button>
         </div>
     </div>
 
     <div id="ui">
-        <div id="displayUser" style="color:#00ffff; font-size:22px; text-shadow: 2px 2px 0 #000;"></div>
+        <div id="displayUser"></div>
         <p class="score-text">PUNTOS: <span id="score">0</span></p>
         <p class="record-ui">RECORD: <span id="highScoreText">0</span></p>
     </div>
@@ -99,7 +77,7 @@
 
     <div id="gameOverScreen">
         <h1 style="color:#ff4444; font-size:45px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
-        <p style="font-size:28px;">Puntos: <span id="finalScore">0</span></p>
+        <p style="font-size:24px;">Puntos: <span id="finalScore">0</span></p>
         <button class="btn" onclick="location.reload()">REINTENTAR</button>
     </div>
 
@@ -113,20 +91,17 @@
         const imgD = new Image(); imgD.src = 'derrota.png';
         const imgB = new Image(); imgB.src = 'barril.png';
         const imgF = new Image(); imgF.src = 'fondo.png';
-        const musFondo = new Audio('musicafondo.mp3'); musFondo.loop = true;
         const sndSalto = new Audio('salto.mp3');
-        const sndPerder = new Audio('perder.mp3');
+        const musFondo = new Audio('musicafondo.mp3'); musFondo.loop = true;
 
         let activo = false, score = 0, vel = 11, obst = [], bgX = 0, estela = [], nivelActual = "";
-        let chig = { x: 100, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
+        let chig = { x: 80, y: 0, w: 100, h: 100, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
         let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
 
-        // CARGA FORZADA 4 SEG
         let loadProgress = 0;
         const interval = setInterval(() => {
             loadProgress += 2;
             document.getElementById("progressBar").style.width = loadProgress + "%";
-            document.getElementById("percent").innerText = loadProgress + "%";
             if(loadProgress >= 100) {
                 clearInterval(interval);
                 document.getElementById("loadingScreen").style.display = "none";
@@ -137,8 +112,13 @@
         function ajustar() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            chig.suelo = canvas.height - 220;
+            
+            // AJUSTE PARA NO FLOTAR: El suelo ahora se alinea con la parte oscura del fondo
+            chig.suelo = canvas.height - 155; 
+            chig.w = (canvas.height < 500) ? 90 : 110; 
+            chig.h = chig.w;
             if(!activo) chig.y = chig.suelo;
+            chig.x = (canvas.width < 700) ? 40 : 100;
         }
 
         function clicPortada() {
@@ -164,19 +144,14 @@
             document.getElementById("levelContainer").style.display = "block";
             document.getElementById("displayUser").innerText = localStorage.getItem('venecoUser');
             document.getElementById("highScoreText").innerText = recordGlobal;
-            ajustar(); 
+            ajustar();
             iniciar();
         }
 
-        function iniciar() { 
-            activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = [];
-            requestAnimationFrame(bucle); 
-            spawn(); 
-        }
+        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = []; requestAnimationFrame(bucle); spawn(); }
 
         const saltar = () => { if(activo && chig.y >= chig.suelo - 15) { chig.dy = chig.salto; sndSalto.currentTime = 0; sndSalto.play().catch(()=>{}); } };
 
-        window.addEventListener("keydown", (e) => { if(e.code === "Space" && activo) { e.preventDefault(); saltar(); } });
         window.addEventListener("mousedown", saltar);
         window.addEventListener("touchstart", (e) => { if(activo) { e.preventDefault(); saltar(); } }, {passive: false});
         window.onresize = ajustar;
@@ -184,8 +159,10 @@
         function spawn() {
             if(!activo) return;
             let esDoble = score >= 200 && Math.random() > 0.6;
-            obst.push({ x: canvas.width + 150, w: 80, h: 90, doble: esDoble });
-            setTimeout(spawn, Math.max(1100 / (vel * 0.07), 800));
+            // Barril escalado al Chigüire
+            obst.push({ x: canvas.width + 150, w: chig.w * 0.75, h: chig.h * 0.8, doble: esDoble });
+            let freq = 1100 / (vel * 0.07);
+            setTimeout(spawn, Math.max(freq, esDoble ? 1100 : 750));
         }
 
         function bucle() {
@@ -200,7 +177,7 @@
                 chig.dy += chig.g; chig.y += chig.dy;
                 if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
 
-                // Estela Original
+                // Estela Original (Restaurada)
                 if(score >= 1000) {
                     estela.push({x: chig.x, y: chig.y, o: 0.4});
                     if(estela.length > 5) estela.shift();
@@ -211,22 +188,26 @@
                     ctx.globalAlpha = 1;
                 });
 
-                // Dificultades Originales
+                // Niveles y Dificultad Originales
                 let nuevoLvl = (score >= 2000) ? "NIVEL CAOS" : (score >= 1000) ? "NIVEL AREPA" : (score >= 500) ? "NIVEL MANGO" : (score >= 200) ? "NIVEL GUACAMAYA" : "PRINCIPIANTE";
                 if(nuevoLvl !== nivelActual) { nivelActual = nuevoLvl; document.getElementById("levelText").innerText = nivelActual; }
+                if(score >= 200) vel += (score >= 2000) ? 0.005 : (score >= 1000) ? 0.004 : (score >= 500) ? 0.003 : 0.002;
 
                 for(let i = obst.length - 1; i >= 0; i--) {
                     obst[i].x -= vel;
-                    let bY = chig.suelo + 20;
+                    // Ajuste de barril para que pise el suelo
+                    let bY = (chig.suelo + chig.h) - obst[i].h;
+                    
                     if(obst[i].doble) {
-                        ctx.drawImage(imgB, obst[i].x, bY, 80, 90);
-                        ctx.drawImage(imgB, (obst[i].x + 80) - 35, bY, 80, 90); // Solapamiento Original
+                        ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
+                        ctx.drawImage(imgB, (obst[i].x + obst[i].w) - (obst[i].w * 0.45), bY, obst[i].w, obst[i].h);
                     } else {
-                        ctx.drawImage(imgB, obst[i].x, bY, 80, 90);
+                        ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
                     }
                     
-                    if (chig.x + 80 > obst[i].x + 20 && chig.x + 20 < obst[i].x + (obst[i].doble ? 110 : 60) && chig.y + 80 > bY) {
-                        activo = false; chig.vivo = false; sndPerder.play(); musFondo.pause();
+                    // Colisión ajustada al escalado
+                    if (chig.x + 30 < obst[i].x + (obst[i].doble ? obst[i].w * 1.5 : obst[i].w) - 30 && chig.x + chig.w - 30 > obst[i].x + 30 && chig.y + 30 < bY + obst[i].h && chig.y + chig.h - 10 > bY) {
+                        activo = false; chig.vivo = false; musFondo.pause();
                         document.getElementById("gameOverScreen").style.display = "flex";
                         document.getElementById("finalScore").innerText = score;
                     }
