@@ -3,48 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run</title>
+    <title>Veneco Run HD</title>
     <style>
-        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
-        
-        /* PANTALLAS */
+        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
         .screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 5000; text-align: center;
         }
-
-        /* Solo la portada se ve al inicio */
-        #introScreen { background: #000 url('portada.png') center/cover; display: flex; cursor: pointer; }
-        #loginMenu { background: rgba(0,0,0,0.9); display: none; }
+        #introScreen { background: #000 url('portada.png') center/cover; cursor: pointer; }
+        #loginMenu { background: rgba(0,0,0,0.95); display: none; }
         #gameOverScreen { background: rgba(0,0,0,0.9); display: none; }
-
-        .box { background: #222; padding: 25px; border: 3px solid #ffcc00; border-radius: 20px; width: 80%; max-width: 300px; }
-        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px; color: #000; background: #fff; }
-        .btn { padding: 15px 30px; background: #ffcc00; color: #000; border: none; border-radius: 50px; font-weight: bold; font-size: 18px; cursor: pointer; }
-        
-        #gameCanvas { display: none; position: absolute; top: 0; left: 0; z-index: 10; }
-        #ui { position: absolute; top: 15px; left: 15px; z-index: 100; display: none; font-size: 24px; font-weight: bold; }
+        .box { background: #1a1a1a; padding: 30px; border: 4px solid #ffcc00; border-radius: 25px; width: 80%; max-width: 320px; box-shadow: 0 0 20px rgba(255,204,0,0.3); }
+        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 12px; border: none; font-size: 16px; color: #000; font-weight: bold; }
+        .btn { padding: 18px 40px; background: #ffcc00; color: #000; border: none; border-radius: 50px; font-weight: bold; font-size: 20px; cursor: pointer; box-shadow: 0 5px 0 #b38f00; }
+        #gameCanvas { display: none; position: absolute; top: 0; left: 0; z-index: 10; width: 100vw; height: 100vh; }
+        #ui { position: absolute; top: 20px; left: 20px; z-index: 100; display: none; font-size: 32px; text-shadow: 2px 2px #000; }
     </style>
 </head>
 <body>
 
     <div id="introScreen" class="screen" onclick="comenzarFlujo()">
-        <h2 style="margin-top: 250px; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 10px;">TOCA PARA EMPEZAR</h2>
+        <div style="margin-top: 300px; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 50px; border: 2px solid #ffcc00; animation: pulse 1.5s infinite;">TAP PARA JUGAR 🐹</div>
     </div>
 
     <div id="loginMenu" class="screen">
         <div class="box">
-            <h2 style="color:#ffcc00;">REGISTRO</h2>
+            <h2 style="color:#ffcc00; margin-top:0;">REGISTRO</h2>
             <input type="text" id="tgUser" placeholder="@Usuario">
             <input type="text" id="solWallet" placeholder="Wallet Solana">
-            <button class="btn" onclick="guardarYJugar()">JUGAR</button>
+            <button class="btn" onclick="guardarYJugar()">LISTO</button>
         </div>
     </div>
 
     <div id="gameOverScreen" class="screen">
-        <h1 style="color:red; font-size: 40px;">¡PERDISTE!</h1>
-        <p style="font-size: 20px;">PUNTOS: <span id="finalScore">0</span></p>
+        <h1 style="color:#ff4444; font-size: 50px; text-shadow: 3px 3px #000;">PERDISTE</h1>
+        <p style="font-size: 25px;">SCORE: <span id="finalScore">0</span></p>
         <button class="btn" onclick="reiniciar()">REINTENTAR</button>
     </div>
 
@@ -55,22 +49,45 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
+        // --- CARGA DE ASSETS ---
         const img = { f: new Image(), c: new Image(), b: new Image(), d: new Image() };
         img.f.src = 'fondo.png'; img.c.src = 'chiguire.png'; img.b.src = 'barril.png'; img.d.src = 'derrota.png';
 
-        let activo = false, score = 0, vel = 8, bgX = 0, obst = [];
-        let pj = { x: 50, y: 0, w: 70, h: 70, dy: 0, g: 0.9, salto: -16, suelo: 0, vivo: true };
+        const mus = new Audio('musicaFondo.mp3'); 
+        mus.loop = true;
+        mus.preload = "auto";
 
+        let activo = false, score = 0, vel = 8, bgX = 0, obst = [];
+        let pj = { x: 50, y: 0, w: 85, h: 85, dy: 0, g: 1.2, salto: -20, suelo: 0, vivo: true };
+
+        // --- AJUSTE HD (RETINA DISPLAY) ---
         function ajustar() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            pj.suelo = canvas.height - 120;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            ctx.scale(dpr, dpr);
+            
+            // Suavizado de imagen
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
+            pj.suelo = window.innerHeight - 140;
             pj.y = pj.suelo;
+            if(window.innerHeight > window.innerWidth) { // Móvil
+                pj.x = 40; pj.w = 75; pj.h = 75; pj.salto = -18;
+            }
         }
         window.addEventListener('resize', ajustar);
         ajustar();
 
         function comenzarFlujo() {
+            // DESBLOQUEO DE AUDIO (Crucial para móvil)
+            mus.play().then(() => {
+                console.log("Audio fluyendo");
+            }).catch(e => {
+                // Si falla, lo intentamos de nuevo al pulsar "LISTO"
+            });
+
             document.getElementById("introScreen").style.display = "none";
             if(localStorage.getItem('venecoUser')) {
                 iniciarJuego();
@@ -85,16 +102,14 @@
                 localStorage.setItem('venecoUser', u);
                 localStorage.setItem('venecoWallet', document.getElementById("solWallet").value);
                 document.getElementById("loginMenu").style.display = "none";
+                mus.play().catch(()=>{}); // Re-intento de audio
                 iniciarJuego();
             }
         }
 
         function iniciarJuego() {
-            activo = true;
-            pj.vivo = true;
-            score = 0;
-            vel = 8;
-            obst = [];
+            ajustar(); // Re-ajustar antes de empezar
+            activo = true; pj.vivo = true; score = 0; vel = 8; obst = [];
             document.getElementById("score").innerText = "0";
             document.getElementById("ui").style.display = "block";
             canvas.style.display = "block";
@@ -104,19 +119,19 @@
 
         function spawn() {
             if(!activo) return;
-            obst.push({ x: canvas.width, w: 50, h: 50 });
-            setTimeout(spawn, Math.max(1000, 2200 - (vel * 60)));
+            obst.push({ x: window.innerWidth, w: 60, h: 65 });
+            setTimeout(spawn, Math.max(900, 2100 - (vel * 70)));
         }
 
         function bucle() {
             if(!activo && !pj.vivo) return;
-            ctx.clearRect(0,0, canvas.width, canvas.height);
+            ctx.clearRect(0,0, window.innerWidth, window.innerHeight);
 
-            // Fondo
+            // Fondo HD
             bgX -= vel * 0.5;
-            if(bgX <= -canvas.width) bgX = 0;
-            ctx.drawImage(img.f, bgX, 0, canvas.width, canvas.height);
-            ctx.drawImage(img.f, bgX + canvas.width, 0, canvas.width, canvas.height);
+            if(bgX <= -window.innerWidth) bgX = 0;
+            ctx.drawImage(img.f, bgX, 0, window.innerWidth, window.innerHeight);
+            ctx.drawImage(img.f, bgX + window.innerWidth, 0, window.innerWidth, window.innerHeight);
 
             if(activo) {
                 pj.dy += pj.g; pj.y += pj.dy;
@@ -125,17 +140,19 @@
                 for(let i = obst.length - 1; i >= 0; i--) {
                     let o = obst[i];
                     o.x -= vel;
-                    ctx.drawImage(img.b, o.x, pj.suelo + 20, o.w, o.h);
+                    let oY = pj.suelo + (pj.h - o.h) + 10;
+                    ctx.drawImage(img.b, o.x, oY, o.w, o.h);
 
-                    if (pj.x < o.x + o.w - 10 && pj.x + pj.w > o.x + 10 && 
-                        pj.y < pj.suelo + 20 + o.h && pj.y + pj.h > pj.suelo + 20) {
+                    // Hitbox refinada
+                    if (pj.x + 15 < o.x + o.w - 15 && pj.x + pj.w - 15 > o.x + 15 && 
+                        pj.y + 10 < oY + o.h && pj.y + pj.h - 5 > oY) {
                         morir();
                     }
                     if(o.x < -100) {
                         obst.splice(i, 1);
                         score += 10;
                         document.getElementById("score").innerText = score;
-                        vel += 0.1;
+                        vel += 0.15;
                     }
                 }
             }
@@ -154,10 +171,12 @@
             iniciarJuego();
         }
 
-        function saltar() { if(activo && pj.y >= pj.suelo - 5) pj.dy = pj.salto; }
-        window.addEventListener("touchstart", (e) => { 
-            if(activo) { e.preventDefault(); saltar(); } 
-        }, {passive: false});
+        function saltar(e) { 
+            if(e && e.cancelable) e.preventDefault();
+            if(activo && pj.y >= pj.suelo - 10) pj.dy = pj.salto; 
+        }
+        
+        window.addEventListener("touchstart", saltar, {passive: false});
         window.addEventListener("mousedown", saltar);
     </script>
 </body>
