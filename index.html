@@ -2,14 +2,14 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Veneco Run - Master Edition</title>
     <style>
-        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; touch-action: manipulation; }
+        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; width: 100vw; height: 100vh; }
         
         /* PANTALLA DE CARGA */
         #loadingScreen {
-            position: absolute; width: 100%; height: 100%; 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: #000 url('portada.png') no-repeat center; 
             background-size: cover;
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
@@ -29,8 +29,8 @@
         }
         #progressBar { width: 0%; height: 100%; background: #ffcc00; box-shadow: 0 0 15px #ffcc00; transition: width 0.1s linear; }
 
-        /* MENÚS ORIGINALES */
-        #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: #ff4444; color: white; border: 2px solid white; padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: none; }
+        /* MENÚS */
+        #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: #ff4444; color: white; border: 2px solid white; padding: 10px 15px; border-radius: 12px; font-weight: bold; display: none; }
         #introScreen, #loginMenu, #gameOverScreen { 
             position: absolute; width: 100%; height: 100%; background-color: #000; 
             background-position: center; background-repeat: no-repeat; 
@@ -46,12 +46,11 @@
         
         #ui { position: absolute; top: 20px; left: 20px; z-index: 850; display: none; pointer-events: none; }
         .score-text { font-size: 40px; color: white; text-shadow: 3px 3px 0 #000; margin: 0; }
-        .record-ui { color: #ffcc00; font-size: 20px; text-shadow: 2px 2px 0 #000; margin: 0; }
         
         #levelContainer { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 800; text-align: center; width: 100%; display: none; pointer-events: none; }
-        #levelText { font-size: 55px; color: #ffcc00; font-weight: bold; text-shadow: 4px 4px 0 #000; margin: 0; opacity: 0.8; }
+        #levelText { font-size: 45px; color: #ffcc00; font-weight: bold; text-shadow: 3px 3px 0 #000; margin: 0; opacity: 0.9; }
         
-        canvas { display: none; image-rendering: -webkit-optimize-contrast; position: absolute; top: 0; left: 0; }
+        canvas { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10; image-rendering: pixelated; }
     </style>
 </head>
 <body>
@@ -64,7 +63,7 @@
     <button id="logoutBtn" onclick="localStorage.clear(); location.reload();">CERRAR SESIÓN ✖</button>
 
     <div id="introScreen" onclick="clicPortada()">
-        <div style="font-size:24px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00; background: rgba(0,0,0,0.5); width:100%; padding: 15px 0;">TOCA PARA EMPEZAR</div>
+        <div style="font-size:22px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00; background: rgba(0,0,0,0.5); width:100%; padding: 15px 0;">TOCA PARA EMPEZAR</div>
     </div>
 
     <div id="loginMenu">
@@ -77,22 +76,15 @@
     </div>
 
     <div id="ui">
-        <div id="displayUser" style="color:#00ffff; font-size:22px; text-shadow: 2px 2px 0 #000;"></div>
+        <div id="displayUser" style="color:#00ffff; font-size:20px; text-shadow: 2px 2px 0 #000;"></div>
         <p class="score-text">PUNTOS: <span id="score">0</span></p>
-        <p class="record-ui">RECORD: <span id="highScoreText">0</span></p>
     </div>
 
     <div id="levelContainer"><p id="levelText">PRINCIPIANTE</p></div>
 
     <div id="gameOverScreen">
-        <h1 style="color:#ff4444; font-size:45px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
-        <div style="display:flex; align-items:center; gap:20px; justify-content:center; margin-bottom:15px;">
-            <div>
-                <p style="font-size:28px; margin:0;">Puntos: <span id="finalScore">0</span></p>
-                <p style="font-size:20px; color:#ffcc00; margin:0;">Récord: <span id="finalBest">0</span></p>
-            </div>
-            <img src="derrota.png" style="width:120px; border-radius:15px;">
-        </div>
+        <h1 style="color:#ff4444; font-size:40px;">¡FIN DEL JUEGO!</h1>
+        <p style="font-size:24px;">Puntos: <span id="finalScore">0</span></p>
         <button class="btn" onclick="location.reload()">REINTENTAR</button>
     </div>
 
@@ -100,24 +92,21 @@
 
     <script>
         const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext("2d", { alpha: false }); // Optimización para evitar negros
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
         const imgD = new Image(); imgD.src = 'derrota.png';
         const imgB = new Image(); imgB.src = 'barril.png';
         const imgF = new Image(); imgF.src = 'fondo.png';
         const imgFM = new Image(); imgFM.src = 'fondo_mobile.png';
-        const sndClick = new Audio('click.mp3');
+        const musFondo = new Audio('musicafondo.mp3'); musFondo.loop = true;
         const sndSalto = new Audio('salto.mp3');
         const sndPerder = new Audio('perder.mp3');
-        const musFondo = new Audio('musicafondo.mp3'); musFondo.loop = true;
-        const sndIntro = new Audio('intro.mp3'); sndIntro.loop = true;
 
         let activo = false, score = 0, vel = 11, obst = [], bgX = 0, estela = [], nivelActual = "";
-        let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
-        let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
+        let chig = { x: 80, y: 0, w: 100, h: 100, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
 
-        // --- CARGA FORZADA ---
+        // --- CARGA ---
         let loadProgress = 0;
         const interval = setInterval(() => {
             loadProgress += 2;
@@ -128,13 +117,17 @@
                 document.getElementById("loadingScreen").style.display = "none";
                 document.getElementById("introScreen").style.display = "flex";
             }
-        }, 80);
+        }, 60);
 
-        if(localStorage.getItem('venecoUser')) document.getElementById("logoutBtn").style.display = "block";
+        function ajustar() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            chig.suelo = canvas.height - 180;
+            chig.y = chig.suelo;
+            chig.x = (canvas.width < 600) ? 30 : 100;
+        }
 
         function clicPortada() {
-            sndClick.play().catch(()=>{}); 
-            sndIntro.play().catch(()=>{});
             document.getElementById("introScreen").style.display = "none";
             if(localStorage.getItem('venecoUser')) prepararJuego();
             else document.getElementById("loginMenu").style.display = "flex";
@@ -142,116 +135,77 @@
 
         function guardarYEntrar() {
             const u = document.getElementById("tgUser").value;
-            const w = document.getElementById("solWallet").value;
             if(u.length > 2) {
                 localStorage.setItem('venecoUser', u);
-                localStorage.setItem('venecoWallet', w);
                 document.getElementById("loginMenu").style.display = "none";
                 prepararJuego();
             }
         }
 
         function prepararJuego() {
-            sndIntro.pause(); 
             musFondo.play().catch(()=>{});
-            canvas.style.display = "block"; 
-            document.getElementById("ui").style.display = "block"; 
+            canvas.style.display = "block";
+            document.getElementById("ui").style.display = "block";
             document.getElementById("levelContainer").style.display = "block";
-            document.getElementById("displayUser").innerText = localStorage.getItem('venecoUser');
-            document.getElementById("highScoreText").innerText = recordGlobal;
+            
+            // Reintento de ajuste por si el móvil cambió de tamaño
             ajustar(); 
-            iniciar(); 
-        }
-
-        function ajustar() {
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = window.innerWidth * dpr;
-            canvas.height = window.innerHeight * dpr;
-            canvas.style.width = window.innerWidth + 'px';
-            canvas.style.height = window.innerHeight + 'px';
-            ctx.scale(dpr, dpr);
-            chig.suelo = window.innerHeight - 220;
-            chig.y = chig.suelo;
-            chig.x = (window.innerWidth < 600) ? 25 : 100;
+            setTimeout(ajustar, 100); 
+            
+            iniciar();
         }
 
         function iniciar() { 
-            activo = true; 
-            chig.vivo = true; 
-            score = 0; 
-            vel = 11; 
-            obst = []; 
-            estela = []; 
-            requestAnimationFrame(bucle); // Iniciamos el dibujo AQUÍ
+            activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; 
+            requestAnimationFrame(bucle);
             spawn(); 
         }
 
         const saltar = () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.currentTime = 0; sndSalto.play().catch(()=>{}); } };
 
-        window.addEventListener("keydown", (e) => { if(e.code === "Space" && activo) { e.preventDefault(); saltar(); } });
-        window.addEventListener("mousedown", () => { if(activo) saltar(); });
         window.addEventListener("touchstart", (e) => { if(activo) { e.preventDefault(); saltar(); } }, {passive: false});
+        window.addEventListener("mousedown", () => { if(activo) saltar(); });
+        window.onresize = ajustar;
 
         function spawn() {
             if(!activo) return;
             let esDoble = score >= 200 && Math.random() > 0.6;
-            obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
-            let baseFreq = 1100 / (vel * 0.07);
-            setTimeout(spawn, Math.max(baseFreq, esDoble ? 1100 : 700));
+            obst.push({ x: canvas.width + 100, w: 80, h: 90, doble: esDoble });
+            setTimeout(spawn, Math.max(1200 / (vel * 0.07), 800));
         }
 
         function bucle() {
             if(!activo && !chig.vivo) return;
-            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            
-            let imgBg = (window.innerWidth < 600) ? imgFM : imgF;
-            bgX -= vel * 0.4; if(bgX <= -window.innerWidth) bgX = 0;
-            ctx.drawImage(imgBg, bgX, 0, window.innerWidth, window.innerHeight);
-            ctx.drawImage(imgBg, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
 
-            // Sombra
-            let sOp = Math.max(0.1, 0.5 - (chig.suelo - chig.y) / 400);
-            ctx.fillStyle = `rgba(0,0,0,${sOp})`; ctx.beginPath();
-            ctx.ellipse(chig.x + 55, chig.suelo + 105, 40, 15, 0, 0, Math.PI * 2); ctx.fill();
+            // Dibujar fondo primero siempre
+            let imgBg = (canvas.width < 600) ? imgFM : imgF;
+            bgX -= vel * 0.4; if(bgX <= -canvas.width) bgX = 0;
+            ctx.drawImage(imgBg, bgX, 0, canvas.width, canvas.height);
+            ctx.drawImage(imgBg, bgX + canvas.width, 0, canvas.width, canvas.height);
 
             if(activo) {
                 chig.dy += chig.g; chig.y += chig.dy;
                 if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
 
-                if(score >= 1000) {
-                    estela.push({x: chig.x, y: chig.y, o: 0.4});
-                    if(estela.length > 5) estela.shift();
-                }
-                estela.forEach((p, i) => {
-                    ctx.globalAlpha = p.o * (i / estela.length);
-                    ctx.drawImage(imgC, p.x - (estela.length - i) * 10, p.y, chig.w, chig.h);
-                    ctx.globalAlpha = 1;
-                });
-
                 let nuevoLvl = (score >= 2000) ? "NIVEL CAOS" : (score >= 1000) ? "NIVEL AREPA" : (score >= 500) ? "NIVEL MANGO" : (score >= 200) ? "NIVEL GUACAMAYA" : "PRINCIPIANTE";
                 if(nuevoLvl !== nivelActual) { nivelActual = nuevoLvl; document.getElementById("levelText").innerText = nivelActual; }
 
-                if(score >= 200) vel += (score >= 2000) ? 0.005 : (score >= 1000) ? 0.004 : (score >= 500) ? 0.003 : 0.002;
-
                 for(let i = obst.length - 1; i >= 0; i--) {
                     obst[i].x -= vel;
-                    let bY = chig.suelo + (chig.h - obst[i].h);
+                    let bY = chig.suelo + 10;
                     if(obst[i].doble) {
-                        ctx.drawImage(imgB, obst[i].x, bY, 80, obst[i].h);
-                        ctx.drawImage(imgB, (obst[i].x + 80) - 35, bY, 80, obst[i].h);
+                        ctx.drawImage(imgB, obst[i].x, bY, 70, 80);
+                        ctx.drawImage(imgB, obst[i].x + 40, bY, 70, 80);
                     } else {
-                        ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
+                        ctx.drawImage(imgB, obst[i].x, bY, 70, 80);
                     }
                     
-                    if (chig.x + 35 < obst[i].x + (obst[i].doble ? 125 : 80) - 35 && chig.x + chig.w - 35 > obst[i].x + 35 && chig.y + 35 < bY + obst[i].h && chig.y + chig.h - 15 > bY) {
-                        activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play();
-                        if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); }
-                        document.getElementById("finalScore").innerText = score;
-                        document.getElementById("finalBest").innerText = recordGlobal;
-                        document.getElementById("levelContainer").style.display = "none";
+                    if (chig.x + 70 > obst[i].x && chig.x + 20 < obst[i].x + (obst[i].doble ? 110 : 70) && chig.y + 80 > bY) {
+                        activo = false; chig.vivo = false; sndPerder.play(); musFondo.pause();
                         document.getElementById("gameOverScreen").style.display = "flex";
+                        document.getElementById("finalScore").innerText = score;
                     }
-                    if(obst[i].x < -200) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.15; }
+                    if(obst[i].x < -100) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.15; }
                 }
             }
             ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
