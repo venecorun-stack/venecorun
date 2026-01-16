@@ -7,171 +7,203 @@
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
         
-        /* PANTALLA DE CARGA */
+        /* PANTALLA DE CARGA ESTILO JUEGO */
         #loadingScreen {
-            position: absolute; width: 100%; height: 100%; background: #000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 2000; transition: opacity 0.5s;
+            position: absolute; width: 100%; height: 100%; 
+            background: #000 url('portada.png') no-repeat center; 
+            background-size: cover;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            z-index: 3000;
         }
-        .loader {
-            border: 8px solid #333; border-top: 8px solid #ffcc00;
-            border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite;
+        /* Efecto oscurecer fondo de carga */
+        #loadingScreen::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: -1;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* EL RESTO DE TUS ESTILOS */
-        #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: #ff4444; color: white; border: 2px solid white; padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: none; }
-        #introScreen, #loginMenu, #gameOverScreen { position: absolute; width: 100%; height: 100%; background-color: #000; background-position: center; background-repeat: no-repeat; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 900; text-align: center; }
+        .loader-container {
+            width: 80%; max-width: 400px; height: 30px;
+            background: rgba(255,255,255,0.1);
+            border: 3px solid #ffcc00; border-radius: 15px;
+            margin-bottom: 100px; overflow: hidden; position: relative;
+        }
+        #progressBar {
+            width: 0%; height: 100%; background: #ffcc00;
+            box-shadow: 0 0 15px #ffcc00; transition: width 0.1s linear;
+        }
+        .loader-text { margin-bottom: 10px; color: #ffcc00; font-size: 18px; letter-spacing: 2px; }
+
+        /* ESTILOS DEL JUEGO */
+        #introScreen, #loginMenu, #gameOverScreen { 
+            position: absolute; width: 100%; height: 100%; background-color: #000;
+            background-position: center; background-repeat: no-repeat;
+            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 900;
+        }
         #introScreen { background-image: url('portada.png'); background-size: contain; cursor: pointer; }
-        @media screen and (max-width: 600px) { #introScreen { background-image: url('portada_mobile.png') !important; background-size: cover !important; } }
-        #loginMenu { background-image: url('portada.png'); background-size: contain; }
-        #gameOverScreen { background: rgba(0,0,0,0.95); }
-        .login-box { background: rgba(0,0,0,0.9); padding: 30px; border: 3px solid #ffcc00; border-radius: 20px; width: 85%; max-width: 350px; }
-        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; background: #222; color: white; }
-        .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; }
+        @media screen and (max-width: 600px) { 
+            #introScreen { background-image: url('portada_mobile.png') !important; background-size: cover !important; }
+            #loadingScreen { background-image: url('portada_mobile.png') !important; }
+        }
+
         #ui { position: absolute; top: 20px; left: 20px; z-index: 850; display: none; pointer-events: none; }
-        .score-text { font-size: 40px; color: white; text-shadow: 3px 3px 0 #000; margin: 0; }
-        #levelContainer { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 800; text-align: center; width: 100%; display: none; pointer-events: none; }
-        #levelText { font-size: 55px; color: #ffcc00; font-weight: bold; text-shadow: 4px 4px 0 #000; margin: 0; opacity: 0.8; }
+        .score-text { font-size: 40px; text-shadow: 3px 3px 0 #000; }
+        #levelContainer { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 800; display: none; text-align: center; width: 100%; }
+        #levelText { font-size: 50px; color: #ffcc00; text-shadow: 4px 4px 0 #000; font-weight: bold; }
         canvas { display: none; image-rendering: -webkit-optimize-contrast; }
+        .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; border-radius: 50px; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="loadingScreen">
-        <div class="loader"></div>
-        <p style="margin-top: 20px; color: #ffcc00;">CARGANDO RECURSOS...</p>
+        <div class="loader-text">CARGANDO... <span id="loadPercent">0%</span></div>
+        <div class="loader-container">
+            <div id="progressBar"></div>
+        </div>
     </div>
 
-    <button id="logoutBtn" onclick="cerrarSesion()">CERRAR SESIÓN ✖</button>
-
     <div id="introScreen" onclick="clicPortada()">
-        <div style="font-size:24px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00; background: rgba(0,0,0,0.5); width:100%; padding: 10px 0;">TOCA PARA EMPEZAR</div>
+        <div style="font-size:24px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00; background: rgba(0,0,0,0.5); width:100%; padding: 15px 0; text-align: center;">TOCA PARA EMPEZAR</div>
     </div>
 
     <div id="loginMenu">
-        <div class="login-box">
-            <h2 style="color:#ffcc00; margin-top:0;">REGISTRO</h2>
-            <input type="text" id="tgUser" placeholder="@tu_usuario">
-            <input type="text" id="solWallet" placeholder="Wallet Solana">
+        <div style="background: rgba(0,0,0,0.9); padding: 30px; border: 3px solid #ffcc00; border-radius: 20px; text-align: center;">
+            <h2 style="color:#ffcc00;">REGISTRO</h2>
+            <input type="text" id="tgUser" placeholder="@tu_usuario" style="width: 80%; padding: 10px; margin-bottom: 10px;">
+            <br>
             <button class="btn" onclick="guardarYEntrar()">LISTO</button>
         </div>
     </div>
+
     <div id="ui">
-        <div id="displayUser" style="color:#00ffff; font-size:22px; text-shadow: 2px 2px 0 #000;"></div>
         <p class="score-text">PUNTOS: <span id="score">0</span></p>
-        <p class="record-ui" style="color:#ffcc00; font-size:20px;">RECORD: <span id="highScoreText">0</span></p>
     </div>
+
     <div id="levelContainer"><p id="levelText">PRINCIPIANTE</p></div>
+
     <div id="gameOverScreen">
         <h1 style="color:#ff4444; font-size:45px;">¡FIN DEL JUEGO!</h1>
         <p style="font-size:28px;">Puntos: <span id="finalScore">0</span></p>
         <button class="btn" onclick="location.reload()">REINTENTAR</button>
     </div>
+
     <canvas id="gameCanvas"></canvas>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // --- SISTEMA DE PRECARGA ---
-        let recursosCargados = 0;
-        const totalRecursos = 7; // 5 imágenes básicas + 1 fondo movil + 1 sonido fondo (mínimo)
+        // IMÁGENES
+        const imgC = new Image(); imgC.src = 'chiguire.png';
+        const imgD = new Image(); imgD.src = 'derrota.png';
+        const imgB = new Image(); imgB.src = 'barril.png';
+        const imgF = new Image(); imgF.src = 'fondo.png';
+        const imgFM = new Image(); imgFM.src = 'fondo_mobile.png';
 
-        function recursoListo() {
-            recursosCargados++;
-            if (recursosCargados >= totalRecursos) {
-                document.getElementById("loadingScreen").style.opacity = "0";
-                setTimeout(() => {
-                    document.getElementById("loadingScreen").style.display = "none";
-                    document.getElementById("introScreen").style.display = "flex";
-                }, 500);
-            }
-        }
-
-        const imgC = new Image(); imgC.src = 'chiguire.png'; imgC.onload = recursoListo;
-        const imgD = new Image(); imgD.src = 'derrota.png'; imgD.onload = recursoListo;
-        const imgB = new Image(); imgB.src = 'barril.png'; imgB.onload = recursoListo;
-        const imgF = new Image(); imgF.src = 'fondo.png'; imgF.onload = recursoListo;
-        const imgFMovil = new Image(); imgFMovil.src = 'fondo_mobile.png'; 
-        imgFMovil.onload = recursoListo;
-        imgFMovil.onerror = () => { imgFMovil.src = 'fondo.png'; recursoListo(); };
-        
-        // Portada también debe cargar
-        const imgP = new Image(); imgP.src = 'portada.png'; imgP.onload = recursoListo;
-        const imgPM = new Image(); imgPM.src = 'portada_mobile.png'; imgPM.onload = recursoListo;
-        imgPM.onerror = recursoListo;
-
-        // --- RESTO DEL JUEGO ---
-        const sndClick = new Audio('click.mp3');
+        // SONIDOS
         const sndSalto = new Audio('salto.mp3');
         const sndPerder = new Audio('perder.mp3');
         const musFondo = new Audio('musicafondo.mp3'); musFondo.loop = true;
-        const sndIntro = new Audio('intro.mp3'); sndIntro.loop = true;
 
+        // LÓGICA DE CARGA (4 SEGUNDOS)
+        let progress = 0;
+        const bar = document.getElementById("progressBar");
+        const percentText = document.getElementById("loadPercent");
+
+        const loadingInterval = setInterval(() => {
+            progress += 2.5; // Ajustado para que dure aprox 4 segundos (100 / 40 pasos)
+            if (progress > 100) progress = 100;
+            
+            bar.style.width = progress + "%";
+            percentText.innerText = Math.floor(progress) + "%";
+
+            if (progress >= 100) {
+                clearInterval(loadingInterval);
+                finalizarCarga();
+            }
+        }, 100);
+
+        function finalizarCarga() {
+            document.getElementById("loadingScreen").style.display = "none";
+            document.getElementById("introScreen").style.display = "flex";
+        }
+
+        // --- LÓGICA DEL JUEGO ---
         let activo = false, score = 0, vel = 11, obst = [], bgX = 0;
-        let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
         let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
-        let estela = [], nivelActual = "";
-
-        if(localStorage.getItem('venecoUser')) document.getElementById("logoutBtn").style.display = "block";
-
-        function cerrarSesion() { localStorage.clear(); location.reload(); }
 
         function clicPortada() { 
-            sndClick.play(); sndIntro.play(); 
             document.getElementById("introScreen").style.display = "none"; 
-            if(localStorage.getItem('venecoUser')) {
-                document.getElementById("logoutBtn").style.display = "none";
-                prepararJuego(); 
-            } else {
-                document.getElementById("loginMenu").style.display = "flex"; 
-            }
+            if(localStorage.getItem('venecoUser')) { prepararJuego(); } 
+            else { document.getElementById("loginMenu").style.display = "flex"; }
         }
 
         function guardarYEntrar() {
             const u = document.getElementById("tgUser").value;
-            const w = document.getElementById("solWallet").value;
             if(u.length > 2) {
                 localStorage.setItem('venecoUser', u);
-                localStorage.setItem('venecoWallet', w);
                 document.getElementById("loginMenu").style.display = "none";
                 prepararJuego();
             }
         }
 
         function prepararJuego() { 
-            sndIntro.pause(); musFondo.play(); 
+            musFondo.play();
             canvas.style.display = "block"; 
             document.getElementById("ui").style.display = "block"; 
             document.getElementById("levelContainer").style.display = "block";
-            document.getElementById("displayUser").innerText = localStorage.getItem('venecoUser');
-            document.getElementById("highScoreText").innerText = recordGlobal;
             ajustar(); iniciar(); 
         }
 
         function ajustar() { 
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr;
-            canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
-            ctx.scale(dpr, dpr); 
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
             chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
             chig.x = (window.innerWidth < 600) ? 25 : 100;
         }
 
-        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = []; bucle(); spawn(); }
-
-        function morir() { 
-            activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play(); 
-            if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); }
-            document.getElementById("finalScore").innerText = score; 
-            document.getElementById("levelContainer").style.display = "none";
-            document.getElementById("gameOverScreen").style.display = "flex"; 
-        }
-
-        const saltar = () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.currentTime = 0; sndSalto.play(); } };
-        window.addEventListener("mousedown", saltar);
-        window.addEventListener("touchstart", (e) => { e.preventDefault(); saltar(); }, {passive: false});
-        window.onresize = ajustar;
+        function iniciar() { activo = true; score = 0; vel = 11; obst = []; bucle(); spawn(); }
 
         function spawn() {
+            if(!activo) return;
+            let esDoble = score >= 200 && Math.random() > 0.6;
+            obst.push({ x: window.innerWidth + 150, w: esDoble ? 130 : 80, h: 90, doble: esDoble });
+            setTimeout(spawn, Math.max(1100 / (vel * 0.07), 800));
+        }
+
+        function bucle() {
+            if(!activo) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let imgBg = (window.innerWidth < 600) ? imgFM : imgF;
+            bgX -= vel * 0.4; if(bgX <= -canvas.width) bgX = 0;
+            ctx.drawImage(imgBg, bgX, 0, canvas.width, canvas.height);
+            ctx.drawImage(imgBg, bgX + canvas.width, 0, canvas.width, canvas.height);
+
+            chig.dy += chig.g; chig.y += chig.dy;
+            if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
+
+            for(let i = obst.length-1; i>=0; i--) {
+                obst[i].x -= vel;
+                let bY = chig.suelo + 20;
+                if(obst[i].doble) {
+                    ctx.drawImage(imgB, obst[i].x, bY, 80, 90);
+                    ctx.drawImage(imgB, obst[i].x + 50, bY, 80, 90);
+                } else {
+                    ctx.drawImage(imgB, obst[i].x, bY, 80, 90);
+                }
+
+                if(chig.x + 80 > obst[i].x && chig.x + 20 < obst[i].x + (obst[i].doble ? 130 : 80) && chig.y + 90 > bY) {
+                    activo = false; sndPerder.play(); musFondo.pause();
+                    document.getElementById("gameOverScreen").style.display = "flex";
+                    document.getElementById("finalScore").innerText = score;
+                }
+                if(obst[i].x < -150) { obst.splice(i,1); score+=10; document.getElementById("score").innerText = score; vel+=0.1; }
+            }
+            ctx.drawImage(imgC, chig.x, chig.y, chig.w, chig.h);
+            requestAnimationFrame(bucle);
+        }
+
+        window.addEventListener("touchstart", (e) => { e.preventDefault(); if(activo) { chig.dy = chig.salto; sndSalto.play(); } }, {passive: false});
+        window.addEventListener("mousedown", () => { if(activo) { chig.dy = chig.salto; sndSalto.play(); } });
+    </script>
+</body>
+</html>
