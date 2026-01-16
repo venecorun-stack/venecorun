@@ -7,24 +7,54 @@
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
         #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: #ff4444; color: white; border: 2px solid white; padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: none; }
-        #introScreen, #loginMenu, #gameOverScreen { position: absolute; width: 100%; height: 100%; background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 900; text-align: center; }
-        #introScreen { background-image: url('portada.png'); cursor: pointer; justify-content: flex-end; }
+        
+        /* PANTALLAS DE MENÚ */
+        #introScreen, #loginMenu, #gameOverScreen { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            background-color: #000;
+            background-position: center; 
+            background-repeat: no-repeat;
+            background-size: contain; /* Para que no se estire ninguna */
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 900; 
+            text-align: center; 
+        }
+
+        /* PORTADA POR DEFECTO (Horizontal/PC) */
+        #introScreen { 
+            background-image: url('portada.png'); 
+            cursor: pointer; 
+            justify-content: flex-end; 
+        }
+
+        /* DETECCIÓN DE PANTALLA VERTICAL PARA LA PORTADA */
+        @media (max-orientation: portrait) {
+            #introScreen {
+                background-image: url('portada_mobile.png'); /* Usa esta para vertical */
+                background-size: cover; /* En móvil vertical, cover suele verse mejor si la imagen está diseñada para ello */
+            }
+        }
+
         #loginMenu { background-image: url('portada.png'); display: none; }
         #gameOverScreen { background: rgba(0,0,0,0.95); display: none; }
+        
         .login-box { background: rgba(0,0,0,0.9); padding: 30px; border: 3px solid #ffcc00; border-radius: 20px; width: 85%; max-width: 350px; }
         input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; background: #222; color: white; }
         .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; }
         .share-btn { background: #000; color: white; border: 2px solid #555; padding: 12px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; margin-top: 10px; font-weight: bold; }
         
-        /* UI SUPERIOR IZQUIERDA */
         #ui { position: absolute; top: 20px; left: 20px; z-index: 850; display: none; pointer-events: none; }
         .score-text { font-size: 40px; color: white; text-shadow: 3px 3px 0 #000; margin: 0; }
         .record-ui { color: #ffcc00; font-size: 20px; text-shadow: 2px 2px 0 #000; margin: 0; }
         
-        /* NIVEL CENTRADO GRANDE */
         #levelContainer {
             position: absolute;
-            top: 15%; /* Un poco arriba del centro para no tapar al chigüire */
+            top: 15%;
             left: 50%;
             transform: translateX(-50%);
             z-index: 800;
@@ -34,12 +64,11 @@
             pointer-events: none;
         }
         #levelText { 
-            font-size: 55px; /* Tamaño grande */
+            font-size: 55px; 
             color: #ffcc00; 
             font-weight: bold; 
             text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
             margin: 0;
-            letter-spacing: 2px;
             opacity: 0.8;
         }
 
@@ -51,7 +80,7 @@
     <button id="logoutBtn" onclick="cerrarSesion()">CERRAR SESIÓN ✖</button>
 
     <div id="introScreen" onclick="clicPortada()">
-        <div style="font-size:24px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00;">TOCA PARA EMPEZAR</div>
+        <div style="font-size:24px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00; background: rgba(0,0,0,0.5); width:100%;">TOCA PARA EMPEZAR</div>
     </div>
 
     <div id="loginMenu">
@@ -141,7 +170,7 @@
             sndIntro.pause(); musFondo.play(); 
             canvas.style.display = "block"; 
             document.getElementById("ui").style.display = "block"; 
-            document.getElementById("levelContainer").style.display = "block"; // Mostrar nivel centrado
+            document.getElementById("levelContainer").style.display = "block";
             document.getElementById("displayUser").innerText = localStorage.getItem('venecoUser');
             document.getElementById("highScoreText").innerText = recordGlobal;
             ajustar(); iniciar(); 
@@ -153,6 +182,13 @@
             canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
             ctx.scale(dpr, dpr); 
             chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
+
+            // AJUSTE DE POSICIÓN PARA MÓVIL
+            if(window.innerWidth < 600) {
+                chig.x = 25; // Súper a la izquierda en vertical para ganar tiempo
+            } else {
+                chig.x = 100; // Normal en PC
+            }
         }
 
         function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = []; bucle(); spawn(); }
@@ -169,7 +205,7 @@
             enviarDatosExcel(score);
             document.getElementById("finalScore").innerText = score; 
             document.getElementById("finalBest").innerText = recordGlobal;
-            document.getElementById("levelContainer").style.display = "none"; // Ocultar nivel al morir
+            document.getElementById("levelContainer").style.display = "none";
             document.getElementById("gameOverScreen").style.display = "flex"; 
         }
 
@@ -187,7 +223,8 @@
         function spawn() {
             if(!activo) return;
             let esDoble = score >= 200 && Math.random() > 0.6;
-            obst.push({ x: window.innerWidth, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
+            // Spawneamos el barril un poco más afuera de la pantalla (+150) para dar tiempo
+            obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
 
             let baseFreq = 1100 / (vel * 0.07);
             if (score > 800) {
@@ -227,7 +264,6 @@
                     ctx.globalAlpha = 1;
                 });
 
-                // LÓGICA DE NIVELES CENTRADOS
                 let nuevoLvl = "PRINCIPIANTE";
                 if(score >= 2000) nuevoLvl = "NIVEL CAOS";
                 else if(score >= 1000) nuevoLvl = "NIVEL AREPA";
@@ -238,7 +274,6 @@
                     nivelActual = nuevoLvl;
                     let el = document.getElementById("levelText");
                     el.innerText = nivelActual;
-                    // Efecto de parpadeo al cambiar de nivel
                     el.style.color = "#ffffff";
                     setTimeout(() => { el.style.color = "#ffcc00"; }, 200);
                 }
@@ -264,7 +299,7 @@
                         chig.y + 35 < bY + obst[i].h && 
                         chig.y + chig.h - 15 > bY) morir();
 
-                    if(obst[i].x < -160) { 
+                    if(obst[i].x < -200) { 
                         obst.splice(i, 1); score += 10; 
                         document.getElementById("score").innerText = score; 
                         vel += 0.15;
