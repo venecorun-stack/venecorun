@@ -8,7 +8,6 @@
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
         #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: #ff4444; color: white; border: 2px solid white; padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: none; }
         
-        /* PANTALLAS DE MENÚ */
         #introScreen, #loginMenu, #gameOverScreen { 
             position: absolute; 
             width: 100%; 
@@ -47,7 +46,6 @@
         .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; }
         .share-btn { background: #000; color: white; border: 2px solid #555; padding: 12px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; margin-top: 10px; font-weight: bold; }
         
-        /* AJUSTES DE LETRAS UI (CORREGIDO) */
         #ui { position: absolute; top: 10px; left: 10px; z-index: 850; display: none; pointer-events: none; }
         .score-text { font-size: 22px; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
         .record-ui { color: #ffcc00; font-size: 14px; text-shadow: 1.5px 1.5px 0 #000; margin: 0; }
@@ -55,19 +53,19 @@
         #levelContainer {
             position: absolute;
             top: 10px;
-            right: 10px; /* Movido a la derecha para no chocar con puntos */
+            right: 10px;
             z-index: 800;
             text-align: right;
             display: none;
             pointer-events: none;
         }
         #levelText { 
-            font-size: 18px; /* Tamaño reducido para que no sea invasivo */
+            font-size: 18px; 
             color: #ffcc00; 
             font-weight: bold; 
             text-shadow: 2px 2px 0 #000;
             margin: 0;
-            background: rgba(0,0,0,0.3); /* Fondo sutil para legibilidad */
+            background: rgba(0,0,0,0.3);
             padding: 2px 8px;
             border-radius: 5px;
         }
@@ -138,6 +136,10 @@
         let estela = [];
         let nivelActual = "";
 
+        // Variables para estabilizar FPS
+        let ultimoTiempo = 0;
+        const fpsObjetivo = 1000 / 60; 
+
         if(localStorage.getItem('venecoUser')) document.getElementById("logoutBtn").style.display = "block";
 
         function cerrarSesion() { localStorage.clear(); location.reload(); }
@@ -182,15 +184,21 @@
             canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
             ctx.scale(dpr, dpr); 
             chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
-
-            if(window.innerWidth < 600) {
-                chig.x = 25;
-            } else {
-                chig.x = 100;
-            }
+            chig.x = window.innerWidth < 600 ? 25 : 100;
         }
 
-        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = []; bucle(); spawn(); }
+        function iniciar() { 
+            activo = true; 
+            chig.vivo = true; 
+            score = 0; 
+            vel = 11; 
+            obst = []; 
+            estela = []; 
+            ultimoTiempo = performance.now();
+            requestAnimationFrame(bucle); 
+            // CAMBIO: Espera 2 segundos antes del primer barril
+            setTimeout(spawn, 2000); 
+        }
 
         async function enviarDatosExcel(puntos) {
             const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyb83SGQoXgHh_eWtJzEr39FmnnoiM__y7fH_GEytH5uAqVCczOUufe523OnXhRcSYzYw/exec";
@@ -233,80 +241,85 @@
             setTimeout(spawn, delay);
         }
 
-        function bucle() {
+        // CAMBIO: Función de bucle estabilizada para Android/iPhone
+        function bucle(tiempoActual) {
             if(!activo && !chig.vivo) return;
-            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            bgX -= vel * 0.4;
-            if(bgX <= -window.innerWidth) bgX = 0;
-            
-            // DIBUJO DE FONDO (AJUSTADO PARA CUBRIR TODO)
-            ctx.drawImage(imgF, bgX, 0, window.innerWidth + 2, window.innerHeight);
-            ctx.drawImage(imgF, bgX + window.innerWidth, 0, window.innerWidth + 2, window.innerHeight);
 
-            let shadowOpacity = Math.max(0.1, 0.5 - (chig.suelo - chig.y) / 400);
-            ctx.fillStyle = `rgba(0,0,0,${shadowOpacity})`;
-            ctx.beginPath();
-            ctx.ellipse(chig.x + 55, chig.suelo + 105, 40, 15, 0, 0, Math.PI * 2);
-            ctx.fill();
+            const delta = tiempoActual - ultimoTiempo;
 
-            if(activo) {
-                chig.dy += chig.g; chig.y += chig.dy;
-                if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
+            if (delta >= fpsObjetivo) {
+                ultimoTiempo = tiempoActual - (delta % fpsObjetivo);
 
-                if(score >= 1000) {
-                    estela.push({x: chig.x, y: chig.y, o: 0.4});
-                    if(estela.length > 5) estela.shift();
-                }
+                ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                bgX -= vel * 0.4;
+                if(bgX <= -window.innerWidth) bgX = 0;
+                
+                ctx.drawImage(imgF, bgX, 0, window.innerWidth + 2, window.innerHeight);
+                ctx.drawImage(imgF, bgX + window.innerWidth, 0, window.innerWidth + 2, window.innerHeight);
 
-                estela.forEach((p, i) => {
-                    ctx.globalAlpha = p.o * (i / estela.length);
-                    ctx.drawImage(imgC, p.x - (estela.length - i) * 10, p.y, chig.w, chig.h);
-                    ctx.globalAlpha = 1;
-                });
+                let shadowOpacity = Math.max(0.1, 0.5 - (chig.suelo - chig.y) / 400);
+                ctx.fillStyle = `rgba(0,0,0,${shadowOpacity})`;
+                ctx.beginPath();
+                ctx.ellipse(chig.x + 55, chig.suelo + 105, 40, 15, 0, 0, Math.PI * 2);
+                ctx.fill();
 
-                let nuevoLvl = "PRINCIPIANTE";
-                if(score >= 2000) nuevoLvl = "NIVEL CAOS";
-                else if(score >= 1000) nuevoLvl = "NIVEL AREPA";
-                else if(score >= 500) nuevoLvl = "NIVEL MANGO";
-                else if(score >= 200) nuevoLvl = "NIVEL GUACAMAYA";
+                if(activo) {
+                    chig.dy += chig.g; chig.y += chig.dy;
+                    if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
 
-                if (nuevoLvl !== nivelActual) {
-                    nivelActual = nuevoLvl;
-                    let el = document.getElementById("levelText");
-                    el.innerText = nivelActual;
-                    el.style.color = "#ffffff";
-                    setTimeout(() => { el.style.color = "#ffcc00"; }, 200);
-                }
-
-                if(score >= 2000) vel += 0.005;
-                else if(score >= 1000) vel += 0.004;
-                else if(score >= 500) vel += 0.003;
-                else if(score >= 200) vel += 0.002;
-
-                for(let i = obst.length - 1; i >= 0; i--) {
-                    obst[i].x -= vel;
-                    let bY = chig.suelo + (chig.h - obst[i].h);
-                    
-                    if(obst[i].doble) {
-                        ctx.drawImage(imgB, obst[i].x, bY, 80, obst[i].h);
-                        ctx.drawImage(imgB, (obst[i].x + 80) - 35, bY, 80, obst[i].h);
-                    } else {
-                        ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
+                    if(score >= 1000) {
+                        estela.push({x: chig.x, y: chig.y, o: 0.4});
+                        if(estela.length > 5) estela.shift();
                     }
-                    
-                    if (chig.x + 35 <     obst[i].x + obst[i].w - 35 && 
-                        chig.x + chig.w - 35 > obst[i].x + 35 && 
-                        chig.y + 35 < bY + obst[i].h && 
-                        chig.y + chig.h - 15 > bY) morir();
 
-                    if(obst[i].x < -200) { 
-                        obst.splice(i, 1); score += 10; 
-                        document.getElementById("score").innerText = score; 
-                        vel += 0.15;
+                    estela.forEach((p, i) => {
+                        ctx.globalAlpha = p.o * (i / estela.length);
+                        ctx.drawImage(imgC, p.x - (estela.length - i) * 10, p.y, chig.w, chig.h);
+                        ctx.globalAlpha = 1;
+                    });
+
+                    let nuevoLvl = "PRINCIPIANTE";
+                    if(score >= 2000) nuevoLvl = "NIVEL CAOS";
+                    else if(score >= 1000) nuevoLvl = "NIVEL AREPA";
+                    else if(score >= 500) nuevoLvl = "NIVEL MANGO";
+                    else if(score >= 200) nuevoLvl = "NIVEL GUACAMAYA";
+
+                    if (nuevoLvl !== nivelActual) {
+                        nivelActual = nuevoLvl;
+                        let el = document.getElementById("levelText");
+                        el.innerText = nivelActual;
+                    }
+
+                    if(score >= 2000) vel += 0.005;
+                    else if(score >= 1000) vel += 0.004;
+                    else if(score >= 500) vel += 0.003;
+                    else if(score >= 200) vel += 0.002;
+
+                    for(let i = obst.length - 1; i >= 0; i--) {
+                        obst[i].x -= vel;
+                        let bY = chig.suelo + (chig.h - obst[i].h);
+                        
+                        if(obst[i].doble) {
+                            ctx.drawImage(imgB, obst[i].x, bY, 80, obst[i].h);
+                            ctx.drawImage(imgB, (obst[i].x + 80) - 35, bY, 80, obst[i].h);
+                        } else {
+                            ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
+                        }
+                        
+                        if (chig.x + 35 <     obst[i].x + obst[i].w - 35 && 
+                            chig.x + chig.w - 35 > obst[i].x + 35 && 
+                            chig.y + 35 < bY + obst[i].h && 
+                            chig.y + chig.h - 15 > bY) morir();
+
+                        if(obst[i].x < -200) { 
+                            obst.splice(i, 1); score += 10; 
+                            document.getElementById("score").innerText = score; 
+                            vel += 0.15;
+                        }
                     }
                 }
+                ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
             }
-            ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
             requestAnimationFrame(bucle);
         }
     </script>
