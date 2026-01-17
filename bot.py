@@ -3,7 +3,7 @@ from telegram import Update, InlineQueryResultGame
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
 # 1. PEGA TU TOKEN AQUÍ (El que te dio BotFather)
-TOKEN = "8578596978:AAHBSRapx8-FJiJseZ5V5x8gX8FXSi6gp_w"
+TOKEN = "8272294302:AAGwu8-5pRClyeTbuHXbMw0QpdOJIyS8MFU"
 
 # 2. TU LINK DE JUEGO
 GAME_URL = "https://venecorun-stack.github.io/venecorun/"
