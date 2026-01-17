@@ -32,11 +32,12 @@
             justify-content: flex-end; 
         }
 
-        /* DETECCIÓN DE PANTALLA VERTICAL PARA LA PORTADA */
-        @media (max-orientation: portrait) {
+        /* CONFIGURACIÓN PARA MÓVIL VERTICAL */
+        @media (max-aspect-ratio: 1/1) {
             #introScreen {
-                background-image: url('portada_mobile.png'); /* Usa esta para vertical */
-                background-size: cover; /* En móvil vertical, cover suele verse mejor si la imagen está diseñada para ello */
+                background-image: url('portada_mobile.png') !important;
+                background-size: cover !important; /* Cubre toda la pantalla vertical */
+                background-position: center center;
             }
         }
 
@@ -294,7 +295,7 @@
                         ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
                     }
                     
-                    if (chig.x + 35 < obst[i].x + obst[i].w - 35 && 
+                    if (chig.x + 35 <     obst[i].x + obst[i].w - 35 && 
                         chig.x + chig.w - 35 > obst[i].x + 35 && 
                         chig.y + 35 < bY + obst[i].h && 
                         chig.y + chig.h - 15 > bY) morir();
