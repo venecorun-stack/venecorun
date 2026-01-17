@@ -16,7 +16,7 @@
             background-color: #000;
             background-position: center; 
             background-repeat: no-repeat;
-            background-size: contain; /* Para que no se estire ninguna */
+            background-size: contain;
             display: flex; 
             flex-direction: column; 
             justify-content: center; 
@@ -25,18 +25,16 @@
             text-align: center; 
         }
 
-        /* PORTADA POR DEFECTO (Horizontal/PC) */
         #introScreen { 
             background-image: url('portada.png'); 
             cursor: pointer; 
             justify-content: flex-end; 
         }
 
-        /* CONFIGURACIÓN PARA MÓVIL VERTICAL */
         @media (max-aspect-ratio: 1/1) {
             #introScreen {
                 background-image: url('portada_mobile.png') !important;
-                background-size: cover !important; /* Cubre toda la pantalla vertical */
+                background-size: cover !important;
                 background-position: center center;
             }
         }
@@ -49,28 +47,29 @@
         .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; }
         .share-btn { background: #000; color: white; border: 2px solid #555; padding: 12px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; margin-top: 10px; font-weight: bold; }
         
-        #ui { position: absolute; top: 20px; left: 20px; z-index: 850; display: none; pointer-events: none; }
-        .score-text { font-size: 40px; color: white; text-shadow: 3px 3px 0 #000; margin: 0; }
-        .record-ui { color: #ffcc00; font-size: 20px; text-shadow: 2px 2px 0 #000; margin: 0; }
+        /* AJUSTES DE LETRAS UI (CORREGIDO) */
+        #ui { position: absolute; top: 10px; left: 10px; z-index: 850; display: none; pointer-events: none; }
+        .score-text { font-size: 22px; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
+        .record-ui { color: #ffcc00; font-size: 14px; text-shadow: 1.5px 1.5px 0 #000; margin: 0; }
         
         #levelContainer {
             position: absolute;
-            top: 15%;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 10px;
+            right: 10px; /* Movido a la derecha para no chocar con puntos */
             z-index: 800;
-            text-align: center;
-            width: 100%;
+            text-align: right;
             display: none;
             pointer-events: none;
         }
         #levelText { 
-            font-size: 55px; 
+            font-size: 18px; /* Tamaño reducido para que no sea invasivo */
             color: #ffcc00; 
             font-weight: bold; 
-            text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+            text-shadow: 2px 2px 0 #000;
             margin: 0;
-            opacity: 0.8;
+            background: rgba(0,0,0,0.3); /* Fondo sutil para legibilidad */
+            padding: 2px 8px;
+            border-radius: 5px;
         }
 
         canvas { display: none; image-rendering: -webkit-optimize-contrast; }
@@ -94,7 +93,7 @@
     </div>
 
     <div id="ui">
-        <div id="displayUser" style="color:#00ffff; font-size:22px; text-shadow: 2px 2px 0 #000;"></div>
+        <div id="displayUser" style="color:#00ffff; font-size:16px; text-shadow: 1.5px 1.5px 0 #000;"></div>
         <p class="score-text">PUNTOS: <span id="score">0</span></p>
         <p class="record-ui">RECORD: <span id="highScoreText">0</span></p>
     </div>
@@ -104,13 +103,13 @@
     </div>
 
     <div id="gameOverScreen">
-        <h1 style="color:#ff4444; font-size:45px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
+        <h1 style="color:#ff4444; font-size:35px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
         <div style="display:flex; align-items:center; gap:20px; justify-content:center; margin-bottom:15px;">
             <div>
-                <p style="font-size:28px; margin:0;">Puntos: <span id="finalScore">0</span></p>
-                <p style="font-size:20px; color:#ffcc00; margin:0;">Récord: <span id="finalBest">0</span></p>
+                <p style="font-size:24px; margin:0;">Puntos: <span id="finalScore">0</span></p>
+                <p style="font-size:18px; color:#ffcc00; margin:0;">Récord: <span id="finalBest">0</span></p>
             </div>
-            <img src="derrota.png" style="width:120px; border-radius:15px;">
+            <img src="derrota.png" style="width:100px; border-radius:15px;">
         </div>
         <button class="share-btn" onclick="compartirX()">𝕏 Compartir en Twitter</button>
         <button class="btn" onclick="location.reload()">REINTENTAR</button>
@@ -184,11 +183,10 @@
             ctx.scale(dpr, dpr); 
             chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
 
-            // AJUSTE DE POSICIÓN PARA MÓVIL
             if(window.innerWidth < 600) {
-                chig.x = 25; // Súper a la izquierda en vertical para ganar tiempo
+                chig.x = 25;
             } else {
-                chig.x = 100; // Normal en PC
+                chig.x = 100;
             }
         }
 
@@ -224,7 +222,6 @@
         function spawn() {
             if(!activo) return;
             let esDoble = score >= 200 && Math.random() > 0.6;
-            // Spawneamos el barril un poco más afuera de la pantalla (+150) para dar tiempo
             obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
 
             let baseFreq = 1100 / (vel * 0.07);
@@ -241,8 +238,10 @@
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
             bgX -= vel * 0.4;
             if(bgX <= -window.innerWidth) bgX = 0;
-            ctx.drawImage(imgF, bgX, 0, window.innerWidth, window.innerHeight);
-            ctx.drawImage(imgF, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
+            
+            // DIBUJO DE FONDO (AJUSTADO PARA CUBRIR TODO)
+            ctx.drawImage(imgF, bgX, 0, window.innerWidth + 2, window.innerHeight);
+            ctx.drawImage(imgF, bgX + window.innerWidth, 0, window.innerWidth + 2, window.innerHeight);
 
             let shadowOpacity = Math.max(0.1, 0.5 - (chig.suelo - chig.y) / 400);
             ctx.fillStyle = `rgba(0,0,0,${shadowOpacity})`;
