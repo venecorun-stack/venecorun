@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Veneco Run - Master Edition</title>
     <style>
-        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
+        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; }
         
         #introScreen, #loginMenu, #mainMenu, #gameOverScreen, #rankingModal { 
             position: absolute; width: 100%; height: 100%; background-color: #000;
@@ -24,7 +24,7 @@
         #rankingModal { background: rgba(0,0,0,0.98); display: none; z-index: 1001; }
 
         .login-box { background: rgba(10, 10, 10, 0.95); padding: 25px; border: 1px solid #ffcc00; border-radius: 30px; width: 85%; max-width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); backdrop-filter: blur(15px); }
-        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #333; font-size: 14px; background: #000; color: white; }
+        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #333; font-size: 14px; background: #000; color: white; outline: none; }
         
         .btn-play-neon { 
             width: 115px; height: 115px; border-radius: 50%; background: #ffcc00; color: #000; 
@@ -51,14 +51,13 @@
             text-decoration: none; color: white; background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.1); transition: 0.3s;
         }
-        .social-item:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
 
         #ui { position: absolute; top: 10px; left: 10px; z-index: 850; display: none; pointer-events: none; }
         .score-text { font-size: 22px; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
         #levelContainer { position: absolute; top: 10px; right: 10px; z-index: 800; display: none; }
         #levelText { font-size: 18px; color: #ffcc00; font-weight: bold; text-shadow: 2px 2px 0 #000; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px; }
 
-        canvas { display: none; image-rendering: -webkit-optimize-contrast; }
+        canvas { display: none; image-rendering: -webkit-optimize-contrast; width: 100vw; height: 100vh; }
     </style>
 </head>
 <body>
@@ -155,7 +154,6 @@
         let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
         let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
         let estela = [], nivelActual = "";
-
         let ultimoTiempo = 0;
         const fpsObjetivo = 1000 / 60; 
 
@@ -187,21 +185,29 @@
 
         function prepararJuego() { 
             document.getElementById("mainMenu").style.display = "none";
-            sndIntro.pause(); musFondo.play(); 
-            canvas.style.display = "block"; 
             document.getElementById("ui").style.display = "block"; 
             document.getElementById("levelContainer").style.display = "block";
+            canvas.style.display = "block"; 
+            ajustar(); 
+            sndIntro.pause(); 
+            musFondo.currentTime = 0;
+            musFondo.play().catch(e => console.log("Audio waiting..."));
             document.getElementById("highScoreText").innerText = recordGlobal;
-            ajustar(); iniciar(); 
+            iniciar(); 
         }
 
         function ajustar() { 
             const dpr = window.devicePixelRatio || 1;
-            canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr;
-            canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            canvas.width = w * dpr; 
+            canvas.height = h * dpr;
+            canvas.style.width = w + 'px'; 
+            canvas.style.height = h + 'px';
             ctx.scale(dpr, dpr); 
-            chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
-            chig.x = window.innerWidth < 600 ? 25 : 100;
+            chig.suelo = h - 220; 
+            chig.y = chig.suelo;
+            chig.x = w < 600 ? 30 : 100;
         }
 
         function iniciar() { 
@@ -240,7 +246,9 @@
 
         const saltar = () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.currentTime = 0; sndSalto.play(); } };
         window.addEventListener("mousedown", saltar);
-        window.addEventListener("touchstart", (e) => { e.preventDefault(); saltar(); }, {passive: false});
+        window.addEventListener("touchstart", (e) => { 
+            if(activo) { e.preventDefault(); saltar(); }
+        }, {passive: false});
         window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
         window.onresize = ajustar;
 
@@ -301,7 +309,7 @@
                             ctx.drawImage(imgB, (obst[i].x + 80) - 35, bY, 80, obst[i].h);
                         } else { ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h); }
                         
-                        if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 >         obst[i].x + 35 && chig.y + 35 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
+                        if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 > obst[i].x + 35 && chig.y + 35 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
                         if(obst[i].x < -200) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.15; }
                     }
                     ctx.drawImage(imgActual, chig.x, chig.y, chig.w, chig.h);
