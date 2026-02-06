@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Final Edition</title>
+    <title>Veneco Run - Final Fixed</title>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; }
         #introScreen, #loginMenu, #mainMenu, #gameOverScreen, #rankingModal { 
@@ -143,7 +143,7 @@
             document.getElementById("loginMenu").style.display = "none"; mostrarMenuPrincipal();
         }
         function mostrarMenuPrincipal() { document.getElementById("mainMenu").style.display = "flex"; document.getElementById("userNameTitle").innerText = localStorage.getItem('venecoUser').toUpperCase(); document.getElementById("menuBestScore").innerText = "Record: " + (localStorage.getItem('venecoRunHighScore') || 0); }
-        function prepararJuego() { document.getElementById("mainMenu").style.display = "none"; document.getElementById("ui").style.display = "block"; document.getElementById("levelContainer").style.display = "block"; canvas.style.display = "block"; ajustar(); sndIntro.pause(); musFondo.currentTime = 0; musFondo.play(); iniciar(); }
+        function prepararJuego() { document.getElementById("mainMenu").style.display = "none"; document.getElementById("ui").style.display = "block"; document.getElementById("levelContainer").style.display = "block"; canvas.style.display = "block"; ajustar(); sndIntro.pause(); musFondo.currentTime = 0; musFondo.play(); document.getElementById("highScoreText").innerText = recordGlobal; iniciar(); }
         function ajustar() { const dpr = window.devicePixelRatio || 1; const w = window.innerWidth; const h = window.innerHeight; canvas.width = w * dpr; canvas.height = h * dpr; canvas.style.width = w + 'px'; canvas.style.height = h + 'px'; ctx.scale(dpr, dpr); chig.suelo = h - 220; chig.y = chig.suelo; chig.x = w < 600 ? 30 : 100; }
         function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = []; frameAnim = 0; bgX_cielo = 0; bgX_suelo = 0; ultimoTiempo = performance.now(); requestAnimationFrame(bucle); setTimeout(spawn, 2000); }
         async function enviarDatosExcel(puntos) { const datos = { usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoWallet'), puntaje: puntos }; try { fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) }); } catch (e) {} }
@@ -169,17 +169,21 @@
                 ultimoTiempo = tiempoActual - (delta % fpsObjetivo);
                 ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
                 
-                // CIELO (PARALLAX LENTO)
-                bgX_cielo -= vel * 0.2; 
-                if(bgX_cielo <= -window.innerWidth) bgX_cielo = 0;
-                ctx.drawImage(imgCielo, bgX_cielo, 0, window.innerWidth + 1, window.innerHeight);
-                ctx.drawImage(imgCielo, bgX_cielo + window.innerWidth, 0, window.innerWidth + 1, window.innerHeight);
+                // CIELO (Súper lento - 10% y solapado)
+                if (imgCielo.complete) {
+                    bgX_cielo -= vel * 0.1; 
+                    if(bgX_cielo <= -window.innerWidth) bgX_cielo = 0;
+                    ctx.drawImage(imgCielo, Math.floor(bgX_cielo), 0, window.innerWidth + 2, window.innerHeight);
+                    ctx.drawImage(imgCielo, Math.floor(bgX_cielo + window.innerWidth), 0, window.innerWidth + 2, window.innerHeight);
+                }
 
-                // SUELO (PARALLAX RÁPIDO)
-                bgX_suelo -= vel; 
-                if(bgX_suelo <= -window.innerWidth) bgX_suelo = 0;
-                ctx.drawImage(imgSuelo, bgX_suelo, 0, window.innerWidth + 1, window.innerHeight);
-                ctx.drawImage(imgSuelo, bgX_suelo + window.innerWidth, 0, window.innerWidth + 1, window.innerHeight);
+                // SUELO (Velocidad normal y solapado para eliminar línea negra)
+                if (imgSuelo.complete) {
+                    bgX_suelo -= vel; 
+                    if(bgX_suelo <= -window.innerWidth) bgX_suelo = 0;
+                    ctx.drawImage(imgSuelo, Math.floor(bgX_suelo), 0, window.innerWidth + 2, window.innerHeight);
+                    ctx.drawImage(imgSuelo, Math.floor(bgX_suelo + window.innerWidth), 0, window.innerWidth + 2, window.innerHeight);
+                }
 
                 if(activo) {
                     chig.dy += chig.g; chig.y += chig.dy;
