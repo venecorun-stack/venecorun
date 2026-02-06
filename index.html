@@ -138,7 +138,7 @@
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyb83SGQoXgHh_eWtJzEr39FmnnoiM__y7fH_GEytH5uAqVCczOUufe523OnXhRcSYzYw/exec";
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzowQ8z7hoY0lWT-l1KqrBO2Zfq7VtmXUAsjRair1mCSlYS-JpuGizgWCPpEv1ev4B0cg/exec";
 
         const imgC1 = new Image(); imgC1.src = 'chiguire.png';
         const imgC2 = new Image(); imgC2.src = 'chiguire2.png';
@@ -171,7 +171,6 @@
             else document.getElementById("loginMenu").style.display = "flex"; 
         }
 
-        // --- FUNCIÓN DE AUTENTICACIÓN CON NUBE ---
         async function autenticarYEntrar() {
             const u = document.getElementById("tgUser").value.trim();
             const w = document.getElementById("bnbWallet").value.trim();
@@ -182,13 +181,11 @@
             if(u.length < 3) { alert("Usuario inválido."); return; }
             if(!walletRegex.test(w)) { alert("Wallet BEP20 inválida."); return; }
 
-            // Visual de carga
             btn.disabled = true;
             btn.style.opacity = "0.5";
             loader.style.display = "block";
 
             try {
-                // Consultar puntos acumulados al servidor
                 const response = await fetch(URL_SCRIPT + "?action=getScore&wallet=" + w);
                 const data = await response.json();
 
@@ -198,7 +195,6 @@
                 if(data && data.score !== undefined) {
                     localStorage.setItem('venecoRunHighScore', data.score);
                     recordGlobal = parseInt(data.score);
-                    console.log("Datos sincronizados: " + data.score + " pts");
                 } else {
                     localStorage.setItem('venecoRunHighScore', 0);
                     recordGlobal = 0;
@@ -208,7 +204,6 @@
                 mostrarMenuPrincipal();
 
             } catch (e) {
-                console.log("Error de red, iniciando con datos locales.");
                 localStorage.setItem('venecoUser', u);
                 localStorage.setItem('venecoWallet', w);
                 document.getElementById("loginMenu").style.display = "none";
@@ -266,7 +261,7 @@
         function morir() { 
             activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play(); 
             if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); }
-            enviarDatosExcel(recordGlobal); // Enviamos el record máximo alcanzado
+            enviarDatosExcel(recordGlobal);
             document.getElementById("finalScore").innerText = score; 
             document.getElementById("finalBest").innerText = recordGlobal;
             document.getElementById("gameOverScreen").style.display = "flex"; 
@@ -306,7 +301,6 @@
                 ultimoTiempo = tiempoActual - (delta % fpsObjetivo);
                 ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
                 
-                // CIELO (10% vel)
                 if (imgCielo.complete) {
                     bgX_cielo -= vel * 0.1; 
                     if(bgX_cielo <= -window.innerWidth) bgX_cielo = 0;
@@ -314,7 +308,6 @@
                     ctx.drawImage(imgCielo, Math.floor(bgX_cielo + window.innerWidth), 0, window.innerWidth + 2, window.innerHeight);
                 }
 
-                // SUELO (100% vel + solapamiento)
                 if (imgSuelo.complete) {
                     bgX_suelo -= vel; 
                     if(bgX_suelo <= -window.innerWidth) bgX_suelo = 0;
