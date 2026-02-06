@@ -3,38 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Diversión y Airdrop</title>
+    <title>Veneco Run - Cloud Sync Edition</title>
     <style>
-        /* Mantenemos todo tu estilo original */
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; }
+        
         #introScreen, #loginMenu, #mainMenu, #gameOverScreen, #rankingModal, #funWarning { 
             position: absolute; width: 100%; height: 100%; background-color: #000;
             background-position: center; background-repeat: no-repeat; background-size: contain;
             display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 900; text-align: center; 
         }
+
         #introScreen { background-image: url('portada.png'); cursor: pointer; justify-content: flex-end; }
         #loginMenu, #mainMenu { background-image: url('portada.png'); display: none; }
         
-        /* NUEVO: Modal de Advertencia */
-        #funWarning { display: none; background: rgba(0,0,0,0.95); z-index: 1005; }
-        .warning-box { background: #111; padding: 30px; border: 2px solid #ff4444; border-radius: 30px; width: 85%; max-width: 320px; }
-        
+        @media (max-aspect-ratio: 1/1) {
+            #introScreen, #loginMenu, #mainMenu { background-image: url('portada_mobile.png') !important; background-size: cover !important; }
+        }
+
+        #funWarning { display: none; background: rgba(0,0,0,0.98); z-index: 1100; }
+        .warning-box { background: #111; padding: 30px; border: 2px solid #ff4444; border-radius: 30px; width: 85%; max-width: 320px; box-shadow: 0 0 50px rgba(255,0,0,0.3); }
+
+        #gameOverScreen { background: rgba(0,0,0,0.95); display: none; }
+        #rankingModal { background: rgba(0,0,0,0.98); display: none; z-index: 1001; }
+
         .login-box { background: rgba(10, 10, 10, 0.95); padding: 25px; border: 1px solid #ffcc00; border-radius: 30px; width: 85%; max-width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); backdrop-filter: blur(15px); }
         input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #333; font-size: 14px; background: #000; color: white; outline: none; }
         
-        .btn { padding: 12px 25px; font-size: 16px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; margin-top: 10px; width: 100%; box-shadow: 0px 4px 0px #b38f00; }
-        .btn-fun { background: transparent; color: #aaa; border: 1px solid #444; box-shadow: none; font-size: 13px; margin-top: 15px; }
+        .btn { padding: 12px 25px; font-size: 16px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; margin-top: 10px; width: 100%; box-shadow: 0px 4px 0px #b38f00; transition: 0.2s; }
+        .btn:active { transform: translateY(3px); box-shadow: 0px 1px 0px #b38f00; }
         
-        /* Botones de advertencia */
-        .btn-continue { background: #00ff00; color: #000; box-shadow: 0 0 15px #00ff00; margin-bottom: 10px; }
-        .btn-back { background: #ff0000; color: #fff; box-shadow: 0 0 15px #ff0000; }
+        .btn-fun { background: #28a745; color: white; box-shadow: 0px 4px 0px #1e7e34; margin-top: 15px; }
+        .btn-continue { background: #00ff00; color: #000; box-shadow: 0 0 15px #00ff00; }
+        .btn-back { background: #ff4444; color: #fff; box-shadow: 0 0 15px #ff4444; margin-top: 15px; }
+
+        .btn-play-neon { 
+            width: 115px; height: 115px; border-radius: 50%; background: #ffcc00; color: #000; 
+            font-size: 20px; font-weight: 900; border: none; cursor: pointer; 
+            box-shadow: 0 0 15px #ffcc00, 0 0 30px #ffcc00; margin: 15px 0; 
+            display: flex; align-items: center; justify-content: center; 
+            text-transform: uppercase; animation: pulse-neon 1.5s infinite;
+        }
+        @keyframes pulse-neon { 0% { box-shadow: 0 0 15px #ffcc00; transform: scale(1); } 50% { box-shadow: 0 0 40px #ffcc00; transform: scale(1.05); } 100% { box-shadow: 0 0 15px #ffcc00; transform: scale(1); } }
+
+        #ui { position: absolute; top: 10px; left: 10px; z-index: 850; display: none; pointer-events: none; }
+        .score-text { font-size: 22px; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
+        #levelContainer { position: absolute; top: 10px; right: 10px; z-index: 800; display: none; }
+        #levelText { font-size: 18px; color: #ffcc00; font-weight: bold; text-shadow: 2px 2px 0 #000; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px; }
 
         canvas { display: none; image-rendering: -webkit-optimize-contrast; width: 100vw; height: 100vh; }
-        /* ... resto de estilos del juego ... */
-        .btn-play-neon { width: 115px; height: 115px; border-radius: 50%; background: #ffcc00; color: #000; font-size: 20px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 0 15px #ffcc00, 0 0 30px #ffcc00; margin: 15px 0; display: flex; align-items: center; justify-content: center; text-transform: uppercase; animation: pulse-neon 1.5s infinite; }
-        @keyframes pulse-neon { 0% { box-shadow: 0 0 15px #ffcc00; transform: scale(1); } 50% { box-shadow: 0 0 40px #ffcc00; transform: scale(1.05); } 100% { box-shadow: 0 0 15px #ffcc00; transform: scale(1); } }
-        #ui, #levelContainer, #gameOverScreen, #rankingModal { display: none; }
-        .score-text { font-size: 22px; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
     </style>
 </head>
 <body>
@@ -49,7 +65,6 @@
             <input type="text" id="tgUser" placeholder="Usuario">
             <input type="text" id="bnbWallet" placeholder="Wallet BNB BEP20 (Metamask)">
             <button class="btn" id="btnLogin" onclick="autenticarYEntrar()">REGISTRARSE / ENTRAR</button>
-            
             <button class="btn btn-fun" onclick="mostrarAdvertencia()">JUGAR POR DIVERSIÓN</button>
             <div id="loadingLogin" style="display:none; color:#ffcc00; font-size:12px; margin-top:10px;">Cargando...</div>
         </div>
@@ -77,13 +92,34 @@
         </div>
     </div>
 
+    <div id="ui">
+        <p class="score-text">PUNTOS: <span id="score">0</span></p>
+        <p style="color: #ffcc00; font-size: 14px; margin:0;">RECORD: <span id="highScoreText">0</span></p>
+    </div>
+    <div id="levelContainer"><p id="levelText">PRINCIPIANTE</p></div>
+
+    <div id="gameOverScreen">
+        <h1 style="color:#ff4444; font-size:35px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
+        <div class="login-box" style="margin-bottom: 20px;">
+            <div style="display:flex; align-items:center; gap:20px; justify-content:center;">
+                <div>
+                    <p style="font-size:24px; margin:0;">Puntos: <span id="finalScore">0</span></p>
+                    <p style="font-size:18px; color:#ffcc00; margin:0;">Récord: <span id="finalBest">0</span></p>
+                </div>
+                <img src="derrota.png" style="width:80px; border-radius:15px;">
+            </div>
+        </div>
+        <button class="btn" onclick="reiniciarRapido()">REINTENTAR</button>
+        <button class="btn" style="background:rgba(255,255,255,0.1); color:white;" onclick="volverAlMenu()">VOLVER AL MENÚ</button>
+    </div>
+
     <canvas id="gameCanvas"></canvas>
+
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzowQ8z7hoY0lWT-l1KqrBO2Zfq7VtmXUAsjRair1mCSlYS-JpuGizgWCPpEv1ev4B0cg/exec";
 
-        // Imágenes y Sonidos (Se mantienen igual)
         const imgC1 = new Image(); imgC1.src = 'chiguire.png';
         const imgC2 = new Image(); imgC2.src = 'chiguire2.png';
         const imgC3 = new Image(); imgC3.src = 'chiguire3.png';
@@ -92,17 +128,19 @@
         const imgB = new Image(); imgB.src = 'barril.png';
         const imgCielo = new Image(); imgCielo.src = 'cielo.png';
         const imgSuelo = new Image(); imgSuelo.src = 'suelo.png';
+
         const sndClick = new Audio('click.mp3');
+        const sndSalto = new Audio('salto.mp3');
+        const sndPerder = new Audio('perder.mp3');
         const musFondo = new Audio('musicafondo.mp3'); musFondo.loop = true;
         const sndIntro = new Audio('intro.mp3'); sndIntro.loop = true;
 
-        let activo = false, score = 0, vel = 11, recordGlobal = 0;
+        let activo = false, score = 0, vel = 11, obst = [], bgX_cielo = 0, bgX_suelo = 0, frameAnim = 0;
+        let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
         let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
-        let ultimoTiempo = 0; const fpsObjetivo = 1000/60;
+        let ultimoTiempo = 0;
+        const fpsObjetivo = 1000 / 60; 
 
-        function clicPortada() { sndClick.play(); sndIntro.play(); document.getElementById("introScreen").style.display = "none"; if(localStorage.getItem('venecoUser')) mostrarMenuPrincipal(); else document.getElementById("loginMenu").style.display = "flex"; }
-        
-        // FUNCIONES DE ADVERTENCIA
         function mostrarAdvertencia() { document.getElementById("funWarning").style.display = "flex"; }
         function ocultarAdvertencia() { document.getElementById("funWarning").style.display = "none"; }
         
@@ -120,11 +158,10 @@
             const u = document.getElementById("tgUser").value.trim();
             const w = document.getElementById("bnbWallet").value.trim();
             if(u.length < 3 || !/^0x[a-fA-F0-9]{40}$/.test(w)) { alert("Datos inválidos"); return; }
-            
             document.getElementById("loadingLogin").style.display = "block";
             try {
-                const res = await fetch(URL_SCRIPT + "?action=getScore&wallet=" + w);
-                const data = await res.json();
+                const response = await fetch(URL_SCRIPT + "?action=getScore&wallet=" + w);
+                const data = await response.json();
                 localStorage.setItem('venecoUser', u);
                 localStorage.setItem('venecoWallet', w);
                 recordGlobal = data.score || 0;
@@ -135,41 +172,141 @@
             document.getElementById("loadingLogin").style.display = "none";
         }
 
+        function clicPortada() { 
+            sndClick.play(); sndIntro.play(); 
+            document.getElementById("introScreen").style.display = "none"; 
+            if(localStorage.getItem('venecoUser')) mostrarMenuPrincipal(); 
+            else document.getElementById("loginMenu").style.display = "flex"; 
+        }
+
         function mostrarMenuPrincipal() {
             document.getElementById("mainMenu").style.display = "flex";
             document.getElementById("userNameTitle").innerText = localStorage.getItem('venecoUser').toUpperCase();
             document.getElementById("menuBestScore").innerText = "Record: " + (localStorage.getItem('venecoRunHighScore') || 0);
         }
 
-        function cerrarSesion() { localStorage.clear(); location.reload(); }
+        function prepararJuego() { 
+            document.getElementById("mainMenu").style.display = "none";
+            document.getElementById("ui").style.display = "block"; 
+            document.getElementById("levelContainer").style.display = "block";
+            canvas.style.display = "block"; 
+            ajustar(); 
+            sndIntro.pause(); 
+            musFondo.currentTime = 0; musFondo.play();
+            document.getElementById("highScoreText").innerText = recordGlobal;
+            iniciar(); 
+        }
 
-        // Lógica de juego simplificada para el ejemplo (Bucle, ajustar, etc. igual que antes)
         function ajustar() { 
             const dpr = window.devicePixelRatio || 1;
             canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr;
-            ctx.scale(dpr, dpr); chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
+            canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
+            ctx.scale(dpr, dpr); 
+            chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
+            chig.x = window.innerWidth < 600 ? 30 : 100;
         }
 
-        function prepararJuego() { 
-            document.getElementById("mainMenu").style.display = "none";
-            canvas.style.display = "block"; ajustar(); iniciar();
-            sndIntro.pause(); musFondo.play();
+        function iniciar() { 
+            activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; frameAnim = 0;
+            bgX_cielo = 0; bgX_suelo = 0;
+            ultimoTiempo = performance.now();
+            requestAnimationFrame(bucle); 
+            setTimeout(spawn, 2000); 
         }
 
-        function iniciar() { activo = true; score = 0; bgX_cielo = 0; bgX_suelo = 0; ultimoTiempo = performance.now(); requestAnimationFrame(bucle); }
+        async function enviarDatosExcel(puntos) {
+            if(localStorage.getItem('venecoWallet') === 'no-wallet') return;
+            const datos = { usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoWallet'), puntaje: puntos };
+            try { fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) }); } catch (e) {}
+        }
 
-        function bucle(t) {
+        function morir() { 
+            activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play(); 
+            if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); }
+            enviarDatosExcel(recordGlobal);
+            document.getElementById("finalScore").innerText = score; 
+            document.getElementById("finalBest").innerText = recordGlobal;
+            document.getElementById("gameOverScreen").style.display = "flex"; 
+        }
+
+        function reiniciarRapido() { document.getElementById("gameOverScreen").style.display = "none"; musFondo.currentTime = 0; musFondo.play(); iniciar(); }
+        function volverAlMenu() { document.getElementById("gameOverScreen").style.display = "none"; canvas.style.display = "none"; document.getElementById("ui").style.display = "none"; document.getElementById("levelContainer").style.display = "none"; mostrarMenuPrincipal(); }
+        function cerrarSesion() { localStorage.clear(); location.reload(); }
+
+        const saltar = () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.currentTime = 0; sndSalto.play(); } };
+        window.addEventListener("mousedown", saltar);
+        window.addEventListener("touchstart", (e) => { if(activo) { e.preventDefault(); saltar(); } }, {passive: false});
+        window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
+
+        function spawn() {
             if(!activo) return;
-            const delta = t - ultimoTiempo;
-            if(delta >= fpsObjetivo) {
-                ultimoTiempo = t - (delta % fpsObjetivo);
-                ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-                // Dibujo de fondo y chigüire igual que antes...
-                // (Para ahorrar espacio aquí no repito todo el dibujo del bucle que ya tienes perfecto)
-                // Asegúrate de copiar el resto del código de movimiento y dibujo aquí abajo.
+            let esDoble = score >= 200 && Math.random() > 0.6;
+            obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
+            let delay = Math.max(1100 / (vel * 0.07), esDoble ? 1100 : 700); 
+            setTimeout(spawn, delay);
+        }
+
+        function bucle(tiempoActual) {
+            if(!activo && !chig.vivo) return;
+            const delta = tiempoActual - ultimoTiempo;
+            if (delta >= fpsObjetivo) {
+                ultimoTiempo = tiempoActual - (delta % fpsObjetivo);
+                ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                
+                if (imgCielo.complete) {
+                    bgX_cielo -= vel * 0.1; 
+                    if(bgX_cielo <= -window.innerWidth) bgX_cielo = 0;
+                    ctx.drawImage(imgCielo, Math.floor(bgX_cielo), 0, window.innerWidth + 2, window.innerHeight);
+                    ctx.drawImage(imgCielo, Math.floor(bgX_cielo + window.innerWidth), 0, window.innerWidth + 2, window.innerHeight);
+                }
+
+                if (imgSuelo.complete) {
+                    bgX_suelo -= vel; 
+                    if(bgX_suelo <= -window.innerWidth) bgX_suelo = 0;
+                    ctx.drawImage(imgSuelo, Math.floor(bgX_suelo), 0, window.innerWidth + 2, window.innerHeight);
+                    ctx.drawImage(imgSuelo, Math.floor(bgX_suelo + window.innerWidth), 0, window.innerWidth + 2, window.innerHeight);
+                }
+
+                if(activo) {
+                    chig.dy += chig.g; chig.y += chig.dy;
+                    if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
+                    frameAnim++;
+                    let imgActual = (chig.y < chig.suelo - 10) ? imgC3 : [imgC1, imgC2, imgC3, imgC4][Math.floor(frameAnim / 6) % 4];
+
+                    if(score >= 2000) vel += 0.005;
+                    else if(score >= 1000) vel += 0.004;
+                    else if(score >= 500) vel += 0.003;
+                    else if(score >= 200) vel += 0.002;
+
+                    for(let i = obst.length - 1; i >= 0; i--) {
+                        obst[i].x -= vel;
+                        let bY = chig.suelo + (chig.h - obst[i].h);
+                        if(obst[i].doble) {
+                            ctx.drawImage(imgB, obst[i].x, bY, 80, obst[i].h);
+                            ctx.drawImage(imgB, (obst[i].x + 80) - 35, bY, 80, obst[i].h);
+                        } else { ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h); }
+                        
+                        if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 > obst[i].x + 35 && chig.y + 35 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
+                        if(obst[i].x < -200) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.15; }
+                    }
+                    ctx.drawImage(imgActual, chig.x, chig.y, chig.w, chig.h);
+                } else { ctx.drawImage(imgD, chig.x, chig.y, chig.w, chig.h); }
             }
             requestAnimationFrame(bucle);
         }
+
+        async function verRanking() {
+            document.getElementById("rankingModal").style.display = "flex";
+            document.getElementById("rankingBody").innerHTML = "";
+            try {
+                const response = await fetch(URL_SCRIPT + "?action=getRanking");
+                const data = await response.json();
+                data.forEach((p, i) => { 
+                    document.getElementById("rankingBody").innerHTML += `<tr><td>${i+1}</td><td>${p.usuario}</td><td>${p.puntaje}</td></tr>`; 
+                });
+            } catch (e) { }
+        }
+        function cerrarRanking() { document.getElementById("rankingModal").style.display = "none"; }
     </script>
 </body>
 </html>
