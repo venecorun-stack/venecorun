@@ -26,7 +26,6 @@
         .login-box { background: rgba(10, 10, 10, 0.95); padding: 25px; border: 1px solid #ffcc00; border-radius: 30px; width: 85%; max-width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); backdrop-filter: blur(15px); }
         input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #333; font-size: 14px; background: #000; color: white; }
         
-        /* BOTÓN JUGAR NEÓN */
         .btn-play-neon { 
             width: 115px; height: 115px; border-radius: 50%; background: #ffcc00; color: #000; 
             font-size: 20px; font-weight: 900; border: none; cursor: pointer; 
@@ -43,8 +42,8 @@
         .btn { padding: 12px 25px; font-size: 16px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; margin-top: 10px; width: 100%; box-shadow: 0px 4px 0px #b38f00; }
         .btn-ranking { background: transparent; border: 2px solid #00ffff; color: #00ffff; box-shadow: none; margin-bottom: 5px; }
         .btn-menu { background: rgba(255,255,255,0.1); color: white; font-size: 14px; border: 1px solid rgba(255,255,255,0.2); }
-        
-        /* REDES SOCIALES */
+        .btn-logout { background: transparent; color: #ff4444; border: 1px solid #ff4444; font-size: 12px; margin-top: 20px; box-shadow: none; }
+
         .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 20px; }
         .social-item { 
             display: flex; align-items: center; justify-content: center; gap: 5px;
@@ -93,6 +92,8 @@
                 <a href="https://www.tiktok.com/@venecotoken" target="_blank" class="social-item" style="border-bottom: 2px solid #ff0050;">TikTok</a>
                 <a href="https://veneco.lol/" target="_blank" class="social-item" style="border-bottom: 2px solid #ffcc00;">Website</a>
             </div>
+
+            <button class="btn btn-logout" onclick="cerrarSesion()">CERRAR SESIÓN ✖</button>
         </div>
     </div>
 
@@ -157,6 +158,8 @@
 
         let ultimoTiempo = 0;
         const fpsObjetivo = 1000 / 60; 
+
+        function cerrarSesion() { localStorage.clear(); location.reload(); }
 
         function clicPortada() { 
             sndClick.play(); sndIntro.play(); 
@@ -243,7 +246,6 @@
 
         function spawn() {
             if(!activo) return;
-            // DOBLE BARRIL ORIGINAL SCORE 200
             let esDoble = score >= 200 && Math.random() > 0.6;
             obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
             let baseFreq = 1100 / (vel * 0.07);
@@ -279,7 +281,6 @@
                         ctx.globalAlpha = 1;
                     });
 
-                    // NIVELES ORIGINALES CON GUACAMAYA
                     let nuevoLvl = "PRINCIPIANTE";
                     if(score >= 2000) nuevoLvl = "NIVEL CAOS";
                     else if(score >= 1000) nuevoLvl = "NIVEL AREPA";
