@@ -150,7 +150,7 @@
         const musFondo = new Audio('musicafondo.mp3'); musFondo.loop = true;
         const sndIntro = new Audio('intro.mp3'); sndIntro.loop = true;
 
-        let activo = false, score = 0, vel = 11, obst = [], bgX = 0, frameAnim = 0;
+        let activo = false, score = 0, vel = 11, obst = [], bgX_cielo = 0, bgX_suelo = 0, frameAnim = 0;
         let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
         let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
         let estela = [], nivelActual = "";
@@ -210,6 +210,7 @@
 
         function iniciar() { 
             activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = []; frameAnim = 0;
+            bgX_cielo = 0; bgX_suelo = 0;
             ultimoTiempo = performance.now();
             requestAnimationFrame(bucle); 
             setTimeout(spawn, 2000); 
@@ -265,12 +266,19 @@
                 ultimoTiempo = tiempoActual - (delta % fpsObjetivo);
                 ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
                 
-                // SINCRONIZACIÓN DE FONDO CON OBSTÁCULOS (vel)
-                bgX -= vel; 
-                if(bgX <= -window.innerWidth) bgX = 0;
-                
-                ctx.drawImage(imgF, bgX, 0, window.innerWidth + 1, window.innerHeight);
-                ctx.drawImage(imgF, bgX + window.innerWidth, 0, window.innerWidth + 1, window.innerHeight);
+                // --- SISTEMA PARALLAX ---
+                // 1. Dibujamos el CIELO (más lento para dar profundidad)
+                bgX_cielo -= vel * 0.3; // Velocidad reducida
+                if(bgX_cielo <= -window.innerWidth) bgX_cielo = 0;
+                ctx.drawImage(imgF, bgX_cielo, 0, window.innerWidth + 1, window.innerHeight * 0.7);
+                ctx.drawImage(imgF, bgX_cielo + window.innerWidth, 0, window.innerWidth + 1, window.innerHeight * 0.7);
+
+                // 2. Dibujamos el SUELO (misma velocidad que barriles)
+                bgX_suelo -= vel; 
+                if(bgX_suelo <= -window.innerWidth) bgX_suelo = 0;
+                // Solo dibujamos la parte inferior de la imagen para el suelo
+                ctx.drawImage(imgF, 0, imgF.height * 0.7, imgF.width, imgF.height * 0.3, bgX_suelo, window.innerHeight * 0.7, window.innerWidth + 1, window.innerHeight * 0.3);
+                ctx.drawImage(imgF, 0, imgF.height * 0.7, imgF.width, imgF.height * 0.3, bgX_suelo + window.innerWidth, window.innerHeight * 0.7, window.innerWidth + 1, window.innerHeight * 0.3);
 
                 if(activo) {
                     chig.dy += chig.g; chig.y += chig.dy;
