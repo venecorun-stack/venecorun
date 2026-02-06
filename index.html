@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Final Animation</title>
+    <title>Veneco Run - Animación Pro</title>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
         
@@ -118,7 +118,7 @@
         const ctx = canvas.getContext("2d");
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzzOjoOCd5HwIdC6_1ZhzT_VheVHiORDF0mkIf_Zp6R9ajIrAP8xT3_U6Ah8aAPcYkHfA/exec";
 
-        // --- RECURSOS ---
+        // --- CARGA DE IMÁGENES (4 CUADROS) ---
         const imgC1 = new Image(); imgC1.src = 'chiguire.png';
         const imgC2 = new Image(); imgC2.src = 'chiguire2.png';
         const imgC3 = new Image(); imgC3.src = 'chiguire3.png';
@@ -182,7 +182,6 @@
 
         const saltar = () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.play(); } };
         
-        // CONTROLES
         window.addEventListener("mousedown", saltar);
         window.addEventListener("touchstart", (e) => { e.preventDefault(); saltar(); }, {passive: false});
         window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
@@ -219,13 +218,13 @@
                     chig.dy += chig.g; chig.y += chig.dy;
                     if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
 
-                    // --- ANIMACIÓN 4 FRAMES ---
+                    // --- ANIMACIÓN 4 CUADROS ---
                     frameAnim++;
                     let imgActual;
                     if (chig.y < chig.suelo - 5) {
                         imgActual = imgC3; 
                     } else {
-                        let ciclo = Math.floor(frameAnim / 5) % 4;
+                        let ciclo = Math.floor(frameAnim / 5) % 4; // Cambia cuadro cada 5 frames
                         if(ciclo === 0) imgActual = imgC1;
                         else if(ciclo === 1) imgActual = imgC2;
                         else if(ciclo === 2) imgActual = imgC3;
