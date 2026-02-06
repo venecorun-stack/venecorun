@@ -167,14 +167,26 @@
         }
 
         function guardarYEntrar() {
-            const u = document.getElementById("tgUser").value;
-            const w = document.getElementById("bnbWallet").value;
-            if(u.length > 2) {
-                localStorage.setItem('venecoUser', u);
-                localStorage.setItem('venecoWallet', w);
-                document.getElementById("loginMenu").style.display = "none";
-                mostrarMenuPrincipal();
+            const u = document.getElementById("tgUser").value.trim();
+            const w = document.getElementById("bnbWallet").value.trim();
+            
+            // Validar formato Wallet BNB (0x + 40 caracteres hex)
+            const walletRegex = /^0x[a-fA-F0-9]{40}$/;
+
+            if(u.length < 3) {
+                alert("Por favor, ingresa un nombre de usuario válido.");
+                return;
             }
+
+            if(!walletRegex.test(w)) {
+                alert("⚠️ Formato de Wallet inválido.\n\nAsegúrate de que empiece por 0x y sea una dirección BEP20 correcta.");
+                return;
+            }
+
+            localStorage.setItem('venecoUser', u);
+            localStorage.setItem('venecoWallet', w);
+            document.getElementById("loginMenu").style.display = "none";
+            mostrarMenuPrincipal();
         }
 
         function mostrarMenuPrincipal() {
@@ -191,7 +203,7 @@
             ajustar(); 
             sndIntro.pause(); 
             musFondo.currentTime = 0;
-            musFondo.play().catch(e => console.log("Audio waiting..."));
+            musFondo.play().catch(e => console.log("Audio interaction needed"));
             document.getElementById("highScoreText").innerText = recordGlobal;
             iniciar(); 
         }
