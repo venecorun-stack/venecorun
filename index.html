@@ -96,9 +96,16 @@
     <div id="levelContainer"><p id="levelText">PRINCIPIANTE</p></div>
 
     <div id="gameOverScreen">
-        <h1 style="color:#ff4444; font-size:35px;">¡FIN DEL JUEGO!</h1>
-        <p style="font-size:24px;">Puntos: <span id="finalScore">0</span></p>
-        <button class="btn" onclick="volverAlMenu()">VOLVER AL MENÚ</button>
+        <h1 style="color:#ff4444; font-size:35px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
+        <div style="display:flex; align-items:center; gap:20px; justify-content:center; margin-bottom:15px;">
+            <div>
+                <p style="font-size:24px; margin:0;">Puntos: <span id="finalScore">0</span></p>
+                <p style="font-size:18px; color:#ffcc00; margin:0;">Récord: <span id="finalBest">0</span></p>
+            </div>
+            <img src="derrota.png" style="width:100px; border-radius:15px;">
+        </div>
+        <button class="share-btn" style="background: #000; border: 2px solid #555; padding: 12px 25px; border-radius: 50px; width: auto;" onclick="compartirX()">𝕏 Compartir en Twitter</button>
+        <button class="btn" style="width: auto; padding: 15px 50px;" onclick="location.reload()">REINTENTAR</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -106,8 +113,6 @@
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        
-        // --- URL ACTUALIZADA CON TU NUEVO SCRIPT ---
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzzOjoOCd5HwIdC6_1ZhzT_VheVHiORDF0mkIf_Zp6R9ajIrAP8xT3_U6Ah8aAPcYkHfA/exec";
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
@@ -154,13 +159,6 @@
             document.getElementById("menuBestScore").innerText = "Tu Record: " + (localStorage.getItem('venecoRunHighScore') || 0);
         }
 
-        function volverAlMenu() {
-            document.getElementById("gameOverScreen").style.display = "none";
-            canvas.style.display = "none";
-            document.getElementById("ui").style.display = "none";
-            mostrarMenuPrincipal();
-        }
-
         function prepararJuego() { 
             document.getElementById("mainMenu").style.display = "none";
             sndIntro.pause(); musFondo.play(); 
@@ -177,19 +175,24 @@
             document.getElementById("rankingBody").innerHTML = "";
             document.getElementById("loadingRanking").style.display = "block";
             try {
-                // Se usa la URL con el parámetro action para el GET
                 const response = await fetch(URL_SCRIPT + "?action=getRanking");
                 const data = await response.json();
                 document.getElementById("loadingRanking").style.display = "none";
                 data.forEach((player, index) => {
                     document.getElementById("rankingBody").innerHTML += `<tr><td>${index+1}</td><td>${player.usuario}</td><td>${player.puntaje}</td></tr>`;
                 });
-            } catch (e) { document.getElementById("loadingRanking").innerText = "Error al conectar con el Ranking."; }
+            } catch (e) { document.getElementById("loadingRanking").innerText = "Error al conectar."; }
         }
 
         function cerrarRanking() { document.getElementById("rankingModal").style.display = "none"; }
         function cerrarSesion() { localStorage.clear(); location.reload(); }
+        
+        function compartirX() {
+            const msg = `🏆 ¡He conseguido ${score} puntos en Veneco Run! 🚀 Récord: ${recordGlobal}. #VenecoRun #BNB`;
+            window.open(`https://twitter.com/intent/tweet?text=${msg}`, '_blank');
+        }
 
+        // --- LÓGICA DEL JUEGO (ORIGINAL) ---
         function ajustar() { 
             const dpr = window.devicePixelRatio || 1;
             canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr;
@@ -216,6 +219,7 @@
             if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); }
             enviarDatosExcel(score);
             document.getElementById("finalScore").innerText = score; 
+            document.getElementById("finalBest").innerText = recordGlobal;
             document.getElementById("levelContainer").style.display = "none";
             document.getElementById("gameOverScreen").style.display = "flex"; 
         }
@@ -245,6 +249,19 @@
                 if(activo) {
                     chig.dy += chig.g; chig.y += chig.dy;
                     if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
+                    
+                    // Manejo de niveles
+                    let nuevoLvl = "PRINCIPIANTE";
+                    if(score >= 2000) nuevoLvl = "NIVEL CAOS";
+                    else if(score >= 1000) nuevoLvl = "NIVEL AREPA";
+                    else if(score >= 500) nuevoLvl = "NIVEL MANGO";
+                    else if(score >= 200) nuevoLvl = "NIVEL GUACAMAYA";
+
+                    if (nuevoLvl !== nivelActual) {
+                        nivelActual = nuevoLvl;
+                        document.getElementById("levelText").innerText = nivelActual;
+                    }
+
                     for(let i = obst.length - 1; i >= 0; i--) {
                         obst[i].x -= vel;
                         let bY = chig.suelo + (chig.h - obst[i].h);
