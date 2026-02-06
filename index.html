@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Animation Edition</title>
+    <title>Veneco Run - Final Animation</title>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
         
@@ -118,10 +118,11 @@
         const ctx = canvas.getContext("2d");
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzzOjoOCd5HwIdC6_1ZhzT_VheVHiORDF0mkIf_Zp6R9ajIrAP8xT3_U6Ah8aAPcYkHfA/exec";
 
-        // --- IMÁGENES ANIMADAS ---
+        // --- RECURSOS ---
         const imgC1 = new Image(); imgC1.src = 'chiguire.png';
         const imgC2 = new Image(); imgC2.src = 'chiguire2.png';
         const imgC3 = new Image(); imgC3.src = 'chiguire3.png';
+        const imgC4 = new Image(); imgC4.src = 'chiguire4.png';
         const imgD = new Image(); imgD.src = 'derrota.png';
         const imgB = new Image(); imgB.src = 'barril.png';
         const imgF = new Image(); imgF.src = 'fondo.png';
@@ -158,33 +159,13 @@
             document.getElementById("levelContainer").style.display = "block"; ajustar(); iniciar(); 
         }
 
-        function reiniciarRapido() {
-            document.getElementById("gameOverScreen").style.display = "none";
-            musFondo.currentTime = 0; musFondo.play(); iniciar();
-        }
-
-        function volverAlMenu() {
-            document.getElementById("gameOverScreen").style.display = "none";
-            canvas.style.display = "none"; document.getElementById("ui").style.display = "none"; mostrarMenuPrincipal();
-        }
-
-        async function verRanking() {
-            document.getElementById("rankingModal").style.display = "flex";
-            document.getElementById("rankingBody").innerHTML = "";
-            try {
-                const response = await fetch(URL_SCRIPT + "?action=getRanking");
-                const data = await response.json();
-                document.getElementById("loadingRanking").style.display = "none";
-                data.forEach((p, i) => { document.getElementById("rankingBody").innerHTML += `<tr><td>${i+1}</td><td>${p.usuario}</td><td>${p.puntaje}</td></tr>`; });
-            } catch (e) { document.getElementById("loadingRanking").innerText = "Error."; }
-        }
-
-        function cerrarRanking() { document.getElementById("rankingModal").style.display = "none"; }
-
         function ajustar() { 
             const dpr = window.devicePixelRatio || 1;
             canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr;
-            ctx.scale(dpr, dpr); chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
+            canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
+            ctx.scale(dpr, dpr); 
+            chig.suelo = window.innerHeight - 220; 
+            chig.y = chig.suelo;
         }
 
         function iniciar() { 
@@ -200,9 +181,28 @@
         }
 
         const saltar = () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.play(); } };
-        window.addEventListener("mousedown", saltar); window.addEventListener("touchstart", saltar);
+        
+        // CONTROLES
+        window.addEventListener("mousedown", saltar);
+        window.addEventListener("touchstart", (e) => { e.preventDefault(); saltar(); }, {passive: false});
+        window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
 
         function spawn() { if(!activo) return; obst.push({ x: window.innerWidth + 150, w: 80, h: 90 }); setTimeout(spawn, Math.max(1100 / (vel * 0.07), 700)); }
+
+        function reiniciarRapido() { document.getElementById("gameOverScreen").style.display = "none"; musFondo.currentTime = 0; musFondo.play(); iniciar(); }
+        function volverAlMenu() { document.getElementById("gameOverScreen").style.display = "none"; canvas.style.display = "none"; document.getElementById("ui").style.display = "none"; mostrarMenuPrincipal(); }
+
+        async function verRanking() {
+            document.getElementById("rankingModal").style.display = "flex";
+            document.getElementById("rankingBody").innerHTML = "";
+            try {
+                const response = await fetch(URL_SCRIPT + "?action=getRanking");
+                const data = await response.json();
+                document.getElementById("loadingRanking").style.display = "none";
+                data.forEach((p, i) => { document.getElementById("rankingBody").innerHTML += `<tr><td>${i+1}</td><td>${p.usuario}</td><td>${p.puntaje}</td></tr>`; });
+            } catch (e) { document.getElementById("loadingRanking").innerText = "Error."; }
+        }
+        function cerrarRanking() { document.getElementById("rankingModal").style.display = "none"; }
 
         function bucle(tiempoActual) {
             if(!activo && !chig.vivo) return;
@@ -210,6 +210,7 @@
             if (delta >= fpsObjetivo) {
                 ultimoTiempo = tiempoActual - (delta % fpsObjetivo);
                 ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                
                 bgX -= vel * 0.4; if(bgX <= -window.innerWidth) bgX = 0;
                 ctx.drawImage(imgF, bgX, 0, window.innerWidth + 2, window.innerHeight);
                 ctx.drawImage(imgF, bgX + window.innerWidth, 0, window.innerWidth + 2, window.innerHeight);
@@ -218,14 +219,17 @@
                     chig.dy += chig.g; chig.y += chig.dy;
                     if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
 
-                    // --- ANIMACIÓN ---
+                    // --- ANIMACIÓN 4 FRAMES ---
                     frameAnim++;
-                    let imgActual = imgC1;
+                    let imgActual;
                     if (chig.y < chig.suelo - 5) {
-                        imgActual = imgC3; // Imagen de salto
+                        imgActual = imgC3; 
                     } else {
-                        let ciclo = Math.floor(frameAnim / 6) % 3;
-                        imgActual = (ciclo === 0) ? imgC1 : (ciclo === 1) ? imgC2 : imgC3;
+                        let ciclo = Math.floor(frameAnim / 5) % 4;
+                        if(ciclo === 0) imgActual = imgC1;
+                        else if(ciclo === 1) imgActual = imgC2;
+                        else if(ciclo === 2) imgActual = imgC3;
+                        else imgActual = imgC4;
                     }
 
                     for(let i = obst.length - 1; i >= 0; i--) {
