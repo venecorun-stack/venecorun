@@ -6,6 +6,16 @@
     <title>Veneco Run - Final Edition</title>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; }
+        
+        /* BOTÓN MUTE GLOBAL */
+        #muteBtn { 
+            position: fixed; top: 20px; right: 20px; width: 45px; height: 45px; 
+            background: rgba(0,0,0,0.7); border: 2px solid #ffcc00; border-radius: 50%; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            z-index: 2000; font-size: 22px; color: white; transition: 0.2s;
+        }
+        #muteBtn:active { transform: scale(0.9); }
+
         #introScreen, #loginMenu, #mainMenu, #gameOverScreen, #rankingModal, #funWarning { 
             position: absolute; width: 100%; height: 100%; background-color: #000;
             background-position: center; background-repeat: no-repeat; background-size: contain;
@@ -15,9 +25,6 @@
         #loginMenu, #mainMenu { background-image: url('portada.png'); display: none; }
         
         @media (max-aspect-ratio: 1/1) { #introScreen, #loginMenu, #mainMenu { background-image: url('portada_mobile.png') !important; background-size: cover !important; } }
-
-        #funWarning { display: none; background: rgba(0,0,0,0.98); z-index: 1100; }
-        .warning-box { background: #111; padding: 30px; border: 2px solid #ff4444; border-radius: 30px; width: 85%; max-width: 320px; box-shadow: 0 0 50px rgba(255,0,0,0.3); }
 
         .login-box { background: rgba(10, 10, 10, 0.95); padding: 25px; border: 1px solid #ffcc00; border-radius: 30px; width: 85%; max-width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); backdrop-filter: blur(15px); }
         input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #333; font-size: 14px; background: #000; color: white; outline: none; }
@@ -35,11 +42,8 @@
 
         #ui { position: absolute; top: 10px; left: 10px; z-index: 850; display: none; pointer-events: none; }
         .score-text { font-size: 22px; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
-        #levelContainer { position: absolute; top: 10px; right: 10px; z-index: 800; display: none; display: flex; align-items: center; gap: 10px; }
-        #levelText { font-size: 18px; color: #ffcc00; font-weight: bold; text-shadow: 2px 2px 0 #000; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 5px; transition: 0.3s; }
-
-        /* ESTILO BOTÓN MUTE */
-        #muteBtn { width: 40px; height: 40px; background: rgba(0,0,0,0.6); border: 1px solid #ffcc00; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1000; font-size: 20px; pointer-events: auto; }
+        #levelContainer { position: absolute; top: 15px; right: 80px; z-index: 800; display: none; }
+        #levelText { font-size: 18px; color: #ffcc00; font-weight: bold; text-shadow: 2px 2px 0 #000; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 5px; }
 
         @keyframes palpitando { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
         .caos-style { color: #ff0000 !important; animation: palpitando 0.5s infinite; text-shadow: 0 0 10px #ff0000 !important; }
@@ -56,6 +60,8 @@
 </head>
 <body>
 
+    <div id="muteBtn" onclick="toggleMute(event)">🔊</div>
+
     <div id="introScreen" onclick="clicPortada()">
         <div style="font-size:24px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00; background: rgba(0,0,0,0.5); width:100%;">TOCA PARA EMPEZAR</div>
     </div>
@@ -65,16 +71,16 @@
             <h2 style="color:#ffcc00; margin-top:0;">REGISTRO AIRDROP</h2>
             <input type="text" id="tgUser" placeholder="Usuario">
             <input type="text" id="bnbWallet" placeholder="Wallet BNB BEP20 (Metamask)">
-            <button class="btn" id="btnLogin" onclick="autenticarYEntrar()">REGISTRARSE / ENTRAR</button>
+            <button class="btn" onclick="autenticarYEntrar()">REGISTRARSE / ENTRAR</button>
             <button class="btn btn-fun" onclick="mostrarAdvertencia()">JUGAR POR DIVERSIÓN</button>
             <div id="loadingLogin" style="display:none; color:#ffcc00; font-size:12px; margin-top:10px;">Cargando...</div>
         </div>
     </div>
 
-    <div id="funWarning">
+    <div id="funWarning" style="display:none;">
         <div class="warning-box">
             <h2 style="color:#ff4444; margin-top:0;">¡ATENCIÓN!</h2>
-            <p style="font-size:16px; line-height:1.4;">En esta modalidad <b>no recibirá airdrop</b> ni premios oficiales.</p>
+            <p>En esta modalidad <b>no recibirá airdrop</b> ni premios oficiales.</p>
             <button class="btn btn-continue" onclick="entrarComoInvitado()">CONTINUAR</button>
             <button class="btn btn-back" onclick="ocultarAdvertencia()">VOLVER ATRÁS</button>
         </div>
@@ -84,14 +90,14 @@
         <div class="login-box" style="border-color: #00ffff;">
             <p style="color:#aaa; font-size: 11px; margin: 0;">PLAYER PROFILE</p>
             <h2 id="userNameTitle" style="color:#fff; margin: 5px 0 10px 0; font-size: 26px;">USUARIO</h2>
-            <div style="display: flex; justify-content: center;"><button class="btn-play-neon" onclick="prepararJuego()">JUGAR</button></div>
+            <button class="btn-play-neon" style="margin: 15px auto;" onclick="prepararJuego()">JUGAR</button>
             <p id="menuBestScore" style="margin: 0 0 15px 0; color: #00ffff; font-size: 14px;">Record: 0 pts</p>
             <button class="btn" style="background:transparent; border:1px solid #00ffff; color:#00ffff;" onclick="verRanking()">🏆 RANKING GLOBAL</button>
             <div class="social-grid">
-                <a href="https://t.me/venecoinu" target="_blank" class="social-item" style="border-bottom: 2px solid #0088cc;">Telegram</a>
-                <a href="https://x.com/veneco_toke" target="_blank" class="social-item" style="border-bottom: 2px solid #fff;">Twitter</a>
-                <a href="https://www.tiktok.com/@venecotoken" target="_blank" class="social-item" style="border-bottom: 2px solid #ff0050;">TikTok</a>
-                <a href="https://veneco.lol/" target="_blank" class="social-item" style="border-bottom: 2px solid #ffcc00;">Website</a>
+                <a href="https://t.me/venecoinu" target="_blank" class="social-item">Telegram</a>
+                <a href="https://x.com/veneco_toke" target="_blank" class="social-item">Twitter</a>
+                <a href="https://www.tiktok.com/@venecotoken" target="_blank" class="social-item">TikTok</a>
+                <a href="https://veneco.lol/" target="_blank" class="social-item">Website</a>
             </div>
             <button class="btn" style="background:transparent; color:#ff4444; border:1px solid #ff4444; font-size:12px; margin-top:20px;" onclick="cerrarSesion()">CERRAR SESIÓN ✖</button>
         </div>
@@ -111,18 +117,13 @@
         <p style="color: #ffcc00; font-size: 14px; margin:0;">RECORD: <span id="highScoreText">0</span></p>
     </div>
 
-    <div id="levelContainer">
-        <div id="muteBtn" onclick="toggleMute()">🔊</div>
-        <p id="levelText">NIVEL AREPA</p>
-    </div>
+    <div id="levelContainer"><p id="levelText">NIVEL AREPA</p></div>
 
     <div id="gameOverScreen">
-        <h1 style="color:#ff4444; font-size:35px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
+        <h1 style="color:#ff4444; font-size:35px;">¡FIN DEL JUEGO!</h1>
         <div class="login-box" style="margin-bottom: 20px;">
-            <div style="display:flex; align-items:center; gap:20px; justify-content:center;">
-                <div><p style="font-size:24px; margin:0;">Puntos: <span id="finalScore">0</span></p><p style="font-size:18px; color:#ffcc00; margin:0;">Récord: <span id="finalBest">0</span></p></div>
-                <img src="derrota.png" style="width:80px; border-radius:15px;">
-            </div>
+            <p style="font-size:24px; margin:0;">Puntos: <span id="finalScore">0</span></p>
+            <p style="font-size:18px; color:#ffcc00; margin:0;">Récord: <span id="finalBest">0</span></p>
         </div>
         <button class="btn" onclick="reiniciarRapido()">REINTENTAR</button>
         <button class="btn" style="background:rgba(255,255,255,0.1); color:white;" onclick="volverAlMenu()">VOLVER AL MENÚ</button>
@@ -156,12 +157,22 @@
         let estela = [], ultimoTiempo = 0, muted = false;
         const fpsObjetivo = 1000 / 60; 
 
-        // LÓGICA DE MUTE
-        function toggleMute() {
+        // LÓGICA DE MUTE GLOBAL
+        function toggleMute(e) {
+            if(e) e.stopPropagation(); // Evita el salto o clicks accidentales
             muted = !muted;
             const btn = document.getElementById("muteBtn");
             btn.innerText = muted ? "🔇" : "🔊";
-            [sndClick, sndSalto, sndPerder, musFondo, sndIntro].forEach(s => s.muted = muted);
+            [sndClick, sndSalto, sndPerder, musFondo, sndIntro].forEach(s => {
+                s.muted = muted;
+                // Si silenciamos, pausamos la que esté sonando, si quitamos silencio, retomamos si el juego está activo
+                if(muted) s.pause();
+            });
+            // Retomar música según el estado si quitamos el silencio
+            if(!muted) {
+                if(activo) musFondo.play();
+                else if(document.getElementById("introScreen").style.display === "none") sndIntro.play();
+            }
         }
 
         function mostrarAdvertencia() { document.getElementById("funWarning").style.display = "flex"; }
@@ -183,19 +194,25 @@
             document.getElementById("loadingLogin").style.display = "none";
         }
 
-        function clicPortada() { sndClick.play(); sndIntro.play(); document.getElementById("introScreen").style.display = "none"; if(localStorage.getItem('venecoUser')) mostrarMenuPrincipal(); else document.getElementById("loginMenu").style.display = "flex"; }
+        function clicPortada() { if(!muted) { sndClick.play(); sndIntro.play(); } document.getElementById("introScreen").style.display = "none"; if(localStorage.getItem('venecoUser')) mostrarMenuPrincipal(); else document.getElementById("loginMenu").style.display = "flex"; }
         function mostrarMenuPrincipal() { document.getElementById("mainMenu").style.display = "flex"; document.getElementById("userNameTitle").innerText = localStorage.getItem('venecoUser').toUpperCase(); document.getElementById("menuBestScore").innerText = "Record: " + (localStorage.getItem('venecoRunHighScore') || 0); }
-        function prepararJuego() { document.getElementById("mainMenu").style.display = "none"; document.getElementById("ui").style.display = "block"; document.getElementById("levelContainer").style.display = "flex"; canvas.style.display = "block"; ajustar(); sndIntro.pause(); musFondo.currentTime = 0; musFondo.play(); document.getElementById("highScoreText").innerText = recordGlobal; iniciar(); }
+        function prepararJuego() { document.getElementById("mainMenu").style.display = "none"; document.getElementById("ui").style.display = "block"; document.getElementById("levelContainer").style.display = "block"; canvas.style.display = "block"; ajustar(); sndIntro.pause(); musFondo.currentTime = 0; if(!muted) musFondo.play(); document.getElementById("highScoreText").innerText = recordGlobal; iniciar(); }
         function ajustar() { const dpr = window.devicePixelRatio || 1; canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr; canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px'; ctx.scale(dpr, dpr); chig.suelo = window.innerHeight - 220; chig.y = chig.suelo; chig.x = window.innerWidth < 600 ? 30 : 100; }
         function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; frameAnim = 0; estela = []; bgX_cielo = 0; bgX_suelo = 0; ultimoTiempo = performance.now(); requestAnimationFrame(bucle); setTimeout(spawn, 2000); }
         async function enviarDatosExcel(puntos) { if(localStorage.getItem('venecoWallet') === 'no-wallet') return; const datos = { usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoWallet'), puntaje: puntos }; try { fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) }); } catch (e) {} }
-        function morir() { activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play(); if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); } enviarDatosExcel(recordGlobal); document.getElementById("finalScore").innerText = score; document.getElementById("finalBest").innerText = recordGlobal; document.getElementById("gameOverScreen").style.display = "flex"; }
-        function reiniciarRapido() { document.getElementById("gameOverScreen").style.display = "none"; musFondo.currentTime = 0; musFondo.play(); iniciar(); }
-        function volverAlMenu() { document.getElementById("gameOverScreen").style.display = "none"; canvas.style.display = "none"; document.getElementById("ui").style.display = "none"; document.getElementById("levelContainer").style.display = "none"; mostrarMenuPrincipal(); }
+        function morir() { activo = false; chig.vivo = false; musFondo.pause(); if(!muted) sndPerder.play(); if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); } enviarDatosExcel(recordGlobal); document.getElementById("finalScore").innerText = score; document.getElementById("finalBest").innerText = recordGlobal; document.getElementById("gameOverScreen").style.display = "flex"; }
+        function reiniciarRapido() { document.getElementById("gameOverScreen").style.display = "none"; musFondo.currentTime = 0; if(!muted) musFondo.play(); iniciar(); }
+        function volverAlMenu() { document.getElementById("gameOverScreen").style.display = "none"; canvas.style.display = "none"; document.getElementById("ui").style.display = "none"; document.getElementById("levelContainer").style.display = "none"; if(!muted) sndIntro.play(); mostrarMenuPrincipal(); }
         function cerrarSesion() { localStorage.clear(); location.reload(); }
 
-        const saltar = () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; if(!muted) { sndSalto.currentTime = 0; sndSalto.play(); } } };
-        window.addEventListener("mousedown", saltar); window.addEventListener("touchstart", (e) => { if(activo) { e.preventDefault(); saltar(); } }, {passive: false});
+        const saltar = (e) => { 
+            if(e && e.target.id === 'muteBtn') return; // Si toca el botón de mute, no salta
+            if(activo && chig.y >= chig.suelo - 10) { 
+                chig.dy = chig.salto; 
+                if(!muted) { sndSalto.currentTime = 0; sndSalto.play(); } 
+            } 
+        };
+        window.addEventListener("mousedown", saltar); window.addEventListener("touchstart", (e) => { if(activo) { if(e.target.id !== 'muteBtn') e.preventDefault(); saltar(e); } }, {passive: false});
         window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
 
         function spawn() { if(!activo) return; let esDoble = score >= 200 && Math.random() > 0.6; obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble }); let delay = Math.max(1100 / (vel * 0.07), esDoble ? 1100 : 700); setTimeout(spawn, delay); }
