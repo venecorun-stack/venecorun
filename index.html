@@ -7,7 +7,6 @@
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
         
-        /* Contenedores de Pantallas */
         #introScreen, #loginMenu, #mainMenu, #gameOverScreen, #rankingModal { 
             position: absolute; width: 100%; height: 100%; background-color: #000;
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
@@ -20,21 +19,18 @@
         
         .login-box { background: rgba(0,0,0,0.9); padding: 25px; border: 3px solid #ffcc00; border-radius: 20px; width: 85%; max-width: 350px; }
         
-        /* Botones e Inputs */
         input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; background: #222; color: white; }
         .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; width: 100%; }
         .btn-ranking { background: #00ffff; box-shadow: 0px 5px 0px #008b8b; margin-top: 15px; }
         .btn-cerrar { background: #ff4444; box-shadow: 0px 5px 0px #8b0000; margin-top: 20px; font-size: 14px; padding: 10px; width: auto; }
         .share-btn { color: white; padding: 10px; border-radius: 10px; font-size: 14px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
 
-        /* Estilo Ventana Ranking */
         #rankingModal { background: rgba(0,0,0,0.95); display: none; z-index: 1001; }
         .ranking-content { background: #111; border: 2px solid #ffcc00; padding: 20px; border-radius: 15px; width: 85%; max-width: 400px; max-height: 70vh; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { color: #ffcc00; border-bottom: 2px solid #ffcc00; padding: 10px; }
         td { padding: 10px; border-bottom: 1px solid #333; }
         
-        /* UI del Juego */
         #ui { position: absolute; top: 10px; left: 10px; z-index: 850; display: none; pointer-events: none; }
         .score-text { font-size: 22px; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
         #levelContainer { position: absolute; top: 10px; right: 10px; z-index: 800; display: none; }
@@ -110,9 +106,10 @@
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyb83SGQoXgHh_eWtJzEr39FmnnoiM__y7fH_GEytH5uAqVCczOUufe523OnXhRcSYzYw/exec";
+        
+        // --- URL ACTUALIZADA CON TU NUEVO SCRIPT ---
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzzOjoOCd5HwIdC6_1ZhzT_VheVHiORDF0mkIf_Zp6R9ajIrAP8xT3_U6Ah8aAPcYkHfA/exec";
 
-        // Imágenes y Sonidos (Se mantienen igual)
         const imgC = new Image(); imgC.src = 'chiguire.png';
         const imgD = new Image(); imgD.src = 'derrota.png';
         const imgB = new Image(); imgB.src = 'barril.png';
@@ -129,7 +126,6 @@
         let estela = [], nivelActual = "", ultimoTiempo = 0;
         const fpsObjetivo = 1000 / 60; 
 
-        // --- LÓGICA DE FLUJO DE MENÚS ---
         function clicPortada() { 
             sndClick.play(); sndIntro.play(); 
             document.getElementById("introScreen").style.display = "none"; 
@@ -181,19 +177,19 @@
             document.getElementById("rankingBody").innerHTML = "";
             document.getElementById("loadingRanking").style.display = "block";
             try {
+                // Se usa la URL con el parámetro action para el GET
                 const response = await fetch(URL_SCRIPT + "?action=getRanking");
                 const data = await response.json();
                 document.getElementById("loadingRanking").style.display = "none";
                 data.forEach((player, index) => {
                     document.getElementById("rankingBody").innerHTML += `<tr><td>${index+1}</td><td>${player.usuario}</td><td>${player.puntaje}</td></tr>`;
                 });
-            } catch (e) { document.getElementById("loadingRanking").innerText = "Error al cargar."; }
+            } catch (e) { document.getElementById("loadingRanking").innerText = "Error al conectar con el Ranking."; }
         }
 
         function cerrarRanking() { document.getElementById("rankingModal").style.display = "none"; }
         function cerrarSesion() { localStorage.clear(); location.reload(); }
 
-        // --- LÓGICA DEL JUEGO (SIN CAMBIOS) ---
         function ajustar() { 
             const dpr = window.devicePixelRatio || 1;
             canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr;
