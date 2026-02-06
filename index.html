@@ -25,8 +25,9 @@
         #rankingModal { background: rgba(0,0,0,0.98); display: none; z-index: 1001; }
 
         /* Cajas y Botones */
-        .login-box { background: rgba(10, 10, 10, 0.9); padding: 25px; border: 1px solid rgba(255, 204, 0, 0.4); border-radius: 30px; width: 85%; max-width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); backdrop-filter: blur(15px); }
-        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #333; font-size: 16px; background: #000; color: white; }
+        .login-box { background: rgba(10, 10, 10, 0.92); padding: 25px; border: 1px solid rgba(255, 204, 0, 0.4); border-radius: 30px; width: 85%; max-width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); backdrop-filter: blur(15px); }
+        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #333; font-size: 14px; background: #000; color: white; outline: none; }
+        input:focus { border-color: #ffcc00; }
         
         /* BOTÓN PLAY NEÓN */
         .btn-play-neon { 
@@ -78,10 +79,11 @@
 
     <div id="loginMenu">
         <div class="login-box">
-            <h2 style="color:#ffcc00; margin-top:0;">REGISTRO</h2>
-            <input type="text" id="tgUser" placeholder="@tu_usuario">
-            <input type="text" id="bnbWallet" placeholder="Wallet BNB">
-            <button class="btn" onclick="guardarYEntrar()">LISTO</button>
+            <h2 style="color:#ffcc00; margin-top:0; font-size: 20px;">REGISTRO AIRDROP</h2>
+            <p style="font-size: 11px; color: #888; margin-bottom: 10px;">Ingresa tus datos para participar</p>
+            <input type="text" id="tgUser" placeholder="Usuario (Ej: @tu_nombre)">
+            <input type="text" id="bnbWallet" placeholder="Wallet BNB BEP20 (Metamask)">
+            <button class="btn" onclick="guardarYEntrar()">REGISTRARME</button>
         </div>
     </div>
 
@@ -99,16 +101,16 @@
             <button class="btn btn-ranking" onclick="verRanking()">🏆 RANKING GLOBAL</button>
 
             <div class="social-grid">
-                <a href="https://t.me/tu_canal" target="_blank" class="social-item" style="border-left: 3px solid #0088cc;">
+                <a href="https://t.me/venecoinu" target="_blank" class="social-item" style="border-left: 3px solid #0088cc;">
                     <span style="font-size:16px;">✈</span> Telegram
                 </a>
-                <a href="https://x.com/tu_cuenta" target="_blank" class="social-item" style="border-left: 3px solid #fff;">
+                <a href="https://x.com/veneco_toke" target="_blank" class="social-item" style="border-left: 3px solid #fff;">
                     <span style="font-size:16px;">𝕏</span> Twitter
                 </a>
-                <a href="https://tiktok.com/@tu_cuenta" target="_blank" class="social-item" style="border-left: 3px solid #ff0050;">
+                <a href="https://www.tiktok.com/@venecotoken" target="_blank" class="social-item" style="border-left: 3px solid #ff0050;">
                     <span style="font-size:16px;">♪</span> TikTok
                 </a>
-                <a href="https://tuweb.com" target="_blank" class="social-item" style="border-left: 3px solid #ffcc00;">
+                <a href="https://veneco.lol/" target="_blank" class="social-item" style="border-left: 3px solid #ffcc00;">
                     <span style="font-size:16px;">🌐</span> Website
                 </a>
             </div>
@@ -153,6 +155,7 @@
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
+        // Tu script de Google Sheets para guardar datos
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyb83SGQoXgHh_eWtJzEr39FmnnoiM__y7fH_GEytH5uAqVCczOUufe523OnXhRcSYzYw/exec";
 
         const imgC1 = new Image(); imgC1.src = 'chiguire.png';
@@ -317,7 +320,7 @@
                             ctx.drawImage(imgB, (obst[i].x + 80) - 35, bY, 80, obst[i].h);
                         } else { ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h); }
                         
-                        if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 > obst[i].x + 35 && chig.y + 35 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
+                        if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 >         obst[i].x + 35 && chig.y + 35 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
                         if(obst[i].x < -200) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.15; }
                     }
                     ctx.drawImage(imgActual, chig.x, chig.y, chig.w, chig.h);
@@ -331,6 +334,7 @@
             document.getElementById("rankingBody").innerHTML = "";
             document.getElementById("loadingRanking").style.display = "block";
             try {
+                // Tu script de ranking
                 const response = await fetch("https://script.google.com/macros/s/AKfycbzzOjoOCd5HwIdC6_1ZhzT_VheVHiORDF0mkIf_Zp6R9ajIrAP8xT3_U6Ah8aAPcYkHfA/exec?action=getRanking");
                 const data = await response.json();
                 document.getElementById("loadingRanking").style.display = "none";
