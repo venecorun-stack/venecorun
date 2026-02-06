@@ -169,20 +169,9 @@
         function guardarYEntrar() {
             const u = document.getElementById("tgUser").value.trim();
             const w = document.getElementById("bnbWallet").value.trim();
-            
-            // Validar formato Wallet BNB (0x + 40 caracteres hex)
             const walletRegex = /^0x[a-fA-F0-9]{40}$/;
-
-            if(u.length < 3) {
-                alert("Por favor, ingresa un nombre de usuario válido.");
-                return;
-            }
-
-            if(!walletRegex.test(w)) {
-                alert("⚠️ Formato de Wallet inválido.\n\nAsegúrate de que empiece por 0x y sea una dirección BEP20 correcta.");
-                return;
-            }
-
+            if(u.length < 3) { alert("Por favor, ingresa un nombre de usuario válido."); return; }
+            if(!walletRegex.test(w)) { alert("⚠️ Formato de Wallet inválido.\n\nAsegúrate de que empiece por 0x y sea una dirección BEP20 correcta."); return; }
             localStorage.setItem('venecoUser', u);
             localStorage.setItem('venecoWallet', w);
             document.getElementById("loginMenu").style.display = "none";
@@ -212,13 +201,10 @@
             const dpr = window.devicePixelRatio || 1;
             const w = window.innerWidth;
             const h = window.innerHeight;
-            canvas.width = w * dpr; 
-            canvas.height = h * dpr;
-            canvas.style.width = w + 'px'; 
-            canvas.style.height = h + 'px';
+            canvas.width = w * dpr; canvas.height = h * dpr;
+            canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
             ctx.scale(dpr, dpr); 
-            chig.suelo = h - 220; 
-            chig.y = chig.suelo;
+            chig.suelo = h - 220; chig.y = chig.suelo;
             chig.x = w < 600 ? 30 : 100;
         }
 
@@ -258,9 +244,7 @@
 
         const saltar = () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.currentTime = 0; sndSalto.play(); } };
         window.addEventListener("mousedown", saltar);
-        window.addEventListener("touchstart", (e) => { 
-            if(activo) { e.preventDefault(); saltar(); }
-        }, {passive: false});
+        window.addEventListener("touchstart", (e) => { if(activo) { e.preventDefault(); saltar(); } }, {passive: false});
         window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
         window.onresize = ajustar;
 
@@ -280,7 +264,11 @@
             if (delta >= fpsObjetivo) {
                 ultimoTiempo = tiempoActual - (delta % fpsObjetivo);
                 ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-                bgX -= vel * 0.4; if(bgX <= -window.innerWidth) bgX = 0;
+                
+                // SINCRONIZACIÓN DE FONDO CON OBSTÁCULOS (vel)
+                bgX -= vel; 
+                if(bgX <= -window.innerWidth) bgX = 0;
+                
                 ctx.drawImage(imgF, bgX, 0, window.innerWidth + 1, window.innerHeight);
                 ctx.drawImage(imgF, bgX + window.innerWidth, 0, window.innerWidth + 1, window.innerHeight);
 
