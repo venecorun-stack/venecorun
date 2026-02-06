@@ -17,19 +17,33 @@
         #loginMenu, #mainMenu { background-image: url('portada.png'); background-size: contain; background-repeat: no-repeat; background-position: center; display: none; }
         #gameOverScreen { background: rgba(0,0,0,0.95); display: none; }
         
-        .login-box { background: rgba(0,0,0,0.9); padding: 25px; border: 3px solid #ffcc00; border-radius: 20px; width: 85%; max-width: 350px; }
+        .login-box { background: rgba(15, 15, 15, 0.95); padding: 25px; border: 1px solid rgba(255, 204, 0, 0.3); border-radius: 30px; width: 85%; max-width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
         
-        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; background: #222; color: white; }
-        .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; width: 100%; }
-        .btn-ranking { background: #00ffff; box-shadow: 0px 5px 0px #008b8b; margin-top: 15px; }
-        .btn-cerrar { background: #ff4444; box-shadow: 0px 5px 0px #8b0000; margin-top: 20px; font-size: 14px; padding: 10px; width: auto; }
-        .share-btn { color: white; padding: 10px; border-radius: 10px; font-size: 14px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #333; font-size: 16px; background: #000; color: white; }
+        
+        /* BOTÓN JUGAR CIRCULAR NEÓN */
+        .btn-play-circle {
+            width: 120px; height: 120px; border-radius: 50%; background: #ffcc00; color: #000;
+            font-size: 20px; font-weight: 900; border: none; cursor: pointer;
+            box-shadow: 0 0 20px #ffcc00, 0 0 40px rgba(255, 204, 0, 0.5);
+            margin: 20px 0; transition: 0.3s; display: flex; align-items: center; justify-content: center;
+            text-transform: uppercase; border: 4px solid #fff;
+        }
+        .btn-play-circle:active { transform: scale(0.9); box-shadow: 0 0 10px #ffcc00; }
 
-        #rankingModal { background: rgba(0,0,0,0.95); display: none; z-index: 1001; }
-        .ranking-content { background: #111; border: 2px solid #ffcc00; padding: 20px; border-radius: 15px; width: 85%; max-width: 400px; max-height: 70vh; overflow-y: auto; }
+        .btn { padding: 12px 25px; font-size: 16px; font-weight: bold; background: #333; color: white; border: none; border-radius: 50px; cursor: pointer; margin-top: 10px; width: 100%; transition: 0.3s; }
+        .btn-ranking { background: transparent; border: 2px solid #00ffff; color: #00ffff; box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); }
+        .btn-primary { background: #ffcc00; color: #000; box-shadow: 0 4px 0 #b38f00; }
+        .btn-menu { background: rgba(255,255,255,0.1); font-size: 14px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.2); }
+        
+        .share-btn { color: white; padding: 10px; border-radius: 12px; font-size: 13px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .share-btn:active { transform: scale(0.95); }
+
+        #rankingModal { background: rgba(0,0,0,0.98); display: none; z-index: 1001; }
+        .ranking-content { background: #0a0a0a; border: 1px solid #ffcc00; padding: 20px; border-radius: 25px; width: 85%; max-width: 400px; max-height: 75vh; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { color: #ffcc00; border-bottom: 2px solid #ffcc00; padding: 10px; }
-        td { padding: 10px; border-bottom: 1px solid #333; }
+        th { color: #ffcc00; border-bottom: 2px solid #333; padding: 12px; font-size: 14px; }
+        td { padding: 12px; border-bottom: 1px solid #1a1a1a; font-size: 14px; }
         
         #ui { position: absolute; top: 10px; left: 10px; z-index: 850; display: none; pointer-events: none; }
         .score-text { font-size: 22px; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
@@ -47,43 +61,48 @@
 
     <div id="loginMenu">
         <div class="login-box">
-            <h2 style="color:#ffcc00; margin-top:0;">REGISTRO AIRDROP</h2>
-            <input type="text" id="tgUser" placeholder="Usuario">
-            <input type="text" id="bnbWallet" placeholder="Wallet BNB BEP20 (MetaMask)">
-            <button class="btn" onclick="guardarYEntrar()">LISTO</button>
+            <h2 style="color:#ffcc00; margin-top:0; letter-spacing: 1px;">REGISTRO AIRDROP</h2>
+            <input type="text" id="tgUser" placeholder="Tu Usuario">
+            <input type="text" id="bnbWallet" placeholder="Wallet BNB BEP20">
+            <button class="btn btn-primary" onclick="guardarYEntrar()">LISTO</button>
         </div>
     </div>
 
     <div id="mainMenu">
-        <div class="login-box">
-            <h2 id="welcomeText" style="color:#ffcc00; margin-top:0;">¡HOLA!</h2>
-            <p id="menuBestScore" style="margin: 0 0 15px 0; color: #00ffff;">Record: 0</p>
+        <div class="login-box" style="border-color: rgba(0, 255, 255, 0.3);">
+            <p id="welcomeText" style="color:#aaa; font-size: 12px; margin: 0; text-transform: uppercase;">Bienvenido</p>
+            <h2 id="userNameTitle" style="color:#fff; margin: 5px 0 15px 0; font-size: 24px;">USUARIO</h2>
             
-            <button class="btn" onclick="prepararJuego()">JUGAR</button>
-            <button class="btn btn-ranking" onclick="verRanking()">RANKING</button>
+            <div style="display: flex; justify-content: center;">
+                <button class="btn-play-circle" onclick="prepararJuego()">JUGAR</button>
+            </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px;">
+            <p id="menuBestScore" style="margin: 0 0 15px 0; color: #00ffff; font-size: 14px;">Record: 0 pts</p>
+            
+            <button class="btn btn-ranking" onclick="verRanking()">🏆 RANKING GLOBAL</button>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px;">
                 <a href="https://t.me/venecoinu" target="_blank" class="share-btn" style="text-decoration: none; background: #0088cc;">✈ Telegram</a>
-                <a href="https://x.com/veneco_toke" target="_blank" class="share-btn" style="text-decoration: none; background: #000; border: 1px solid #555;">𝕏 Twitter</a>
+                <a href="https://x.com/veneco_toke" target="_blank" class="share-btn" style="text-decoration: none; background: #000; border: 1px solid #333;">𝕏 Twitter</a>
                 <a href="https://www.tiktok.com/@venecotoken" target="_blank" class="share-btn" style="text-decoration: none; background: #ff0050;">♪ TikTok</a>
                 <a href="https://www.veneco.lol/" target="_blank" class="share-btn" style="text-decoration: none; background: #ffcc00; color: #000;">🌐 Web</a>
             </div>
 
-            <button class="btn btn-cerrar" onclick="cerrarSesion()">CERRAR SESIÓN ✖</button>
+            <p onclick="cerrarSesion()" style="color: #666; font-size: 11px; margin-top: 20px; cursor: pointer; text-decoration: underline;">Cerrar sesión / Cambiar wallet</p>
         </div>
     </div>
 
     <div id="rankingModal">
         <div class="ranking-content">
-            <h2 style="color:#ffcc00;">TOP 10 PLAYERS</h2>
-            <div id="loadingRanking">Cargando datos...</div>
+            <h2 style="color:#ffcc00; margin-top: 0;">TOP 10 PLAYERS</h2>
+            <div id="loadingRanking">Cargando...</div>
             <table id="rankingTable">
                 <thead>
                     <tr><th>#</th><th>Usuario</th><th>Puntos</th></tr>
                 </thead>
                 <tbody id="rankingBody"></tbody>
             </table>
-            <button class="btn" style="margin-top:20px;" onclick="cerrarRanking()">VOLVER</button>
+            <button class="btn btn-primary" style="margin-top:20px;" onclick="cerrarRanking()">VOLVER</button>
         </div>
     </div>
 
@@ -96,16 +115,22 @@
     <div id="levelContainer"><p id="levelText">PRINCIPIANTE</p></div>
 
     <div id="gameOverScreen">
-        <h1 style="color:#ff4444; font-size:35px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
-        <div style="display:flex; align-items:center; gap:20px; justify-content:center; margin-bottom:15px;">
-            <div>
-                <p style="font-size:24px; margin:0;">Puntos: <span id="finalScore">0</span></p>
-                <p style="font-size:18px; color:#ffcc00; margin:0;">Récord: <span id="finalBest">0</span></p>
+        <h1 style="color:#ff4444; font-size:35px; text-shadow: 3px 3px 0 #000; margin-bottom: 10px;">¡FIN DEL JUEGO!</h1>
+        <div class="login-box" style="margin-bottom: 20px;">
+            <div style="display:flex; align-items:center; gap:20px; justify-content:center;">
+                <div>
+                    <p style="font-size:24px; margin:0;">Puntos: <span id="finalScore">0</span></p>
+                    <p style="font-size:18px; color:#ffcc00; margin:0;">Récord: <span id="finalBest">0</span></p>
+                </div>
+                <img src="derrota.png" style="width:80px; border-radius:15px;">
             </div>
-            <img src="derrota.png" style="width:100px; border-radius:15px;">
         </div>
-        <button class="share-btn" style="background: #000; border: 2px solid #555; padding: 12px 25px; border-radius: 50px; width: auto;" onclick="compartirX()">𝕏 Compartir en Twitter</button>
-        <button class="btn" style="width: auto; padding: 15px 50px;" onclick="location.reload()">REINTENTAR</button>
+        
+        <div style="width: 85%; max-width: 300px;">
+            <button class="btn btn-primary" style="font-size: 20px; padding: 15px;" onclick="reiniciarRapido()">REINTENTAR</button>
+            <button class="share-btn" style="background: #000; border: 1px solid #555; width: 100%; margin-top: 10px; padding: 12px;" onclick="compartirX()">𝕏 Compartir Resultado</button>
+            <button class="btn btn-menu" onclick="volverAlMenu()">VOLVER AL MENÚ</button>
+        </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -134,11 +159,8 @@
         function clicPortada() { 
             sndClick.play(); sndIntro.play(); 
             document.getElementById("introScreen").style.display = "none"; 
-            if(localStorage.getItem('venecoUser')) {
-                mostrarMenuPrincipal();
-            } else {
-                document.getElementById("loginMenu").style.display = "flex"; 
-            }
+            if(localStorage.getItem('venecoUser')) { mostrarMenuPrincipal(); } 
+            else { document.getElementById("loginMenu").style.display = "flex"; }
         }
 
         function guardarYEntrar() {
@@ -155,11 +177,20 @@
 
         function mostrarMenuPrincipal() {
             document.getElementById("mainMenu").style.display = "flex";
-            document.getElementById("welcomeText").innerText = "¡HOLA, " + localStorage.getItem('venecoUser').toUpperCase() + "!";
-            document.getElementById("menuBestScore").innerText = "Tu Record: " + (localStorage.getItem('venecoRunHighScore') || 0);
+            document.getElementById("userNameTitle").innerText = localStorage.getItem('venecoUser').toUpperCase();
+            document.getElementById("menuBestScore").innerText = "Tu Record: " + (localStorage.getItem('venecoRunHighScore') || 0) + " pts";
+        }
+
+        function volverAlMenu() {
+            sndClick.play();
+            document.getElementById("gameOverScreen").style.display = "none";
+            canvas.style.display = "none";
+            document.getElementById("ui").style.display = "none";
+            mostrarMenuPrincipal();
         }
 
         function prepararJuego() { 
+            sndClick.play();
             document.getElementById("mainMenu").style.display = "none";
             sndIntro.pause(); musFondo.play(); 
             canvas.style.display = "block"; 
@@ -170,7 +201,16 @@
             ajustar(); iniciar(); 
         }
 
+        function reiniciarRapido() {
+            sndClick.play();
+            document.getElementById("gameOverScreen").style.display = "none";
+            musFondo.currentTime = 0;
+            musFondo.play();
+            iniciar();
+        }
+
         async function verRanking() {
+            sndClick.play();
             document.getElementById("rankingModal").style.display = "flex";
             document.getElementById("rankingBody").innerHTML = "";
             document.getElementById("loadingRanking").style.display = "block";
@@ -178,21 +218,20 @@
                 const response = await fetch(URL_SCRIPT + "?action=getRanking");
                 const data = await response.json();
                 document.getElementById("loadingRanking").style.display = "none";
-                data.forEach((player, index) => {
-                    document.getElementById("rankingBody").innerHTML += `<tr><td>${index+1}</td><td>${player.usuario}</td><td>${player.puntaje}</td></tr>`;
+                data.forEach((p, i) => {
+                    document.getElementById("rankingBody").innerHTML += `<tr><td>${i+1}</td><td>${p.usuario}</td><td>${p.puntaje}</td></tr>`;
                 });
-            } catch (e) { document.getElementById("loadingRanking").innerText = "Error al conectar."; }
+            } catch (e) { document.getElementById("loadingRanking").innerText = "Error de conexión."; }
         }
 
-        function cerrarRanking() { document.getElementById("rankingModal").style.display = "none"; }
-        function cerrarSesion() { localStorage.clear(); location.reload(); }
+        function cerrarRanking() { sndClick.play(); document.getElementById("rankingModal").style.display = "none"; }
+        function cerrarSesion() { if(confirm("¿Cerrar sesión?")){localStorage.clear(); location.reload();} }
         
         function compartirX() {
             const msg = `🏆 ¡He conseguido ${score} puntos en Veneco Run! 🚀 Récord: ${recordGlobal}. #VenecoRun #BNB`;
             window.open(`https://twitter.com/intent/tweet?text=${msg}`, '_blank');
         }
 
-        // --- LÓGICA DEL JUEGO (ORIGINAL) ---
         function ajustar() { 
             const dpr = window.devicePixelRatio || 1;
             canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr;
@@ -203,7 +242,8 @@
         }
 
         function iniciar() { 
-            activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = []; 
+            activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; 
+            document.getElementById("score").innerText = "0";
             ultimoTiempo = performance.now();
             requestAnimationFrame(bucle); 
             setTimeout(spawn, 2000); 
@@ -250,17 +290,12 @@
                     chig.dy += chig.g; chig.y += chig.dy;
                     if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
                     
-                    // Manejo de niveles
                     let nuevoLvl = "PRINCIPIANTE";
                     if(score >= 2000) nuevoLvl = "NIVEL CAOS";
                     else if(score >= 1000) nuevoLvl = "NIVEL AREPA";
                     else if(score >= 500) nuevoLvl = "NIVEL MANGO";
                     else if(score >= 200) nuevoLvl = "NIVEL GUACAMAYA";
-
-                    if (nuevoLvl !== nivelActual) {
-                        nivelActual = nuevoLvl;
-                        document.getElementById("levelText").innerText = nivelActual;
-                    }
+                    if (nuevoLvl !== nivelActual) { nivelActual = nuevoLvl; document.getElementById("levelText").innerText = nivelActual; }
 
                     for(let i = obst.length - 1; i >= 0; i--) {
                         obst[i].x -= vel;
