@@ -95,7 +95,6 @@
         const ctx = canvas.getContext("2d");
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzzOjoOCd5HwIdC6_1ZhzT_VheVHiORDF0mkIf_Zp6R9ajIrAP8xT3_U6Ah8aAPcYkHfA/exec";
 
-        // --- IMÁGENES ANIMADAS ---
         const imgC1 = new Image(); imgC1.src = 'chiguire.png';
         const imgC2 = new Image(); imgC2.src = 'chiguire2.png';
         const imgC3 = new Image(); imgC3.src = 'chiguire3.png';
@@ -125,18 +124,18 @@
         window.addEventListener("mousedown", saltar); window.addEventListener("touchstart", (e) => { e.preventDefault(); saltar(); }, {passive: false});
         window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
 
-        // --- SPAWN ORIGINAL (NIVELES Y DOBLE BARRIL) ---
+        // --- SPAWN ORIGINAL REPARADO (BARRIL DOBLE) ---
         function spawn() {
             if(!activo) return;
-            let prob = Math.random();
-            if(score > 500 && prob > 0.7) {
-                obst.push({ x: canvas.width + 100, w: 80, h: 90 });
-                setTimeout(() => { if(activo) obst.push({ x: canvas.width + 100, w: 80, h: 90 }); }, 200);
-            } else {
-                obst.push({ x: canvas.width + 100, w: 80, h: 90 });
+            obst.push({ x: canvas.width + 100, w: 80, h: 90 });
+            
+            // Lógica de barril doble según nivel
+            if(score > 500 && Math.random() > 0.6) {
+                setTimeout(() => { if(activo) obst.push({ x: canvas.width + 100, w: 80, h: 90 }); }, 250); 
             }
-            let proximoSpawn = Math.max(1200 / (vel * 0.08), 800);
-            setTimeout(spawn, proximoSpawn);
+
+            let minTime = Math.max(1200 / (vel * 0.08), 700);
+            setTimeout(spawn, minTime + Math.random() * 400);
         }
 
         function reiniciarRapido() { document.getElementById("gameOverScreen").style.display = "none"; musFondo.currentTime = 0; musFondo.play(); iniciar(); }
@@ -153,13 +152,13 @@
                 chig.dy += chig.g; chig.y += chig.dy;
                 if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
 
-                // --- ANIMACIÓN ---
+                // ANIMACIÓN 4 CUADROS
                 frameAnim++;
                 let imgActual;
                 if (chig.y < chig.suelo - 5) {
                     imgActual = imgC3;
                 } else {
-                    let ciclo = Math.floor(frameAnim / 5) % 4;
+                    let ciclo = Math.floor(frameAnim / 6) % 4;
                     imgActual = [imgC1, imgC2, imgC3, imgC4][ciclo];
                 }
 
@@ -168,11 +167,10 @@
                     let bY = chig.suelo + (chig.h - obst[i].h);
                     ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
                     if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 > obst[i].x + 35 && chig.y + 35 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
-                    if(obst[i].x < -100) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.05; }
+                    if(obst[i].x < -100) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.06; }
                 }
                 ctx.drawImage(imgActual, chig.x, chig.y, chig.w, chig.h);
 
-                // --- ACTUALIZACIÓN DE NIVELES ORIGINAL ---
                 const lt = document.getElementById("levelText");
                 if(score < 500) lt.innerText = "PRINCIPIANTE";
                 else if(score < 1500) { lt.innerText = "AMATEUR"; lt.style.color = "#00ffff"; }
