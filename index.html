@@ -3,50 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Animación Pro</title>
+    <title>Veneco Run</title>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
-        
-        #introScreen, #loginMenu, #mainMenu, #gameOverScreen, #rankingModal { 
-            position: absolute; width: 100%; height: 100%; background-color: #000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            z-index: 900; text-align: center; 
-        }
-
+        #introScreen, #loginMenu, #mainMenu, #gameOverScreen, #rankingModal { position: absolute; width: 100%; height: 100%; background-color: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 900; text-align: center; }
         #introScreen { background-image: url('portada.png'); background-size: contain; background-repeat: no-repeat; background-position: center; cursor: pointer; justify-content: flex-end; }
         #loginMenu, #mainMenu { background-image: url('portada.png'); background-size: contain; background-repeat: no-repeat; background-position: center; display: none; }
         #gameOverScreen { background: rgba(0,0,0,0.95); display: none; }
-        
         .login-box { background: rgba(15, 15, 15, 0.95); padding: 25px; border: 1px solid rgba(255, 204, 0, 0.3); border-radius: 30px; width: 85%; max-width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
-        
         input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #333; font-size: 16px; background: #000; color: white; }
-        
-        .btn-play-circle {
-            width: 120px; height: 120px; border-radius: 50%; background: #ffcc00; color: #000;
-            font-size: 20px; font-weight: 900; border: 4px solid #fff; cursor: pointer;
-            box-shadow: 0 0 20px #ffcc00, 0 0 40px rgba(255, 204, 0, 0.5);
-            margin: 20px 0; transition: 0.3s; display: flex; align-items: center; justify-content: center;
-            text-transform: uppercase;
-        }
-
+        .btn-play-circle { width: 120px; height: 120px; border-radius: 50%; background: #ffcc00; color: #000; font-size: 20px; font-weight: 900; border: 4px solid #fff; cursor: pointer; box-shadow: 0 0 20px #ffcc00, 0 0 40px rgba(255, 204, 0, 0.5); margin: 20px 0; transition: 0.3s; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
         .btn { padding: 12px 25px; font-size: 16px; font-weight: bold; background: #333; color: white; border: none; border-radius: 50px; cursor: pointer; margin-top: 10px; width: 100%; transition: 0.3s; }
         .btn-ranking { background: transparent; border: 2px solid #00ffff; color: #00ffff; }
         .btn-primary { background: #ffcc00; color: #000; box-shadow: 0 4px 0 #b38f00; }
         .btn-menu { background: rgba(255,255,255,0.1); font-size: 14px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.2); }
-        
         .share-btn { color: white; padding: 10px; border-radius: 12px; font-size: 13px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; text-decoration: none; }
-
         #rankingModal { background: rgba(0,0,0,0.98); display: none; z-index: 1001; }
         .ranking-content { background: #0a0a0a; border: 1px solid #ffcc00; padding: 20px; border-radius: 25px; width: 85%; max-width: 400px; max-height: 75vh; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { color: #ffcc00; border-bottom: 2px solid #333; padding: 12px; }
         td { padding: 12px; border-bottom: 1px solid #1a1a1a; }
-        
         #ui { position: absolute; top: 10px; left: 10px; z-index: 850; display: none; pointer-events: none; }
         .score-text { font-size: 22px; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
         #levelContainer { position: absolute; top: 10px; right: 10px; z-index: 800; display: none; }
         #levelText { font-size: 18px; color: #ffcc00; font-weight: bold; text-shadow: 2px 2px 0 #000; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px; }
-
         canvas { display: none; image-rendering: -webkit-optimize-contrast; }
     </style>
 </head>
@@ -90,10 +70,7 @@
         </div>
     </div>
 
-    <div id="ui">
-        <p class="score-text">PUNTOS: <span id="score">0</span></p>
-        <p style="color: #ffcc00; font-size: 14px; margin:0;">RECORD: <span id="highScoreText">0</span></p>
-    </div>
+    <div id="ui"><p class="score-text">PUNTOS: <span id="score">0</span></p></div>
     <div id="levelContainer"><p id="levelText">PRINCIPIANTE</p></div>
 
     <div id="gameOverScreen">
@@ -118,7 +95,7 @@
         const ctx = canvas.getContext("2d");
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzzOjoOCd5HwIdC6_1ZhzT_VheVHiORDF0mkIf_Zp6R9ajIrAP8xT3_U6Ah8aAPcYkHfA/exec";
 
-        // --- CARGA DE IMÁGENES (4 CUADROS) ---
+        // --- IMÁGENES ANIMADAS ---
         const imgC1 = new Image(); imgC1.src = 'chiguire.png';
         const imgC2 = new Image(); imgC2.src = 'chiguire2.png';
         const imgC3 = new Image(); imgC3.src = 'chiguire3.png';
@@ -134,62 +111,78 @@
         let activo = false, score = 0, vel = 11, obst = [], bgX = 0, frameAnim = 0;
         let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
         let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
-        const fpsObjetivo = 1000 / 60; let ultimoTiempo = 0;
 
-        function clicPortada() { 
-            document.getElementById("introScreen").style.display = "none"; 
-            if(localStorage.getItem('venecoUser')) mostrarMenuPrincipal();
-            else document.getElementById("loginMenu").style.display = "flex"; 
-        }
+        function clicPortada() { document.getElementById("introScreen").style.display = "none"; if(localStorage.getItem('venecoUser')) mostrarMenuPrincipal(); else document.getElementById("loginMenu").style.display = "flex"; }
+        function guardarYEntrar() { const u = document.getElementById("tgUser").value; if(u.length > 2) { localStorage.setItem('venecoUser', u); mostrarMenuPrincipal(); document.getElementById("loginMenu").style.display = "none"; } }
+        function mostrarMenuPrincipal() { document.getElementById("mainMenu").style.display = "flex"; document.getElementById("userNameTitle").innerText = localStorage.getItem('venecoUser').toUpperCase(); document.getElementById("menuBestScore").innerText = "Record: " + (localStorage.getItem('venecoRunHighScore') || 0); }
+        function prepararJuego() { document.getElementById("mainMenu").style.display = "none"; musFondo.play(); canvas.style.display = "block"; document.getElementById("ui").style.display = "block"; document.getElementById("levelContainer").style.display = "block"; ajustar(); iniciar(); }
+        function ajustar() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; chig.suelo = canvas.height - 220; chig.y = chig.suelo; }
 
-        function guardarYEntrar() {
-            const u = document.getElementById("tgUser").value;
-            if(u.length > 2) { localStorage.setItem('venecoUser', u); mostrarMenuPrincipal(); document.getElementById("loginMenu").style.display = "none"; }
-        }
-
-        function mostrarMenuPrincipal() {
-            document.getElementById("mainMenu").style.display = "flex";
-            document.getElementById("userNameTitle").innerText = localStorage.getItem('venecoUser').toUpperCase();
-            document.getElementById("menuBestScore").innerText = "Record: " + (localStorage.getItem('venecoRunHighScore') || 0);
-        }
-
-        function prepararJuego() { 
-            document.getElementById("mainMenu").style.display = "none";
-            musFondo.play(); canvas.style.display = "block"; document.getElementById("ui").style.display = "block"; 
-            document.getElementById("levelContainer").style.display = "block"; ajustar(); iniciar(); 
-        }
-
-        function ajustar() { 
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr;
-            canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
-            ctx.scale(dpr, dpr); 
-            chig.suelo = window.innerHeight - 220; 
-            chig.y = chig.suelo;
-        }
-
-        function iniciar() { 
-            activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; frameAnim = 0;
-            ultimoTiempo = performance.now(); requestAnimationFrame(bucle); setTimeout(spawn, 2000); 
-        }
-
-        function morir() { 
-            activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play(); 
-            if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); }
-            document.getElementById("finalScore").innerText = score; document.getElementById("finalBest").innerText = recordGlobal;
-            document.getElementById("gameOverScreen").style.display = "flex"; 
-        }
+        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; frameAnim = 0; bucle(); spawn(); }
+        function morir() { activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play(); if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); } document.getElementById("finalScore").innerText = score; document.getElementById("finalBest").innerText = recordGlobal; document.getElementById("gameOverScreen").style.display = "flex"; }
 
         const saltar = () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.play(); } };
-        
-        window.addEventListener("mousedown", saltar);
-        window.addEventListener("touchstart", (e) => { e.preventDefault(); saltar(); }, {passive: false});
+        window.addEventListener("mousedown", saltar); window.addEventListener("touchstart", (e) => { e.preventDefault(); saltar(); }, {passive: false});
         window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
 
-        function spawn() { if(!activo) return; obst.push({ x: window.innerWidth + 150, w: 80, h: 90 }); setTimeout(spawn, Math.max(1100 / (vel * 0.07), 700)); }
+        // --- SPAWN ORIGINAL (NIVELES Y DOBLE BARRIL) ---
+        function spawn() {
+            if(!activo) return;
+            let prob = Math.random();
+            if(score > 500 && prob > 0.7) {
+                obst.push({ x: canvas.width + 100, w: 80, h: 90 });
+                setTimeout(() => { if(activo) obst.push({ x: canvas.width + 100, w: 80, h: 90 }); }, 200);
+            } else {
+                obst.push({ x: canvas.width + 100, w: 80, h: 90 });
+            }
+            let proximoSpawn = Math.max(1200 / (vel * 0.08), 800);
+            setTimeout(spawn, proximoSpawn);
+        }
 
         function reiniciarRapido() { document.getElementById("gameOverScreen").style.display = "none"; musFondo.currentTime = 0; musFondo.play(); iniciar(); }
         function volverAlMenu() { document.getElementById("gameOverScreen").style.display = "none"; canvas.style.display = "none"; document.getElementById("ui").style.display = "none"; mostrarMenuPrincipal(); }
+
+        function bucle() {
+            if(!activo && !chig.vivo) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            bgX -= vel * 0.4; if(bgX <= -canvas.width) bgX = 0;
+            ctx.drawImage(imgF, bgX, 0, canvas.width, canvas.height);
+            ctx.drawImage(imgF, bgX + canvas.width, 0, canvas.width, canvas.height);
+
+            if(activo) {
+                chig.dy += chig.g; chig.y += chig.dy;
+                if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
+
+                // --- ANIMACIÓN ---
+                frameAnim++;
+                let imgActual;
+                if (chig.y < chig.suelo - 5) {
+                    imgActual = imgC3;
+                } else {
+                    let ciclo = Math.floor(frameAnim / 5) % 4;
+                    imgActual = [imgC1, imgC2, imgC3, imgC4][ciclo];
+                }
+
+                for(let i = obst.length - 1; i >= 0; i--) {
+                    obst[i].x -= vel;
+                    let bY = chig.suelo + (chig.h - obst[i].h);
+                    ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
+                    if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 > obst[i].x + 35 && chig.y + 35 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
+                    if(obst[i].x < -100) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.05; }
+                }
+                ctx.drawImage(imgActual, chig.x, chig.y, chig.w, chig.h);
+
+                // --- ACTUALIZACIÓN DE NIVELES ORIGINAL ---
+                const lt = document.getElementById("levelText");
+                if(score < 500) lt.innerText = "PRINCIPIANTE";
+                else if(score < 1500) { lt.innerText = "AMATEUR"; lt.style.color = "#00ffff"; }
+                else if(score < 3000) { lt.innerText = "PRO"; lt.style.color = "#ff00ff"; }
+                else { lt.innerText = "LEYENDA"; lt.style.color = "#ff0000"; }
+            } else {
+                ctx.drawImage(imgD, chig.x, chig.y, chig.w, chig.h);
+            }
+            requestAnimationFrame(bucle);
+        }
 
         async function verRanking() {
             document.getElementById("rankingModal").style.display = "flex";
@@ -202,50 +195,6 @@
             } catch (e) { document.getElementById("loadingRanking").innerText = "Error."; }
         }
         function cerrarRanking() { document.getElementById("rankingModal").style.display = "none"; }
-
-        function bucle(tiempoActual) {
-            if(!activo && !chig.vivo) return;
-            const delta = tiempoActual - ultimoTiempo;
-            if (delta >= fpsObjetivo) {
-                ultimoTiempo = tiempoActual - (delta % fpsObjetivo);
-                ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-                
-                bgX -= vel * 0.4; if(bgX <= -window.innerWidth) bgX = 0;
-                ctx.drawImage(imgF, bgX, 0, window.innerWidth + 2, window.innerHeight);
-                ctx.drawImage(imgF, bgX + window.innerWidth, 0, window.innerWidth + 2, window.innerHeight);
-
-                if(activo) {
-                    chig.dy += chig.g; chig.y += chig.dy;
-                    if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
-
-                    // --- ANIMACIÓN 4 CUADROS ---
-                    frameAnim++;
-                    let imgActual;
-                    if (chig.y < chig.suelo - 5) {
-                        imgActual = imgC3; 
-                    } else {
-                        let ciclo = Math.floor(frameAnim / 5) % 4; // Cambia cuadro cada 5 frames
-                        if(ciclo === 0) imgActual = imgC1;
-                        else if(ciclo === 1) imgActual = imgC2;
-                        else if(ciclo === 2) imgActual = imgC3;
-                        else imgActual = imgC4;
-                    }
-
-                    for(let i = obst.length - 1; i >= 0; i--) {
-                        obst[i].x -= vel;
-                        let bY = chig.suelo + (chig.h - obst[i].h);
-                        ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
-                        if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 > obst[i].x + 35 && 
-                            chig.y + 35 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
-                        if(obst[i].x < -200) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.15; }
-                    }
-                    ctx.drawImage(imgActual, chig.x, chig.y, chig.w, chig.h);
-                } else {
-                    ctx.drawImage(imgD, chig.x, chig.y, chig.w, chig.h);
-                }
-            }
-            requestAnimationFrame(bucle);
-        }
     </script>
 </body>
 </html>
