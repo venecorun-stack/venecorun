@@ -119,7 +119,7 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // --- CARGA DE LAS 4 IMÁGENES PARA ANIMACIÓN ---
+        // CARGA DE IMÁGENES ANIMADAS
         const imgC1 = new Image(); imgC1.src = 'chiguire.png';
         const imgC2 = new Image(); imgC2.src = 'chiguire2.png';
         const imgC3 = new Image(); imgC3.src = 'chiguire3.png';
@@ -139,7 +139,7 @@
         let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
         let estela = [];
         let nivelActual = "";
-        let frameAnim = 0; // Para el ciclo de animación
+        let frameAnim = 0; // Para controlar las patas
 
         let ultimoTiempo = 0;
         const fpsObjetivo = 1000 / 60; 
@@ -192,13 +192,7 @@
         }
 
         function iniciar() { 
-            activo = true; 
-            chig.vivo = true; 
-            score = 0; 
-            vel = 11; 
-            obst = []; 
-            estela = []; 
-            frameAnim = 0;
+            activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = []; 
             ultimoTiempo = performance.now();
             requestAnimationFrame(bucle); 
             setTimeout(spawn, 2000); 
@@ -233,6 +227,7 @@
 
         function spawn() {
             if(!activo) return;
+            // JUGABILIDAD ORIGINAL: Dobles a partir de 200 pts
             let esDoble = score >= 200 && Math.random() > 0.6;
             obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
 
@@ -247,18 +242,18 @@
 
         function bucle(tiempoActual) {
             if(!activo && !chig.vivo) return;
-
             const delta = tiempoActual - ultimoTiempo;
 
             if (delta >= fpsObjetivo) {
                 ultimoTiempo = tiempoActual - (delta % fpsObjetivo);
-
                 ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                
                 bgX -= vel * 0.4;
                 if(bgX <= -window.innerWidth) bgX = 0;
                 
-                ctx.drawImage(imgF, bgX, 0, window.innerWidth + 2, window.innerHeight);
-                ctx.drawImage(imgF, bgX + window.innerWidth, 0, window.innerWidth + 2, window.innerHeight);
+                // Fondo sin rayas (+1 para solapar mínimamente)
+                ctx.drawImage(imgF, bgX, 0, window.innerWidth + 1, window.innerHeight);
+                ctx.drawImage(imgF, bgX + window.innerWidth, 0, window.innerWidth + 1, window.innerHeight);
 
                 let shadowOpacity = Math.max(0.1, 0.5 - (chig.suelo - chig.y) / 400);
                 ctx.fillStyle = `rgba(0,0,0,${shadowOpacity})`;
@@ -275,28 +270,24 @@
                         if(estela.length > 5) estela.shift();
                     }
 
-                    // --- LOGICA DE IMAGEN ACTUAL (ANIMACIÓN) ---
+                    // --- NUEVA LÓGICA DE IMAGEN ANIMADA ---
                     frameAnim++;
                     let imgActual;
-                    if (!chig.vivo) {
-                        imgActual = imgD;
-                    } else if (chig.y < chig.suelo - 10) {
+                    if (chig.y < chig.suelo - 10) {
                         imgActual = imgC3; // Imagen de salto
                     } else {
-                        // Cambia de imagen cada 6 frames para un trote natural
-                        let ciclo = Math.floor(frameAnim / 6) % 4;
-                        if(ciclo === 0) imgActual = imgC1;
-                        else if(ciclo === 1) imgActual = imgC2;
-                        else if(ciclo === 2) imgActual = imgC3;
-                        else imgActual = imgC4;
+                        let ciclo = Math.floor(frameAnim / 6) % 4; // Cambia cada 6 frames
+                        imgActual = [imgC1, imgC2, imgC3, imgC4][ciclo];
                     }
 
                     estela.forEach((p, i) => {
                         ctx.globalAlpha = p.o * (i / estela.length);
+                        // La estela usa la imagen de salto si está saltando
                         ctx.drawImage(imgActual, p.x - (estela.length - i) * 10, p.y, chig.w, chig.h);
                         ctx.globalAlpha = 1;
                     });
 
+                    // NIVELES ORIGINALES (GUACAMAYA, MANGO, AREPA, CAOS)
                     let nuevoLvl = "PRINCIPIANTE";
                     if(score >= 2000) nuevoLvl = "NIVEL CAOS";
                     else if(score >= 1000) nuevoLvl = "NIVEL AREPA";
@@ -305,10 +296,10 @@
 
                     if (nuevoLvl !== nivelActual) {
                         nivelActual = nuevoLvl;
-                        let el = document.getElementById("levelText");
-                        el.innerText = nivelActual;
+                        document.getElementById("levelText").innerText = nivelActual;
                     }
 
+                    // VELOCIDAD ORIGINAL
                     if(score >= 2000) vel += 0.005;
                     else if(score >= 1000) vel += 0.004;
                     else if(score >= 500) vel += 0.003;
@@ -336,7 +327,6 @@
                             vel += 0.15;
                         }
                     }
-                    // Dibujar personaje con la imagen animada calculada
                     ctx.drawImage(imgActual, chig.x, chig.y, chig.w, chig.h);
                 } else {
                     ctx.drawImage(imgD, chig.x, chig.y, chig.w, chig.h);
