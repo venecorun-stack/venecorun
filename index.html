@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - 1000 PTS</title>
+    <title>Veneco Run - Sistema 1000 Puntos</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
@@ -82,7 +82,7 @@
         async function postData(body) {
             try {
                 await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(body) });
-            } catch(e) { console.error("Error envío"); }
+            } catch(e) { console.log("Error envío"); }
         }
 
         function clicPortada() {
@@ -123,26 +123,24 @@
                 recordGlobalBD = data.puntos || 0;
                 document.getElementById("highScoreText").innerText = recordGlobalBD;
                 if(data.wallet) document.getElementById("walletInput").value = data.wallet;
-                if(data.bono === true) marcarTareaCompletada();
-            } catch(e) { console.log("Sync..."); }
+                if(data.bono === true) {
+                    marcarTareaCompletada();
+                }
+            } catch(e) { console.log("Cargando perfil..."); }
         }
 
         async function unirseTelegramTask() {
             if(localStorage.getItem('taskTGDone') === 'true') return;
             window.open("https://t.me/venecoinu", "_blank");
             
-            const uName = localStorage.getItem('venecoUser');
-            const uID = localStorage.getItem('venecoTGID');
-
-            // Enviamos la petición de bono de 1000 pts
             await postData({
                 accion: "bono_tg",
-                usuario: uName,
-                wallet: uID
+                usuario: localStorage.getItem('venecoUser'),
+                wallet: localStorage.getItem('venecoTGID')
             });
             
             localStorage.setItem('taskTGDone', 'true');
-            alert("¡Puntos de Telegram solicitados (+1000)! Se verán reflejados en breve.");
+            alert("¡Felicidades! +1000 Puntos. Se actualizarán en segundos.");
             marcarTareaCompletada();
             setTimeout(mostrarMenu, 2000);
         }
@@ -152,11 +150,11 @@
             if(btn) {
                 btn.style.opacity = "0.5";
                 btn.onclick = null;
-                btn.innerHTML = "<b>✅ TAREA COMPLETADA</b><span>1000 pts acreditados</span>";
-                localStorage.setItem('taskTGDone', 'true');
+                btn.innerHTML = "<b>✅ TAREA COMPLETADA</b><span>Ya recibiste 1000 pts</span>";
             }
         }
 
+        // --- FUNCIONES DE JUEGO IGUALES ---
         async function cargarRanking() {
             abrirModal('modalRank');
             const list = document.getElementById("rankList");
@@ -165,12 +163,9 @@
                 const res = await fetch(URL_SCRIPT + "?tipo=getRanking&t=" + Date.now());
                 const data = await res.json();
                 if(data && Array.isArray(data)) {
-                    list.innerHTML = data.map((u, i) => `
-                        <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
-                            <span>${i+1}. ${u.usuario}</span> <b style="color:#ffcc00;">${u.puntaje} pts</b>
-                        </div>`).join('');
+                    list.innerHTML = data.map((u, i) => `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;"><span>${i+1}. ${u.usuario}</span> <b style="color:#ffcc00;">${u.puntaje} pts</b></div>`).join('');
                 }
-            } catch(e) { list.innerHTML = "Error de conexión."; }
+            } catch(e) { list.innerHTML = "Error conexión"; }
         }
 
         function guardarWallet() {
@@ -197,12 +192,11 @@
         }
 
         function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; bucle(); spawn(); }
-
         function spawn() {
             if(!activo) return;
             let esDoble = score >= 200 && Math.random() > 0.6;
-            obst.push({ x: window.innerWidth + 150, w: esDoble ? 130 : 75, h: 85, doble: esDoble });
-            setTimeout(spawn, Math.max(1100 / (vel * 0.07), esDoble ? 1200 : 750));
+            obst.push({ x: window.innerWidth + 150, w: esDoble ? 130 : 75, h: 85 });
+            setTimeout(spawn, Math.max(1100 / (vel * 0.07), 750));
         }
 
         function bucle() {
