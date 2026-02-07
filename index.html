@@ -2,11 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Veneco Run</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; }
+        /* Bloqueamos cualquier movimiento extra del navegador */
+        html, body { 
+            margin: 0; padding: 0; background: #000; overflow: hidden; 
+            font-family: 'Arial Black', sans-serif; color: white;
+            position: fixed; width: 100%; height: 100%;
+            touch-action: none; -webkit-user-select: none;
+        }
+
         #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 2000; background: #ff4444; color: white; border: 2px solid white; padding: 10px; border-radius: 10px; cursor: pointer; display: none; font-weight: bold; }
         
         #introScreen, #loginMenu, #mainMenu, #gameOverScreen { position: absolute; width: 100%; height: 100%; background-position: center; background-repeat: no-repeat; background-size: cover; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; text-align: center; }
@@ -23,19 +30,18 @@
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
         
         .menu-opt { width: 85%; max-width: 320px; background: rgba(255,255,255,0.08); margin: 6px 0; padding: 12px; border-radius: 18px; cursor: pointer; border: 1px solid #444; }
-        .menu-opt b { font-size: 16px; display: block; }
-        .menu-opt span { display: block; font-size: 10px; color: #aaa; }
         
-        #ui { position: absolute; top: 15px; left: 15px; z-index: 850; display: none; pointer-events: none; }
+        #ui { position: absolute; top: 15px; left: 15px; z-index: 1500; display: none; pointer-events: none; }
         #scoreDisplay { font-size: 22px; color: white; text-shadow: 1px 1px 0 #000; margin: 0; }
-        #bestDisplay { font-size: 14px; color: #ffcc00; text-shadow: 1px 1px 0 #000; margin: 0; }
-
-        #levelContainer { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 800; text-align: center; width: 100%; display: none; pointer-events: none; }
-        #levelText { font-size: 35px; color: #ffcc00; font-weight: bold; text-shadow: 2px 2px 4px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; margin: 0; opacity: 1; }
+        #levelContainer { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 1500; text-align: center; width: 100%; display: none; pointer-events: none; }
+        #levelText { font-size: 35px; color: #ffcc00; font-weight: bold; text-shadow: 2px 2px 4px #000; margin: 0; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; flex-direction: column; align-items: center; justify-content: center; }
         .modal-content { background: #1a1a1a; padding: 25px; border-radius: 25px; width: 85%; border: 2px solid #ffcc00; max-height: 80vh; overflow-y: auto; }
-        canvas { display: none; image-rendering: -webkit-optimize-contrast; cursor: pointer; touch-action: none; }
+        
+        /* El canvas ahora tiene un z-index específico para asegurar que reciba el touch */
+        canvas { display: none; image-rendering: -webkit-optimize-contrast; cursor: pointer; touch-action: none; position: relative; z-index: 500; }
+        
         .btn { padding: 15px; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 16px; text-decoration: none; display: block; }
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; background: #333; color: white; text-align: center; box-sizing: border-box; }
     </style>
@@ -61,9 +67,9 @@
         </div>
         <div class="play-circle" onclick="prepararJuego()">JUGAR</div>
         <div class="menu-opt" onclick="cargarRanking()"><b>🏆 RANKING TOP 10</b><span>Ver líderes</span></div>
-        <div class="menu-opt" onclick="abrirModal('modalAirdrop')"><b>💰 REGISTRAR WALLET</b><span>Wallet BNB BEP20 (MetaMask / Trust)</span></div>
-        <div class="menu-opt" onclick="window.open('https://t.me/venecoinu', '_blank')"><b>📢 CANAL DE TELEGRAM</b><span>Comunidad</span></div>
-        <div class="menu-opt" style="background: rgba(46, 204, 113, 0.2); border-color: #2ecc71;" onclick="compartirJuego()"><b>🔗 COMPARTIR JUEGO</b><span>Invita amigos</span></div>
+        <div class="menu-opt" onclick="abrirModal('modalAirdrop')"><b>💰 REGISTRAR WALLET</b><span>Wallet BNB BEP20</span></div>
+        <div class="menu-opt" onclick="window.open('https://t.me/venecoinu', '_blank')"><b>📢 CANAL DE TELEGRAM</b></div>
+        <div class="menu-opt" style="background: rgba(46, 204, 113, 0.2); border-color: #2ecc71;" onclick="compartirJuego()"><b>🔗 COMPARTIR JUEGO</b></div>
     </div>
 
     <div id="modalRank" class="modal"><div class="modal-content"><h3>TOP 10 LÍDERES</h3><div id="rankList"></div><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
@@ -71,15 +77,13 @@
     <div id="modalAirdrop" class="modal">
         <div class="modal-content">
             <h3>REGISTRO WALLET</h3>
-            <p style="font-size: 12px; color: #ffcc00;">Ingresa tu Wallet BNB BEP20 (MetaMask / Trust)</p>
             <input type="text" id="walletInput" placeholder="0x...">
             <button class="btn" onclick="guardarWallet()">GUARDAR WALLET</button>
             <button class="btn" onclick="cerrarModales()">CERRAR</button>
         </div>
     </div>
 
-    <div id="ui"><p id="scoreDisplay">SCORE: <span id="score">0</span></p><p id="bestDisplay">BEST: <span id="highScoreText">0</span></p></div>
-    
+    <div id="ui"><p id="scoreDisplay">SCORE: <span id="score">0</span></p><p id="bestDisplay" style="font-size: 14px; color: #ffcc00;">BEST: <span id="highScoreText">0</span></p></div>
     <div id="levelContainer"><p id="levelText">NIVEL MANGO</p></div>
 
     <div id="gameOverScreen">
@@ -93,14 +97,13 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        
+        tg.enableClosingConfirmation(); // Evita cierres accidentales
+
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxS64u2ud1QZ2G93d0sQpD7T2iXemvRwVvBXcVw9dvgIjpAZROBsdqnjY1OPPAopSAh/exec";
 
         const chigSprites = [new Image(), new Image(), new Image(), new Image()];
-        chigSprites[0].src = 'chiguire.png';
-        chigSprites[1].src = 'chiguire2.png';
-        chigSprites[2].src = 'chiguire3.png';
-        chigSprites[3].src = 'chiguire4.png';
+        chigSprites[0].src = 'chiguire.png'; chigSprites[1].src = 'chiguire2.png';
+        chigSprites[2].src = 'chiguire3.png'; chigSprites[3].src = 'chiguire4.png';
         
         const imgB = new Image(); imgB.src = 'barril.png';
         const imgD = new Image(); imgD.src = 'derrota.png';
@@ -168,6 +171,8 @@
             document.getElementById("ui").style.display = "block";
             document.getElementById("levelContainer").style.display = "block";
             ajustar(); 
+            // IMPORTANTE: Forzar el foco para capturar el primer touch
+            window.focus();
             iniciar();
         }
 
@@ -193,19 +198,14 @@
             if(!activo) return;
             let esDoble = score >= 200 && Math.random() > 0.6;
             obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
-            let baseFreq = 1100 / (vel * 0.07);
-            if (score > 800) baseFreq *= (0.7 + Math.random() * 0.5);
-            let delay = Math.max(baseFreq, esDoble ? 1100 : 700); 
+            let delay = Math.max(1100 / (vel * 0.07), esDoble ? 1100 : 700); 
             setTimeout(spawn, delay);
         }
 
         function bucle() {
             if(!activo && !chig.vivo) return;
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            
-            skyX -= vel * 0.05;
-            bgX -= vel;
-            
+            skyX -= vel * 0.05; bgX -= vel;
             if(skyX <= -window.innerWidth) skyX = 0;
             if(bgX <= -window.innerWidth) bgX = 0;
 
@@ -217,63 +217,40 @@
             if(activo) {
                 chig.dy += chig.g; chig.y += chig.dy;
                 if(chig.y > chig.suelo) { 
-                    chig.y = chig.suelo; 
-                    chig.dy = 0; 
+                    chig.y = chig.suelo; chig.dy = 0; 
                     chig.tick++;
-                    if(chig.tick > (15 / (vel/10))) { 
-                        chig.frame = (chig.frame + 1) % 4;
-                        chig.tick = 0;
-                    }
+                    if(chig.tick > (15 / (vel/10))) { chig.frame = (chig.frame + 1) % 4; chig.tick = 0; }
                 } else { chig.frame = 1; }
 
-                if(score >= 800) {
-                    estela.push({x: chig.x, y: chig.y, o: 0.4, f: chig.frame});
-                    if(estela.length > 5) estela.shift();
-                }
-                estela.forEach((p, i) => {
-                    ctx.globalAlpha = p.o * (i / estela.length);
-                    ctx.drawImage(chigSprites[p.f], p.x - (estela.length - i) * 10, p.y, chig.w, chig.h);
-                    ctx.globalAlpha = 1;
-                });
-
+                // Lógica de niveles (Sin tocar fases)
                 let nuevoLvl = nivelActual;
-                
                 if (score === 500 && !faseAlivioActivada) {
-                    vel = 11; 
-                    faseAlivioActivada = true;
-                    nuevoLvl = "¡RESPIRA! VIENE LO BUENO";
+                    vel = 11; faseAlivioActivada = true; nuevoLvl = "¡RESPIRA!";
                     setTimeout(() => { if(score < 600) nivelActual = "NIVEL GUACAMAYA"; }, 3000);
                 } else {
                     if(score >= 800) nuevoLvl = "NIVEL GUARIMBA";
                     else if(score >= 600) nuevoLvl = "NIVEL CAOS";
-                    else if(score >= 400 && score < 500) nuevoLvl = "NIVEL GUACAMAYA";
-                    else if(score >= 200 && score < 400) nuevoLvl = "NIVEL AREPA";
-                    else if(score < 200) nuevoLvl = "NIVEL MANGO";
+                    else if(score >= 400) nuevoLvl = "NIVEL GUACAMAYA";
+                    else if(score >= 200) nuevoLvl = "NIVEL AREPA";
+                    else nuevoLvl = "NIVEL MANGO";
                 }
-
                 if (nuevoLvl !== nivelActual) {
                     nivelActual = nuevoLvl;
                     document.getElementById("levelText").innerText = nivelActual;
                 }
 
-                if(score >= 800) vel += 0.005;
-                else if(score >= 600) vel += 0.004;
-                else if(score >= 400) vel += 0.003;
-                else if(score >= 200) vel += 0.002;
+                if(score >= 200) vel += 0.002;
 
                 for(let i = obst.length - 1; i >= 0; i--) {
                     obst[i].x -= vel;
                     let bY = chig.suelo + (chig.h - obst[i].h);
-                    if(obst[i].doble) {
-                        ctx.drawImage(imgB, obst[i].x, bY, 80, obst[i].h);
-                        ctx.drawImage(imgB, (obst[i].x + 80) - 35, bY, 80, obst[i].h);
-                    } else {
-                        ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
-                    }
+                    ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
+                    
                     if (chig.x + 35 < obst[i].x + obst[i].w - 35 && 
                         chig.x + chig.w - 35 > obst[i].x + 35 && 
                         chig.y + 35 < bY + obst[i].h && 
                         chig.y + chig.h - 15 > bY) morir();
+
                     if(obst[i].x < -200) { 
                         obst.splice(i, 1); score += 10; 
                         document.getElementById("score").innerText = score; 
@@ -281,7 +258,6 @@
                     }
                 }
             }
-            
             const currentImg = chig.vivo ? chigSprites[chig.frame] : imgD;
             ctx.drawImage(currentImg, chig.x, chig.y, chig.w, chig.h);
             requestAnimationFrame(bucle);
@@ -298,20 +274,21 @@
             document.getElementById("gameOverScreen").style.display = "flex";
         }
 
-        const saltar = (e) => { 
-            if (e && (e.type === "touchstart" || e.type === "touchmove")) {
-                e.preventDefault();
-            }
+        // CONTROL DE SALTO TOTALMENTE COMPATIBLE CON MÓVIL
+        const manejarSalto = (e) => { 
+            // Evitamos que el toque mueva la pantalla de Telegram
+            if (e && e.cancelable) e.preventDefault();
+            
             if(activo && chig.y >= chig.suelo - 15) { 
                 chig.dy = chig.salto; 
-                sndSalto.currentTime = 0;
-                sndSalto.play().catch(() => {}); 
+                try { sndSalto.currentTime = 0; sndSalto.play(); } catch(e) {}
             } 
         };
         
-        window.addEventListener("touchstart", saltar, {passive: false});
-        window.addEventListener("mousedown", (e) => { if(e.button === 0) saltar(e); });
-        window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(e); } });
+        // Listeners globales para el salto
+        window.addEventListener("touchstart", manejarSalto, {passive: false});
+        window.addEventListener("mousedown", (e) => { if(e.button === 0) manejarSalto(e); });
+        window.addEventListener("keydown", (e) => { if(e.code === "Space") manejarSalto(e); });
         
         function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
@@ -321,8 +298,7 @@
             const w = document.getElementById("walletInput").value;
             if(!w) return;
             postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), walletAddress: w });
-            alert("Wallet Guardada!"); 
-            cerrarModales();
+            alert("Wallet Guardada!"); cerrarModales();
         }
 
         function compartirJuego() {
