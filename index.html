@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Sistema Activo</title>
+    <title>Veneco Run - Sistema Completo</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
@@ -48,11 +48,13 @@
             <div id="userPointsDisplay">PUNTOS: <span id="currentScoreMenu">0</span></div>
         </div>
         <div class="play-circle" onclick="prepararJuego()">JUGAR</div>
+        <div class="menu-opt" onclick="abrirModal('modalRef')"><b>👥 MIS REFERIDOS</b><span>Gana +150 pts</span></div>
         <div class="menu-opt" onclick="cargarRanking()"><b>🏆 RANKING TOP 10</b><span>Ver líderes</span></div>
         <div class="menu-opt" onclick="abrirModal('modalAirdrop')"><b>💰 REGISTRAR WALLET</b><span>Wallet BNB</span></div>
         <div class="menu-opt" id="btnTGTask" onclick="unirseTelegramTask()"><b>📢 CANAL TELEGRAM</b><span>Gana +100 puntos</span></div>
     </div>
 
+    <div id="modalRef" class="modal"><div class="modal-content"><h3>REFERIDOS</h3><input type="text" id="refLink" readonly><button class="btn" onclick="copiarRef()">COPIAR LINK</button><p style="font-size:12px; margin-top:15px; color:#aaa;">Comparte tu link para ganar puntos extras.</p><button class="btn" onclick="cerrarModales()">VOLVER</button></div></div>
     <div id="modalRank" class="modal"><div class="modal-content"><h3>TOP 10 LÍDERES</h3><div id="rankList"></div><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
     <div id="modalAirdrop" class="modal"><div class="modal-content"><h3>REGISTRO WALLET</h3><input type="text" id="walletInput" placeholder="0x..."><button class="btn" onclick="guardarWallet()">GUARDAR WALLET</button><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
 
@@ -67,7 +69,6 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         
-        // URL ACTUALIZADA
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzECq9M3ZjDVG0dr8MoMelidzdR0AToHz1ynuWijIGiLlJtoqubBVgqAxk-N_5FO6eVWw/exec";
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
@@ -95,12 +96,18 @@
             }
         }
 
+        async function postData(body) {
+            try {
+                await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(body) });
+            } catch(e) { console.log("Error posting"); }
+        }
+
         function loginTG() {
             const u = tg.initDataUnsafe.user;
             const userName = u.username ? "@" + u.username : u.first_name;
             localStorage.setItem('venecoUser', userName);
             localStorage.setItem('venecoTGID', u.id.toString());
-            fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: userName, wallet: u.id.toString(), puntaje: 0 })});
+            postData({ accion: "puntos", usuario: userName, wallet: u.id.toString(), puntaje: 0 });
             mostrarMenu();
         }
 
@@ -110,6 +117,7 @@
             document.getElementById("logoutBtn").style.display = "block";
             const myID = localStorage.getItem('venecoTGID');
             document.getElementById("userNameDisplay").innerText = localStorage.getItem('venecoUser');
+            document.getElementById("refLink").value = "https://t.me/venecotoken_bot/venecorun?startapp=" + myID;
             
             fetch(URL_SCRIPT + "?tipo=getUserData&id=" + myID)
                 .then(res => res.json())
@@ -141,9 +149,9 @@
         function unirseTelegramTask() {
             window.open("https://t.me/venecoinu", "_blank");
             if(localStorage.getItem('taskTGDone') !== 'true') {
-                fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: 100 }) });
+                postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: 100 });
                 localStorage.setItem('taskTGDone', 'true');
-                alert("¡Has ganado +100 puntos!");
+                alert("¡+100 puntos!");
                 setTimeout(mostrarMenu, 1500);
             }
         }
@@ -159,7 +167,7 @@
         function guardarWallet() {
             const w = document.getElementById("walletInput").value;
             if(!w) return;
-            fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), walletAddress: w })});
+            postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), walletAddress: w });
             alert("Billetera guardada."); cerrarModales();
         }
 
@@ -211,16 +219,17 @@
 
         function morir() {
             activo = false; chig.vivo = false;
-            fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: score })});
+            postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: score });
             document.getElementById("finalScore").innerText = score; 
             document.getElementById("gameOverScreen").style.display = "flex";
         }
 
-        const saltar = (e) => { if(e && e.type === "touchstart") e.preventDefault(); if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; if(sndSalto.paused) sndSalto.play(); else { sndSalto.currentTime = 0; sndSalto.play(); } } };
+        const saltar = (e) => { if(e && e.type === "touchstart") e.preventDefault(); if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.play(); } };
         window.addEventListener("touchstart", saltar, {passive: false}); window.addEventListener("mousedown", saltar);
         function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
         function cerrarSesion() { localStorage.clear(); location.reload(); }
+        function copiarRef() { const c = document.getElementById("refLink"); c.select(); document.execCommand("copy"); alert("Link copiado!"); }
     </script>
 </body>
 </html>
