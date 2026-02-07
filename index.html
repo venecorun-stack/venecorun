@@ -1,49 +1,225 @@
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Veneco Run - Fixed</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; }
+        #muteBtn { position: fixed; top: 20px; right: 20px; width: 45px; height: 45px; background: rgba(0,0,0,0.7); border: 2px solid #ffcc00; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2000; font-size: 22px; }
+        #introScreen, #loginMenu, #mainMenu, #gameOverScreen, #rankingModal, #funWarning { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 900; text-align: center; background-size: contain; background-repeat: no-repeat; background-position: center; background-color: #000; }
+        #introScreen { background-image: url('portada.png'); cursor: pointer; }
+        #loginMenu, #mainMenu { display: none; background-image: url('portada.png'); }
+        @media (max-aspect-ratio: 1/1) { #introScreen, #loginMenu, #mainMenu { background-image: url('portada_mobile.png') !important; background-size: cover; } }
+        .login-box { background: rgba(10, 10, 10, 0.95); padding: 25px; border: 1px solid #ffcc00; border-radius: 30px; width: 85%; max-width: 350px; backdrop-filter: blur(15px); }
+        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #000; color: white; }
+        .btn { padding: 12px 25px; font-size: 16px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; margin-top: 10px; width: 100%; }
+        .btn-play-neon { width: 100px; height: 100px; border-radius: 50%; background: #ffcc00; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 0 20px #ffcc00; animation: pulse 1.5s infinite; margin: 20px; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        #ui { position: absolute; top: 10px; left: 10px; z-index: 850; display: none; }
+        canvas { display: none; width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="muteBtn" onclick="toggleMute()">🔊</div>
 
-<script>
-    const tg = window.Telegram.WebApp;
+    <div id="introScreen" onclick="clicPortada()">
+        <div style="margin-bottom:50px; background:rgba(0,0,0,0.6); padding:10px;">TOCA PARA EMPEZAR</div>
+    </div>
 
-    async function autenticarYEntrar() {
-        let u, w;
-        
-        // Prioridad 1: Telegram Automático
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            u = tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name;
-            w = "TG_" + (tg.initDataUnsafe.user.id); // Usamos ID de Telegram como Wallet interna
-        } else {
-            // Prioridad 2: Manual (Formulario)
-            u = document.getElementById("tgUser").value.trim();
-            w = document.getElementById("bnbWallet").value.trim();
-            if(u.length < 3 || !/^0x[a-fA-F0-9]{40}$/.test(w)) { alert("Datos inválidos"); return; }
+    <div id="loginMenu">
+        <div class="login-box">
+            <h2 style="color:#ffcc00;">REGISTRO</h2>
+            <div id="tgFields">
+                <input type="text" id="tgUser" placeholder="Usuario">
+                <input type="text" id="bnbWallet" placeholder="Wallet BNB (0x...)">
+            </div>
+            <button class="btn" id="mainBtn" onclick="autenticarYEntrar()">REGISTRARSE / ENTRAR</button>
+            <button class="btn" style="background:#28a745; color:white;" onclick="entrarInvitado()">MODO DIVERSIÓN</button>
+            <div id="loadingLogin" style="display:none; color:#ffcc00;">Conectando...</div>
+        </div>
+    </div>
+
+    <div id="mainMenu">
+        <div class="login-box" style="border-color: #00ffff;">
+            <h2 id="userNameTitle">USUARIO</h2>
+            <button class="btn-play-neon" onclick="prepararJuego()">JUGAR</button>
+            <p id="menuBestScore">Record: 0</p>
+            <button class="btn" onclick="cerrarSesion()">CERRAR SESIÓN</button>
+        </div>
+    </div>
+
+    <div id="ui">
+        <p>PUNTOS: <span id="score">0</span></p>
+    </div>
+
+    <div id="gameOverScreen">
+        <h1 style="color:red;">¡FIN DEL JUEGO!</h1>
+        <p>Puntos: <span id="finalScore">0</span></p>
+        <button class="btn" onclick="reiniciarRapido()">REINTENTAR</button>
+        <button class="btn" onclick="location.reload()">MENÚ</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzowQ8z7hoY0lWT-l1KqrBO2Zfq7VtmXUAsjRair1mCSlYS-JpuGizgWCPpEv1ev4B0cg/exec";
+        const tg = window.Telegram.WebApp;
+
+        // Imágenes
+        const imgC1 = new Image(); imgC1.src = 'chiguire.png';
+        const imgC2 = new Image(); imgC2.src = 'chiguire2.png';
+        const imgC3 = new Image(); imgC3.src = 'chiguire3.png';
+        const imgB = new Image(); imgB.src = 'barril.png';
+        const imgSuelo = new Image(); imgSuelo.src = 'suelo.png';
+
+        let activo = false, score = 0, vel = 11, obst = [], frameAnim = 0;
+        let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
+        let chig = { x: 50, y: 0, w: 80, h: 80, dy: 0, g: 1.8, salto: -20, suelo: 0 };
+        let muted = false;
+
+        // Detección de Telegram al iniciar
+        window.onload = () => {
+            if (tg.initDataUnsafe?.user) {
+                document.getElementById("tgFields").style.display = "none";
+                document.getElementById("mainBtn").innerText = "ENTRAR CON TELEGRAM";
+            }
+        };
+
+        async function autenticarYEntrar() {
+            let u, w;
+            if (tg.initDataUnsafe?.user) {
+                u = tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name;
+                w = "TG_" + tg.initDataUnsafe.user.id;
+            } else {
+                u = document.getElementById("tgUser").value.trim();
+                w = document.getElementById("bnbWallet").value.trim();
+                if(!u || w.length < 10) return alert("Datos incompletos");
+            }
+
+            document.getElementById("loadingLogin").style.display = "block";
+            try {
+                const res = await fetch(`${URL_SCRIPT}?action=getScore&user=${u}&wallet=${w}`);
+                const data = await res.json();
+                localStorage.setItem('venecoUser', u);
+                localStorage.setItem('venecoWallet', w);
+                recordGlobal = data.score || 0;
+                mostrarMenuPrincipal();
+            } catch (e) { alert("Error de conexión con el servidor"); }
+            document.getElementById("loadingLogin").style.display = "none";
         }
 
-        document.getElementById("loadingLogin").style.display = "block";
-        try {
-            // Enviamos AMBOS parámetros para que el script no se confunda
-            const response = await fetch(`${URL_SCRIPT}?action=getScore&wallet=${w}&user=${u}`);
-            const data = await response.json();
-            
-            localStorage.setItem('venecoUser', u); 
-            localStorage.setItem('venecoWallet', w);
-            recordGlobal = data.score || 0; 
-            localStorage.setItem('venecoRunHighScore', recordGlobal);
-            
-            document.getElementById("loginMenu").style.display = "none"; 
+        function entrarInvitado() {
+            localStorage.setItem('venecoUser', 'Invitado');
+            localStorage.setItem('venecoWallet', 'none');
             mostrarMenuPrincipal();
-        } catch (e) { 
-            console.error(e);
-            alert("Error de conexión. Verifica que el Script esté publicado como 'Cualquiera'."); 
         }
-        document.getElementById("loadingLogin").style.display = "none";
-    }
 
-    // Al cargar la página, si es Telegram, el botón cambia de texto
-    window.onload = () => {
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            const btn = document.querySelector(".btn[onclick='autenticarYEntrar()']");
-            btn.innerText = "ENTRAR CON TELEGRAM";
-            document.getElementById("tgUser").style.display = "none";
-            document.getElementById("bnbWallet").style.display = "none";
+        function clicPortada() {
+            document.getElementById("introScreen").style.display = "none";
+            if(localStorage.getItem('venecoUser')) mostrarMenuPrincipal();
+            else document.getElementById("loginMenu").style.display = "flex";
         }
-    };
-</script>
+
+        function mostrarMenuPrincipal() {
+            document.getElementById("loginMenu").style.display = "none";
+            document.getElementById("mainMenu").style.display = "flex";
+            document.getElementById("userNameTitle").innerText = localStorage.getItem('venecoUser');
+            document.getElementById("menuBestScore").innerText = "Record: " + recordGlobal;
+        }
+
+        function ajustar() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            chig.suelo = canvas.height - 150;
+            chig.y = chig.suelo;
+        }
+
+        function prepararJuego() {
+            document.getElementById("mainMenu").style.display = "none";
+            document.getElementById("ui").style.display = "block";
+            canvas.style.display = "block";
+            ajustar();
+            iniciar();
+        }
+
+        function iniciar() {
+            activo = true;
+            score = 0;
+            vel = 10;
+            obst = [];
+            requestAnimationFrame(bucle);
+            spawn();
+        }
+
+        function spawn() {
+            if(!activo) return;
+            obst.push({ x: canvas.width + 100, w: 60, h: 70 });
+            setTimeout(spawn, Math.max(800, 2000 - (score * 2)));
+        }
+
+        function bucle() {
+            if(!activo) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Suelo
+            ctx.drawImage(imgSuelo, 0, canvas.height - 100, canvas.width, 100);
+
+            // Chiguire logic
+            chig.dy += chig.g;
+            chig.y += chig.dy;
+            if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
+            
+            frameAnim++;
+            let img = (chig.y < chig.suelo) ? imgC3 : (Math.floor(frameAnim/10)%2 == 0 ? imgC1 : imgC2);
+            ctx.drawImage(img, chig.x, chig.y, chig.w, chig.h);
+
+            // Obstáculos
+            for(let i = obst.length-1; i>=0; i--) {
+                obst[i].x -= vel;
+                ctx.drawImage(imgB, obst[i].x, chig.suelo + 10, obst[i].w, obst[i].h);
+                
+                // Colisión simple
+                if(chig.x < obst[i].x + 40 && chig.x + 40 > obst[i].x && chig.y + 40 > chig.suelo) {
+                    morir();
+                }
+
+                if(obst[i].x < -100) {
+                    obst.splice(i, 1);
+                    score += 10;
+                    document.getElementById("score").innerText = score;
+                }
+            }
+            requestAnimationFrame(bucle);
+        }
+
+        function morir() {
+            activo = false;
+            document.getElementById("finalScore").innerText = score;
+            document.getElementById("gameOverScreen").style.display = "flex";
+            if(score > recordGlobal && localStorage.getItem('venecoWallet') !== 'none') {
+                fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({
+                    usuario: localStorage.getItem('venecoUser'),
+                    wallet: localStorage.getItem('venecoWallet'),
+                    puntaje: score
+                })});
+            }
+        }
+
+        function reiniciarRapido() {
+            document.getElementById("gameOverScreen").style.display = "none";
+            iniciar();
+        }
+
+        function toggleMute() { muted = !muted; document.getElementById("muteBtn").innerText = muted ? "🔇" : "🔊"; }
+        function cerrarSesion() { localStorage.clear(); location.reload(); }
+
+        window.addEventListener("touchstart", (e) => { 
+            if(activo && chig.y >= chig.suelo - 5) chig.dy = chig.salto; 
+        });
+    </script>
+</body>
+</html>
