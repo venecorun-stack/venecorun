@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Final System</title>
+    <title>Veneco Run - Sistema Integrado</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
@@ -67,6 +67,8 @@
         tg.expand();
         
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxS64u2ud1QZ2G93d0sQpD7T2iXemvRwVvBXcVw9dvgIjpAZROBsdqnjY1OPPAopSAh/exec";
+        
+        // Capturamos el referido directamente del start_param de Telegram
         const referidoPor = tg.initDataUnsafe.start_param || null;
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
@@ -81,7 +83,13 @@
         let chig = { x: 80, y: 0, w: 100, h: 100, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
 
         async function postData(body) {
-            try { await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(body) }); } catch(e) {}
+            try { 
+                await fetch(URL_SCRIPT, { 
+                    method: "POST", 
+                    mode: "no-cors", 
+                    body: JSON.stringify(body) 
+                }); 
+            } catch(e) { console.log("Error de red"); }
         }
 
         function clicPortada() {
@@ -94,10 +102,19 @@
 
         function loginTG() {
             const u = tg.initDataUnsafe.user;
+            if(!u) { alert("Abre desde Telegram"); return; }
             const userName = u.username ? "@" + u.username : u.first_name;
             localStorage.setItem('venecoUser', userName);
             localStorage.setItem('venecoTGID', u.id.toString());
-            postData({ accion: "puntos", usuario: userName, wallet: u.id.toString(), puntaje: 0, invitadoPor: referidoPor });
+            
+            // Enviamos el login con el referido (si existe)
+            postData({ 
+                accion: "puntos", 
+                usuario: userName, 
+                wallet: u.id.toString(), 
+                puntaje: 0, 
+                invitadoPor: referidoPor 
+            });
             mostrarMenu();
         }
 
@@ -116,23 +133,34 @@
                 recordGlobalBD = data.puntos || 0;
                 document.getElementById("highScoreText").innerText = recordGlobalBD;
                 if(data.bono === true) marcarTareaCompletada();
-            } catch(e) {}
+            } catch(e) { console.log("Cargando..."); }
         }
 
         async function unirseTelegramTask() {
             window.open("https://t.me/venecoinu", "_blank");
-            await postData({ accion: "bono_tg", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID') });
-            localStorage.setItem('taskTGDone', 'true');
-            alert("¡Bono solicitado! +1000 Puntos.");
+            
+            // Mandamos el bono inmediatamente
+            await postData({ 
+                accion: "bono_tg", 
+                usuario: localStorage.getItem('venecoUser'), 
+                wallet: localStorage.getItem('venecoTGID') 
+            });
+            
+            alert("¡Bono solicitado! Actualizando puntos...");
             marcarTareaCompletada();
-            setTimeout(mostrarMenu, 2000);
+            setTimeout(mostrarMenu, 2000); // Recargamos puntos tras 2 seg
         }
 
         function marcarTareaCompletada() {
             const btn = document.getElementById('btnTGTask');
-            if(btn) { btn.style.opacity = "0.5"; btn.onclick = null; btn.innerHTML = "<b>✅ TAREA COMPLETADA</b>"; }
+            if(btn) { 
+                btn.style.opacity = "0.5"; 
+                btn.onclick = null; 
+                btn.innerHTML = "<b>✅ TAREA COMPLETADA</b><span>+1000 pts sumados</span>"; 
+            }
         }
 
+        // --- FUNCIONES DE JUEGO (SIN CAMBIOS) ---
         async function cargarRanking() {
             abrirModal('modalRank');
             const list = document.getElementById("rankList");
