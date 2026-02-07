@@ -1,70 +1,261 @@
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-<style>
-    /* ... (mismo CSS anterior) ... */
-    .btn-tg { background: #0088cc; color: white; box-shadow: 0px 5px 0px #005580; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; }
-</style>
-
-<div id="loginMenu">
-    <div class="login-box">
-        <h2 style="color:#ffcc00; margin-top:0; letter-spacing: 2px;">REGISTRO AIRDROP</h2>
-        <p id="tgStatus" style="font-size: 14px; margin-bottom: 20px;">Detectando cuenta de Telegram...</p>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Veneco Run - Master Edition</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
+        #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: #ff4444; color: white; border: 2px solid white; padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: none; }
         
-        <button id="btnEntrarTG" class="btn btn-tg" onclick="loginTelegram()" style="display:none;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.35-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.36-.48.99-.74 3.84-1.67 6.41-2.77 7.7-3.31 3.64-1.53 4.4-1.8 4.89-1.81.11 0 .35.03.5.16.13.11.17.26.18.37 0 .07.01.21 0 .33z"/></svg>
-            JUGAR AHORA
-        </button>
+        #introScreen, #loginMenu, #gameOverScreen { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            background-color: #000;
+            background-position: center; 
+            background-repeat: no-repeat;
+            background-size: contain;
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 900; 
+            text-align: center; 
+        }
+
+        #introScreen { 
+            background-image: url('portada.png'); 
+            cursor: pointer; 
+            justify-content: flex-end; 
+        }
+
+        @media (max-aspect-ratio: 1/1) {
+            #introScreen {
+                background-image: url('portada_mobile.png') !important;
+                background-size: cover !important;
+                background-position: center center;
+            }
+        }
+
+        #loginMenu { background-image: url('portada.png'); display: none; }
+        #gameOverScreen { background: rgba(0,0,0,0.95); display: none; }
+        
+        .login-box { background: rgba(0,0,0,0.9); padding: 30px; border: 3px solid #ffcc00; border-radius: 20px; width: 85%; max-width: 350px; }
+        .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; width: 100%; }
+        /* Botón estilo Telegram */
+        .btn-tg { background: #24A1DE; color: white; box-shadow: 0px 5px 0px #1a719b; margin-top: 20px; }
+        
+        .share-btn { background: #000; color: white; border: 2px solid #555; padding: 12px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        
+        #ui { position: absolute; top: 20px; left: 20px; z-index: 850; display: none; pointer-events: none; }
+        .score-text { font-size: 40px; color: white; text-shadow: 3px 3px 0 #000; margin: 0; }
+        .record-ui { color: #ffcc00; font-size: 20px; text-shadow: 2px 2px 0 #000; margin: 0; }
+        
+        #levelContainer { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 800; text-align: center; width: 100%; display: none; pointer-events: none; }
+        #levelText { font-size: 55px; color: #ffcc00; font-weight: bold; text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; margin: 0; opacity: 0.8; }
+
+        canvas { display: none; image-rendering: -webkit-optimize-contrast; }
+    </style>
+</head>
+<body>
+
+    <button id="logoutBtn" onclick="cerrarSesion()">CERRAR SESIÓN ✖</button>
+
+    <div id="introScreen" onclick="clicPortada()">
+        <div style="font-size:24px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00; background: rgba(0,0,0,0.5); width:100%;">TOCA PARA EMPEZAR</div>
     </div>
-</div>
 
-<script>
-    // Inicializar Telegram WebApp
-    const tg = window.Telegram.WebApp;
-    tg.expand(); // Expande el mini-app a pantalla completa
+    <div id="loginMenu">
+        <div class="login-box">
+            <h2 style="color:#ffcc00; margin-top:0;">REGISTRO AIRDROP</h2>
+            <p style="color:white; font-size:14px;">Para participar, inicia sesión con tu cuenta oficial de Telegram.</p>
+            
+            <button class="btn btn-tg" onclick="guardarYEntrarTelegram()">INICIAR CON TELEGRAM</button>
+        </div>
+    </div>
 
-    // ... (variables de imágenes y sonidos igual) ...
+    <div id="ui">
+        <div id="displayUser" style="color:#00ffff; font-size:22px; text-shadow: 2px 2px 0 #000;"></div>
+        <p class="score-text">PUNTOS: <span id="score">0</span></p>
+        <p class="record-ui">RECORD: <span id="highScoreText">0</span></p>
+    </div>
 
-    function clicPortada() { 
-        sndClick.play(); sndIntro.play(); 
-        document.getElementById("introScreen").style.display = "none"; 
-        
-        if(localStorage.getItem('venecoUser')) {
-            prepararJuego(); 
-        } else {
-            document.getElementById("loginMenu").style.display = "flex";
-            verificarUsuarioTelegram();
+    <div id="levelContainer">
+        <p id="levelText">PRINCIPIANTE</p>
+    </div>
+
+    <div id="gameOverScreen">
+        <h1 style="color:#ff4444; font-size:45px; text-shadow: 3px 3px 0 #000;">¡FIN DEL JUEGO!</h1>
+        <div style="display:flex; align-items:center; gap:20px; justify-content:center; margin-bottom:15px;">
+            <div>
+                <p style="font-size:28px; margin:0;">Puntos: <span id="finalScore">0</span></p>
+                <p style="font-size:20px; color:#ffcc00; margin:0;">Récord: <span id="finalBest">0</span></p>
+            </div>
+            <img src="derrota.png" style="width:120px; border-radius:15px;">
+        </div>
+        <button class="share-btn" onclick="compartirX()">𝕏 Compartir en Twitter</button>
+        <button class="btn" onclick="location.reload()">REINTENTAR</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        // Inicializar Telegram WebApp con seguridad
+        const tg = window.Telegram ? window.Telegram.WebApp : null;
+        if(tg) tg.expand();
+
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // ... (Carga de imágenes y sonidos igual que el original) ...
+        const imgC = new Image(); imgC.src = 'chiguire.png';
+        const imgD = new Image(); imgD.src = 'derrota.png';
+        const imgB = new Image(); imgB.src = 'barril.png';
+        const imgF = new Image(); imgF.src = 'fondo.png';
+
+        const sndClick = new Audio('click.mp3');
+        const sndSalto = new Audio('salto.mp3');
+        const sndPerder = new Audio('perder.mp3');
+        const musFondo = new Audio('musicafondo.mp3'); musFondo.loop = true;
+        const sndIntro = new Audio('intro.mp3'); sndIntro.loop = true;
+
+        let activo = false, score = 0, vel = 11, obst = [], bgX = 0;
+        let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
+        let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
+        let estela = [];
+        let nivelActual = "";
+
+        if(localStorage.getItem('venecoUser')) document.getElementById("logoutBtn").style.display = "block";
+
+        function cerrarSesion() { localStorage.clear(); location.reload(); }
+
+        function clicPortada() { 
+            sndClick.play(); sndIntro.play(); 
+            document.getElementById("introScreen").style.display = "none"; 
+            if(localStorage.getItem('venecoUser')) {
+                document.getElementById("logoutBtn").style.display = "none";
+                prepararJuego(); 
+            } else {
+                document.getElementById("loginMenu").style.display = "flex"; 
+            }
         }
-    }
 
-    function verificarUsuarioTelegram() {
-        const user = tg.initDataUnsafe?.user;
-        const statusText = document.getElementById("tgStatus");
-        const btn = document.getElementById("btnEntrarTG");
-
-        if (user) {
-            // Si el usuario tiene @username lo usamos, si no, su nombre + ID
-            const nombreUsuario = user.username ? `@${user.username}` : `${user.first_name}_${user.id}`;
-            statusText.innerText = "Bienvenido, " + nombreUsuario;
-            statusText.style.color = "#00ff00";
-            btn.style.display = "flex";
-            // Guardamos temporalmente para la función de login
-            window.tgDetectedUser = nombreUsuario;
-        } else {
-            statusText.innerText = "Error: Abre el juego desde Telegram";
-            statusText.style.color = "#ff4444";
-        }
-    }
-
-    function loginTelegram() {
-        if (window.tgDetectedUser) {
+        // FUNCIÓN MODIFICADA PARA TELEGRAM REAL
+        function guardarYEntrarTelegram() {
             sndClick.play();
-            localStorage.setItem('venecoUser', window.tgDetectedUser);
-            localStorage.setItem('venecoWallet', "Telegram_Auth"); // Mantenemos el campo para el Excel
+            
+            let userReal = "Invitado";
+            
+            // Intentamos obtener el usuario real de Telegram
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                const u = tg.initDataUnsafe.user;
+                userReal = u.username ? "@" + u.username : u.first_name;
+            } else {
+                // Si se abre fuera de Telegram para pruebas
+                userReal = "Web_User_" + Math.floor(Math.random()*100);
+            }
+
+            localStorage.setItem('venecoUser', userReal);
+            localStorage.setItem('venecoWallet', "Telegram_Auth"); // Valor por defecto
             
             document.getElementById("loginMenu").style.display = "none";
+            document.getElementById("logoutBtn").style.display = "none";
             prepararJuego();
         }
-    }
 
-    // El resto de la lógica (prepararJuego, morir, enviarDatosExcel, etc.) se mantiene IGUAL
-</script>
+        // ... (El resto de las funciones: prepararJuego, ajustar, iniciar, enviarDatosExcel, morir, bucle, etc. SE MANTIENEN IGUAL QUE EL ORIGINAL) ...
+
+        function prepararJuego() { 
+            sndIntro.pause(); musFondo.play(); 
+            canvas.style.display = "block"; 
+            document.getElementById("ui").style.display = "block"; 
+            document.getElementById("levelContainer").style.display = "block";
+            document.getElementById("displayUser").innerText = localStorage.getItem('venecoUser');
+            document.getElementById("highScoreText").innerText = recordGlobal;
+            ajustar(); iniciar(); 
+        }
+
+        function ajustar() { 
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr;
+            canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
+            ctx.scale(dpr, dpr); 
+            chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
+            if(window.innerWidth < 600) { chig.x = 25; } else { chig.x = 100; }
+        }
+
+        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = []; bucle(); spawn(); }
+
+        async function enviarDatosExcel(puntos) {
+            const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyb83SGQoXgHh_eWtJzEr39FmnnoiM__y7fH_GEytH5uAqVCczOUufe523OnXhRcSYzYw/exec";
+            const datos = { usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoWallet'), puntaje: puntos };
+            try { fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) }); } catch (e) {}
+        }
+
+        function morir() { 
+            activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play(); 
+            if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); }
+            enviarDatosExcel(score);
+            document.getElementById("finalScore").innerText = score; 
+            document.getElementById("finalBest").innerText = recordGlobal;
+            document.getElementById("levelContainer").style.display = "none";
+            document.getElementById("gameOverScreen").style.display = "flex"; 
+        }
+
+        function compartirX() {
+            const msg = `🏆 ¡He conseguido ${score} puntos en Veneco Run! 🚀 Récord: ${recordGlobal}. #VenecoRun #Airdrop`;
+            window.open(`https://twitter.com/intent/tweet?text=${msg}`, '_blank');
+        }
+
+        const saltar = () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.currentTime = 0; sndSalto.play(); } };
+        window.addEventListener("mousedown", saltar);
+        window.addEventListener("touchstart", saltar);
+        window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
+        window.onresize = ajustar;
+
+        function spawn() {
+            if(!activo) return;
+            let esDoble = score >= 200 && Math.random() > 0.6;
+            obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
+            let baseFreq = 1100 / (vel * 0.07);
+            let delay = Math.max(baseFreq, esDoble ? 1100 : 700); 
+            setTimeout(spawn, delay);
+        }
+
+        function bucle() {
+            if(!activo && !chig.vivo) return;
+            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            bgX -= vel * 0.4;
+            if(bgX <= -window.innerWidth) bgX = 0;
+            ctx.drawImage(imgF, bgX, 0, window.innerWidth, window.innerHeight);
+            ctx.drawImage(imgF, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
+            
+            if(activo) {
+                chig.dy += chig.g; chig.y += chig.dy;
+                if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
+                
+                for(let i = obst.length - 1; i >= 0; i--) {
+                    obst[i].x -= vel;
+                    let bY = chig.suelo + (chig.h - obst[i].h);
+                    ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
+                    
+                    if (chig.x + 35 < obst[i].x + obst[i].w - 35 && 
+                        chig.x + chig.w - 35 > obst[i].x + 35 && 
+                        chig.y + 35 < bY + obst[i].h && 
+                        chig.y + chig.h - 15 > bY) morir();
+
+                    if(obst[i].x < -200) { 
+                        obst.splice(i, 1); score += 10; 
+                        document.getElementById("score").innerText = score; 
+                        vel += 0.15;
+                    }
+                }
+            }
+            ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
+            requestAnimationFrame(bucle);
+        }
+    </script>
+</body>
+</html>
