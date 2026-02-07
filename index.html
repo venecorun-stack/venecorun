@@ -39,12 +39,11 @@
         .modal-content { background: #1a1a1a; padding: 25px; border-radius: 25px; width: 85%; border: 2px solid #ffcc00; max-height: 80vh; overflow-y: auto; }
         
         canvas { display: none; image-rendering: -webkit-optimize-contrast; position: relative; z-index: 500; }
-        
-        .btn { padding: 15px; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 16px; text-decoration: none; display: block; }
+        .btn { padding: 15px; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 16px; text-decoration: none; display: block; text-align: center;}
     </style>
 </head>
 <body>
-    <button id="logoutBtn" onclick="cerrarSesion()">SALIR ✖</button>
+    <button id="logoutBtn" onclick="reproducirClick(); cerrarSesion()">SALIR ✖</button>
     <div id="touchLayer"></div>
 
     <div id="introScreen" onclick="clicPortada()">
@@ -64,18 +63,19 @@
             <div id="userPointsDisplay">RÉCORD: <span id="currentScoreMenu">0</span></div>
         </div>
         <div class="play-circle" onclick="prepararJuego()">JUGAR</div>
-        <div class="menu-opt" onclick="cargarRanking()"><b>🏆 RANKING TOP 10</b></div>
-        <div class="menu-opt" onclick="abrirModal('modalAirdrop')"><b>💰 REGISTRAR WALLET</b></div>
+        <div class="menu-opt" onclick="reproducirClick(); cargarRanking()"><b>🏆 RANKING TOP 10</b></div>
+        <div class="menu-opt" onclick="reproducirClick(); abrirModal('modalAirdrop')"><b>💰 REGISTRAR WALLET</b></div>
+        <div class="menu-opt" onclick="reproducirClick(); window.open('https://t.me/venecoinu', '_blank')"><b>📢 CANAL DE TELEGRAM</b></div>
+        <div class="menu-opt" style="background: rgba(46, 204, 113, 0.2); border-color: #2ecc71;" onclick="reproducirClick(); compartirJuego()"><b>🔗 COMPARTIR JUEGO</b></div>
     </div>
 
-    <div id="modalRank" class="modal"><div class="modal-content"><h3>TOP 10 LÍDERES</h3><div id="rankList"></div><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
-    
+    <div id="modalRank" class="modal"><div class="modal-content"><h3>TOP 10 LÍDERES</h3><div id="rankList"></div><button class="btn" onclick="reproducirClick(); cerrarModales()">CERRAR</button></div></div>
     <div id="modalAirdrop" class="modal">
         <div class="modal-content">
             <h3>REGISTRO WALLET</h3>
-            <input type="text" id="walletInput" style="width:100%; padding:10px; margin:10px 0; border-radius:10px; border:none; background:#333; color:white;" placeholder="0x...">
-            <button class="btn" onclick="guardarWallet()">GUARDAR</button>
-            <button class="btn" onclick="cerrarModales()">CERRAR</button>
+            <input type="text" id="walletInput" style="width:100%; padding:12px; margin:10px 0; border-radius:10px; border:none; background:#333; color:white; box-sizing: border-box;" placeholder="0x...">
+            <button class="btn" onclick="reproducirClick(); guardarWallet()">GUARDAR</button>
+            <button class="btn" onclick="reproducirClick(); cerrarModales()">CERRAR</button>
         </div>
     </div>
 
@@ -85,7 +85,7 @@
     <div id="gameOverScreen">
         <h1 style="text-shadow: 1px 1px 0 #000;">¡FIN DEL JUEGO!</h1>
         <p>Puntos: <span id="finalScore">0</span></p>
-        <button class="btn" onclick="location.reload()">VOLVER AL MENÚ</button>
+        <button class="btn" onclick="reproducirClick(); location.reload()">VOLVER AL MENÚ</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -96,13 +96,17 @@
 
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxS64u2ud1QZ2G93d0sQpD7T2iXemvRwVvBXcVw9dvgIjpAZROBsdqnjY1OPPAopSAh/exec";
 
-        // SONIDOS
+        // CONFIGURACIÓN DE TUS ARCHIVOS DE AUDIO
         const sndSalto = new Audio('salto.mp3');
-        const sndGameOver = new Audio('derrota_sonido.mp3'); // Asegúrate de tener este archivo
-        const musIntro = new Audio('intro_musica.mp3'); 
-        const musJuego = new Audio('juego_musica.mp3');
+        const sndClick = new Audio('click.mp3');
+        const sndPerder = new Audio('perder.mp3');
+        const musIntro = new Audio('intro.mp3'); 
+        const musFondo = new Audio('musicafondo.mp3');
+        
         musIntro.loop = true;
-        musJuego.loop = true;
+        musFondo.loop = true;
+
+        function reproducirClick() { sndClick.currentTime = 0; sndClick.play().catch(()=>{}); }
 
         const chigSprites = [new Image(), new Image(), new Image(), new Image()];
         chigSprites[0].src = 'chiguire.png'; chigSprites[1].src = 'chiguire2.png';
@@ -116,7 +120,6 @@
         const ctx = canvas.getContext("2d");
         const touchLayer = document.getElementById("touchLayer");
 
-        // VELOCIDAD INICIAL AJUSTADA (Más lenta: de 11 a 8)
         let activo = false, score = 0, vel = 8, obst = [], bgX = 0, skyX = 0, recordGlobalBD = 0;
         let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true, frame: 0, tick: 0 };
         let nivelActual = "";
@@ -127,7 +130,7 @@
         }
 
         function clicPortada() {
-            // Activar audio por interacción del usuario (Requerido por móviles)
+            reproducirClick();
             musIntro.play().catch(() => {});
             document.getElementById("introScreen").style.display = "none";
             if(localStorage.getItem('venecoUser')) mostrarMenu();
@@ -144,7 +147,7 @@
                 mostrarMenu();
             } else {
                 document.getElementById("loginMenu").style.display = "flex";
-                document.getElementById("loginContainer").innerHTML = `<a href="https://t.me/venecotoken_bot" class="btn">IR AL BOT</a>`;
+                document.getElementById("loginContainer").innerHTML = `<button class="btn" onclick="reproducirClick(); window.location.href='https://t.me/venecotoken_bot'">IR AL BOT</button>`;
             }
         }
 
@@ -153,7 +156,6 @@
             document.getElementById("mainMenu").style.display = "flex";
             document.getElementById("logoutBtn").style.display = "block";
             document.getElementById("userNameDisplay").innerText = localStorage.getItem('venecoUser');
-            
             try {
                 const res = await fetch(URL_SCRIPT + "?tipo=getUserData&id=" + localStorage.getItem('venecoTGID'));
                 const data = await res.json();
@@ -164,9 +166,10 @@
         }
 
         function prepararJuego() {
+            reproducirClick();
             musIntro.pause();
-            musJuego.currentTime = 0;
-            musJuego.play().catch(() => {});
+            musFondo.currentTime = 0;
+            musFondo.play().catch(() => {});
             
             document.getElementById("mainMenu").style.display = "none";
             document.getElementById("logoutBtn").style.display = "none";
@@ -200,7 +203,6 @@
             if(!activo) return;
             let esDoble = score >= 200 && Math.random() > 0.6;
             obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
-            // Tiempo entre obstáculos ajustado a la nueva velocidad
             let wait = Math.max(1300 / (vel * 0.1), esDoble ? 1200 : 800);
             setTimeout(spawn, wait);
         }
@@ -245,70 +247,7 @@
 
                 for(let i = obst.length - 1; i >= 0; i--) {
                     obst[i].x -= vel;
-                    ctx.drawImage(imgB, obst[i].x, chig.suelo + (chig.h - obst[i].h), obst[i].w, obst[i].h);
+                    let barrilY = chig.suelo + (chig.h - obst[i].h);
+                    ctx.drawImage(imgB, obst[i].x, barrilY, obst[i].w, obst[i].h);
                     
-                    if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 > obst[i].x + 35 && chig.y + 35 < (chig.suelo + (chig.h - obst[i].h)) + obst[i].h && chig.y + chig.h - 15 > (chig.suelo + (chig.h - obst[i].h))) morir();
-
-                    if(obst[i].x < -200) { 
-                        obst.splice(i, 1); score += 10; 
-                        document.getElementById("score").innerText = score; 
-                        vel += 0.12; // Aceleración un poco más suave (era 0.15)
-                    }
-                }
-            }
-            ctx.drawImage(chig.vivo ? chigSprites[chig.frame] : imgD, chig.x, chig.y, chig.w, chig.h);
-            requestAnimationFrame(bucle);
-        }
-
-        function morir() {
-            activo = false; chig.vivo = false;
-            musJuego.pause();
-            sndGameOver.play().catch(() => {}); // Sonido de derrota
-            
-            touchLayer.style.display = "none";
-            if (score > recordGlobalBD) {
-                recordGlobalBD = score;
-                postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: score });
-            }
-            document.getElementById("finalScore").innerText = score; 
-            document.getElementById("levelContainer").style.display = "none";
-            document.getElementById("gameOverScreen").style.display = "flex";
-        }
-
-        const manejarSalto = (e) => { 
-            if (e && e.cancelable) e.preventDefault();
-            if(activo && chig.y >= chig.suelo - 20) { 
-                chig.dy = chig.salto; 
-                sndSalto.currentTime = 0;
-                sndSalto.play().catch(() => {});
-            } 
-        };
-        
-        touchLayer.addEventListener("touchstart", manejarSalto, {passive: false});
-        touchLayer.addEventListener("mousedown", manejarSalto);
-        window.addEventListener("keydown", (e) => { if(e.code === "Space") manejarSalto(e); });
-        
-        function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
-        function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
-        function cerrarSesion() { localStorage.clear(); location.reload(); }
-        
-        function guardarWallet() {
-            const w = document.getElementById("walletInput").value;
-            if(!w) return;
-            postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), walletAddress: w });
-            alert("Wallet Guardada!"); cerrarModales();
-        }
-
-        async function cargarRanking() {
-            abrirModal('modalRank');
-            const list = document.getElementById("rankList");
-            list.innerHTML = "Cargando...";
-            try {
-                const res = await fetch(URL_SCRIPT + "?tipo=getRanking&t=" + Date.now());
-                const data = await res.json();
-                list.innerHTML = data.map((u, i) => `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;"><span>${i+1}. ${u.usuario}</span> <b style="color:#ffcc00;">${u.puntaje} pts</b></div>`).join('');
-            } catch(e) { list.innerHTML = "Error conexión"; }
-        }
-    </script>
-</body>
-</html>
+                    if (chig.x + 3
