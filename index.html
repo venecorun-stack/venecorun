@@ -86,7 +86,7 @@
 
     <script>
         const tg = window.Telegram ? window.Telegram.WebApp : null;
-        if(tg) tg.expand();
+        if(tg && tg.expand) tg.expand();
 
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
@@ -125,19 +125,21 @@
             const title = document.getElementById("loginTitle");
             const desc = document.getElementById("loginDesc");
 
-            // Verificamos si hay una sesión real de Telegram Mini App
-            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                // ESTÁ EN TELEGRAM
+            // Verificamos si los datos de Telegram están presentes
+            if (tg && tg.initData && tg.initData !== "") {
+                // ESTÁ DENTRO DE TELEGRAM
                 container.innerHTML = `<button class="btn btn-tg" onclick="guardarYEntrarTelegram()">INICIAR CON TELEGRAM</button>`;
             } else {
-                // ESTÁ EN LA WEB (BLOQUEAR)
+                // ESTÁ EN NAVEGADOR WEB (BLOQUEO)
                 title.innerText = "¡SÓLO EN TELEGRAM!";
                 title.style.color = "#ff4444";
                 desc.innerText = "Para participar por el AIRDROP y guardar tu récord, debes abrir el juego desde nuestro Bot oficial.";
+                // Enlace universal corregido
                 container.innerHTML = `
-                    <a href="https://t.me/venecotoken_bot/venecorun" class="btn btn-tg">
+                    <a href="tg://resolve?domain=venecotoken_bot&appname=venecorun" class="btn btn-tg">
                         ABRIR EN TELEGRAM
                     </a>
+                    <p style="font-size:10px; margin-top:10px; color:#aaa;">Si el botón no abre, busca @venecotoken_bot en Telegram</p>
                 `;
             }
         }
@@ -150,6 +152,8 @@
                 localStorage.setItem('venecoTGID', u.id.toString());
                 document.getElementById("loginMenu").style.display = "none";
                 prepararJuego();
+            } else {
+                alert("Error: Inicia el juego desde el bot oficial.");
             }
         }
 
@@ -208,8 +212,7 @@
 
         function spawn() {
             if(!activo) return;
-            let esDoble = score >= 200 && Math.random() > 0.6;
-            obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90 });
+            obst.push({ x: window.innerWidth + 150, w: 80, h: 90 });
             setTimeout(spawn, Math.max(700, 1100 / (vel * 0.07)));
         }
 
