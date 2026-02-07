@@ -3,21 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Fase 5 Master Fix</title>
+    <title>Veneco Run - Fase 5 Oficial</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
         #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 2000; background: #ff4444; color: white; border: 2px solid white; padding: 10px; border-radius: 10px; cursor: pointer; display: none; font-weight: bold; }
-        
-        #introScreen, #loginMenu, #mainMenu, #gameOverScreen { 
-            position: absolute; width: 100%; height: 100%; background-position: center; background-repeat: no-repeat; background-size: cover; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; text-align: center; 
-        }
+        #introScreen, #loginMenu, #mainMenu, #gameOverScreen { position: absolute; width: 100%; height: 100%; background-position: center; background-repeat: no-repeat; background-size: cover; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; text-align: center; }
         #introScreen { background-image: url('portada_mobile.png'); cursor: pointer; justify-content: flex-end; }
         #loginMenu { background-image: url('portada_mobile.png'); display: none; }
         #mainMenu { background: radial-gradient(circle, #1a1a1a, #000); display: none; overflow-y: auto; padding: 20px 0; }
         #gameOverScreen { background: rgba(0,0,0,0.95); display: none; }
-
         #userProfile { background: rgba(255, 204, 0, 0.15); border: 1px solid #ffcc00; padding: 12px 25px; border-radius: 20px; margin-bottom: 20px; min-width: 220px; }
         #userNameDisplay { color: #ffcc00; font-size: 18px; display: block; }
         #userPointsDisplay { font-size: 22px; color: #fff; text-shadow: 0 0 10px #ffcc00; font-weight: bold; }
@@ -26,36 +21,29 @@
         .menu-opt { width: 85%; max-width: 320px; background: rgba(255,255,255,0.08); margin: 6px 0; padding: 12px; border-radius: 18px; cursor: pointer; border: 1px solid #444; }
         .menu-opt b { font-size: 16px; display: block; }
         .menu-opt span { display: block; font-size: 10px; color: #aaa; }
-
         #ui { position: absolute; top: 15px; left: 15px; z-index: 850; display: none; pointer-events: none; }
         #scoreDisplay { font-size: 22px; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
         #bestDisplay { font-size: 14px; color: #ffcc00; text-shadow: 1px 1px 0 #000; margin: 0; }
         #levelContainer { position: absolute; top: 15px; right: 15px; z-index: 800; text-align: right; display: none; pointer-events: none; }
         #levelText { font-size: 18px; color: #ffcc00; font-weight: bold; text-shadow: 2px 2px 0 #000; margin: 0; }
-        
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; flex-direction: column; align-items: center; justify-content: center; }
         .modal-content { background: #1a1a1a; padding: 25px; border-radius: 25px; width: 85%; border: 2px solid #ffcc00; max-height: 80vh; overflow-y: auto; }
-        
         canvas { display: none; image-rendering: -webkit-optimize-contrast; cursor: pointer; }
-        .btn { padding: 15px; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 16px; }
+        .btn { padding: 15px; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 16px; text-decoration: none; display: block; }
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; background: #333; color: white; text-align: center; box-sizing: border-box; }
     </style>
 </head>
 <body>
-
     <button id="logoutBtn" onclick="cerrarSesion()">SALIR ✖</button>
-
     <div id="introScreen" onclick="clicPortada()">
         <div style="background:rgba(0,0,0,0.7); width:100%; padding:20px; margin-bottom:50px;">TOCA PARA INICIAR</div>
     </div>
-
     <div id="loginMenu">
         <div style="background:rgba(0,0,0,0.85); padding:30px; border-radius:25px; border:2px solid #ffcc00; width: 80%;">
             <h2 style="color:#ffcc00;">REGISTRO</h2>
             <div id="loginContainer"></div>
         </div>
     </div>
-
     <div id="mainMenu">
         <div id="userProfile">
             <span id="userNameDisplay">Sincronizando...</span>
@@ -78,13 +66,13 @@
     </div>
     <div id="levelContainer"><p id="levelText">PRINCIPIANTE</p></div>
     <div id="gameOverScreen"><h1>¡FIN DEL JUEGO!</h1><p>Puntos: <span id="finalScore">0</span></p><button class="btn" onclick="location.reload()">VOLVER</button></div>
-    
     <canvas id="gameCanvas"></canvas>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzwBSVNdugeDYOuu0VamA-YCmTh-jOg8QeiIGaM5jO0BRKn_OpYameJDMiCO8IGsBEE/exec";
+        // REEMPLAZA ESTA URL CON LA DE TU NUEVA IMPLEMENTACIÓN
+        const URL_SCRIPT = "TU_URL_AQUI_EJEMPLO/exec";
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
         const imgB = new Image(); imgB.src = 'barril.png';
@@ -94,8 +82,7 @@
 
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        let activo = false, score = 0, vel = 11, obst = [], bgX = 0;
-        let recordGlobalBD = 0;
+        let activo = false, score = 0, vel = 11, obst = [], bgX = 0, recordGlobalBD = 0;
         let chig = { x: 80, y: 0, w: 100, h: 100, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
         let nivelActual = "";
 
@@ -108,7 +95,7 @@
                 if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                     container.innerHTML = `<button class="btn" onclick="loginTG()">ENTRAR CON TELEGRAM</button>`;
                 } else {
-                    container.innerHTML = `<a href="https://t.me/venecotoken_bot" target="_blank" class="btn" style="text-decoration:none; display:block;">IR AL BOT DE TELEGRAM</a>`;
+                    container.innerHTML = `<a href="https://t.me/venecotoken_bot" class="btn">IR AL BOT DE TELEGRAM</a>`;
                 }
             }
         }
@@ -128,7 +115,6 @@
             document.getElementById("logoutBtn").style.display = "block";
             const myID = localStorage.getItem('venecoTGID');
             document.getElementById("userNameDisplay").innerText = localStorage.getItem('venecoUser');
-            
             try {
                 const res = await fetch(URL_SCRIPT + "?tipo=getUserData&id=" + myID);
                 const data = await res.json();
@@ -136,27 +122,24 @@
                 recordGlobalBD = data.puntos || 0;
                 document.getElementById("highScoreText").innerText = recordGlobalBD;
                 if(data.wallet) document.getElementById("walletInput").value = data.wallet;
-            } catch (e) { document.getElementById("currentScoreMenu").innerText = "0"; }
+            } catch (e) { }
             checkTaskStatus();
         }
 
         async function cargarRanking() {
             abrirModal('modalRank');
             const list = document.getElementById("rankList");
-            list.innerHTML = "<p>Cargando Top 10...</p>";
+            list.innerHTML = "Cargando...";
             try {
-                const res = await fetch(URL_SCRIPT + "?tipo=getRanking");
+                const res = await fetch(URL_SCRIPT + "?tipo=getRanking&t=" + Date.now());
                 const data = await res.json();
-                if(data && Array.isArray(data) && data.length > 0) {
-                    list.innerHTML = data.map((u, i) => {
-                        let nombre = u.usuario || u.user || "Jugador";
-                        let pts = u.puntaje || u.pts || 0;
-                        return `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
-                            <span>${i+1}. ${nombre}</span> <b style="color:#ffcc00;">${pts} pts</b>
-                        </div>`;
-                    }).join('');
-                } else { list.innerHTML = "<p>Aún no hay puntuaciones.</p>"; }
-            } catch(e) { list.innerHTML = "<p>Error de conexión.</p>"; }
+                if(data && data.length > 0) {
+                    list.innerHTML = data.map((u, i) => `
+                        <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
+                            <span>${i+1}. ${u.usuario}</span> <b style="color:#ffcc00;">${u.puntaje} pts</b>
+                        </div>`).join('');
+                } else { list.innerHTML = "No hay puntuaciones."; }
+            } catch(e) { list.innerHTML = "Error al cargar."; }
         }
 
         function cargarReferidos() {
@@ -164,10 +147,9 @@
             const myID = localStorage.getItem('venecoTGID');
             document.getElementById("refLink").value = `https://t.me/venecotoken_bot/venecorun?startapp=${myID}`;
             document.getElementById("listaRefs").innerHTML = "Cargando...";
-            fetch(URL_SCRIPT + "?tipo=getReferidos&id=" + myID)
-                .then(r => r.json()).then(data => {
-                    document.getElementById("listaRefs").innerHTML = `<p>Total: ${data.length}</p>` + data.map(r => `<div style="font-size:12px; margin-bottom:5px;">👤 ${r}</div>`).join('');
-                }).catch(() => document.getElementById("listaRefs").innerHTML = "Sin referidos.");
+            fetch(URL_SCRIPT + "?tipo=getReferidos&id=" + myID).then(r => r.json()).then(data => {
+                document.getElementById("listaRefs").innerHTML = `<p>Total: ${data.length}</p>` + data.map(r => `<div style="font-size:12px;">👤 ${r}</div>`).join('');
+            }).catch(() => document.getElementById("listaRefs").innerHTML = "Sin referidos.");
         }
 
         function unirseTelegramTask() {
@@ -176,7 +158,7 @@
                 fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: 100 }) });
                 localStorage.setItem('taskTGDone', 'true');
                 alert("¡+100 Puntos sumados!");
-                setTimeout(mostrarMenu, 1000);
+                setTimeout(mostrarMenu, 1500);
             }
         }
 
@@ -184,23 +166,20 @@
             if(localStorage.getItem('taskTGDone') === 'true') {
                 const btn = document.getElementById('btnTGTask');
                 btn.style.opacity = "0.5"; btn.onclick = null;
-                btn.innerHTML = "<b>✅ TAREA COMPLETADA</b><span>Puntos recibidos</span>";
+                btn.innerHTML = "<b>✅ TAREA COMPLETADA</b>";
             }
         }
 
         function guardarWallet() {
             const w = document.getElementById("walletInput").value;
-            if(!w) return alert("Ingresa una wallet");
             fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), walletAddress: w })});
-            alert("Wallet Guardada!");
-            cerrarModales();
+            alert("Wallet Guardada!"); cerrarModales();
         }
 
         function prepararJuego() {
             document.getElementById("mainMenu").style.display = "none";
             document.getElementById("logoutBtn").style.display = "none";
-            canvas.style.display = "block"; 
-            document.getElementById("ui").style.display = "block";
+            canvas.style.display = "block"; document.getElementById("ui").style.display = "block";
             document.getElementById("levelContainer").style.display = "block";
             ajustar(); iniciar();
         }
@@ -214,10 +193,7 @@
             chig.x = (window.innerWidth < 600) ? 30 : 100;
         }
 
-        function iniciar() {
-            activo = true; chig.vivo = true; score = 0; vel = 11; obst = [];
-            bucle(); spawn();
-        }
+        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; bucle(); spawn(); }
 
         function spawn() {
             if(!activo) return;
@@ -230,20 +206,16 @@
         function bucle() {
             if(!activo && !chig.vivo) return;
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            bgX -= vel * 0.4;
-            if(bgX <= -window.innerWidth) bgX = 0;
+            bgX -= vel * 0.4; if(bgX <= -window.innerWidth) bgX = 0;
             ctx.drawImage(imgF, bgX, 0, window.innerWidth, window.innerHeight);
             ctx.drawImage(imgF, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
-
             if(activo) {
                 chig.dy += chig.g; chig.y += chig.dy;
                 if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
                 if(score > recordGlobalBD) { recordGlobalBD = score; document.getElementById("highScoreText").innerText = recordGlobalBD; }
-
                 let nL = "PRINCIPIANTE";
                 if(score >= 2000) nL = "CAOS"; else if(score >= 1000) nL = "AREPA"; else if(score >= 500) nL = "MANGO"; else if(score >= 200) nL = "GUACAMAYA";
                 if (nL !== nivelActual) { nivelActual = nL; document.getElementById("levelText").innerText = nivelActual; }
-
                 for(let i = obst.length - 1; i >= 0; i--) {
                     obst[i].x -= vel;
                     let bY = chig.suelo + (chig.h - obst[i].h);
@@ -265,12 +237,11 @@
         }
 
         const saltar = (e) => { if(e && e.type === "touchstart") e.preventDefault(); if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.currentTime = 0; sndSalto.play(); } };
-        window.addEventListener("touchstart", saltar, {passive: false});
-        window.addEventListener("mousedown", saltar);
+        window.addEventListener("touchstart", saltar, {passive: false}); window.addEventListener("mousedown", saltar);
         function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
         function cerrarSesion() { localStorage.clear(); location.reload(); }
-        function copiarRef() { const c = document.getElementById("refLink"); c.select(); document.execCommand("copy"); alert("Link Copiado!"); }
+        function copiarRef() { const c = document.getElementById("refLink"); c.select(); document.execCommand("copy"); alert("Copiado!"); }
     </script>
 </body>
 </html>
