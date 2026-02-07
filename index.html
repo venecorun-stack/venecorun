@@ -52,7 +52,7 @@
     <div id="loginMenu">
         <div class="login-box">
             <h2 style="color:#ffcc00; margin-top:0;">REGISTRO AIRDROP</h2>
-            <p style="color:white; font-size:14px;">Inicia sesión con tu Telegram oficial para registrar tus puntos.</p>
+            <p style="color:white; font-size:14px;">Inicia sesión con tu Telegram real para guardar tus puntos.</p>
             <button class="btn btn-tg" onclick="guardarYEntrarTelegram()">INICIAR CON TELEGRAM</button>
         </div>
     </div>
@@ -103,7 +103,6 @@
         let activo = false, score = 0, vel = 11, obst = [], bgX = 0;
         let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
         let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
-        let estela = [];
         let nivelActual = "";
 
         if(localStorage.getItem('venecoUser')) document.getElementById("logoutBtn").style.display = "block";
@@ -123,14 +122,13 @@
         function guardarYEntrarTelegram() {
             sndClick.play();
             let userReal = "Invitado";
-            let tgID = "000000";
+            let tgID = "TEST_USER";
 
+            // CAPTURA REAL DE TELEGRAM
             if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 const u = tg.initDataUnsafe.user;
                 userReal = u.username ? "@" + u.username : u.first_name;
                 tgID = u.id.toString();
-            } else {
-                userReal = "Tester_" + Math.floor(Math.random()*99);
             }
 
             localStorage.setItem('venecoUser', userReal);
@@ -159,21 +157,34 @@
             chig.x = (window.innerWidth < 600) ? 25 : 100;
         }
 
-        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = []; bucle(); spawn(); }
+        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; bucle(); spawn(); }
 
         async function enviarDatosExcel(puntos) {
-            const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbwUqRVs7tK0qi_1bRx7JARIo5EZ6cUg3TAcVADA4LxfX2rqCnbFkaKLtYaupECRW36T/exec";
+            // TU NUEVA URL DE GOOGLE SCRIPT
+            const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbx1IW--ljJfrkk8Tf5QR31U9bl2E_LjkrWjaHSXyuQb6ZTl0T3kPXXVa2dibgiC9OAy/exec";
+            
             const datos = { 
                 usuario: localStorage.getItem('venecoUser'), 
                 wallet: localStorage.getItem('venecoTGID'), 
                 puntaje: puntos 
             };
-            try { fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) }); } catch (e) {}
+
+            try { 
+                fetch(URL_SCRIPT, { 
+                    method: "POST", 
+                    mode: "no-cors", 
+                    headers: { "Content-Type": "application/json" }, 
+                    body: JSON.stringify(datos) 
+                }); 
+            } catch (e) { console.log("Error al enviar", e); }
         }
 
         function morir() { 
             activo = false; chig.vivo = false; musFondo.pause(); sndPerder.play(); 
-            if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); }
+            if(score > recordGlobal) { 
+                recordGlobal = score; 
+                localStorage.setItem('venecoRunHighScore', recordGlobal); 
+            }
             enviarDatosExcel(score);
             document.getElementById("finalScore").innerText = score; 
             document.getElementById("finalBest").innerText = recordGlobal;
@@ -181,7 +192,7 @@
         }
 
         function compartirX() {
-            const msg = `🏆 ¡He conseguido ${score} puntos en Veneco Run! 🚀 Récord: ${recordGlobal}. #VenecoRun #Airdrop`;
+            const msg = `🏆 ¡He conseguido ${score} puntos en Veneco Run! 🚀 Mi récord es ${recordGlobal}. #VenecoRun #Airdrop`;
             window.open(`https://twitter.com/intent/tweet?text=${msg}`, '_blank');
         }
 
@@ -211,8 +222,19 @@
                 for(let i = obst.length - 1; i >= 0; i--) {
                     obst[i].x -= vel;
                     ctx.drawImage(imgB, obst[i].x, chig.suelo + (chig.h - obst[i].h), obst[i].w, obst[i].h);
-                    if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 > obst[i].x + 35 && chig.y + 35 < chig.suelo + 90 && chig.y + chig.h - 15 > chig.suelo + (chig.h - obst[i].h)) morir();
-                    if(obst[i].x < -200) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.15; }
+                    
+                    // Colisión ajustada
+                    if (chig.x + 35 < obst[i].x + obst[i].w - 35 && 
+                        chig.x + chig.w - 35 > obst[i].x + 35 && 
+                        chig.y + 35 < chig.suelo + 90 && 
+                        chig.y + chig.h - 15 > chig.suelo + (chig.h - obst[i].h)) morir();
+
+                    if(obst[i].x < -200) { 
+                        obst.splice(i, 1); 
+                        score += 10; 
+                        document.getElementById("score").innerText = score; 
+                        vel += 0.15; 
+                    }
                 }
             }
             ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
