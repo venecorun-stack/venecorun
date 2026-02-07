@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Master Edition</title>
+    <title>Veneco Run - Airdrop Edition</title>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
         #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: #ff4444; color: white; border: 2px solid white; padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: none; }
@@ -16,7 +16,7 @@
             background-color: #000;
             background-position: center; 
             background-repeat: no-repeat;
-            background-size: contain; /* Para que no se estire ninguna */
+            background-size: contain;
             display: flex; 
             flex-direction: column; 
             justify-content: center; 
@@ -25,18 +25,16 @@
             text-align: center; 
         }
 
-        /* PORTADA POR DEFECTO (Horizontal/PC) */
         #introScreen { 
             background-image: url('portada.png'); 
             cursor: pointer; 
             justify-content: flex-end; 
         }
 
-        /* CONFIGURACIÓN PARA MÓVIL VERTICAL */
         @media (max-aspect-ratio: 1/1) {
             #introScreen {
                 background-image: url('portada_mobile.png') !important;
-                background-size: cover !important; /* Cubre toda la pantalla vertical */
+                background-size: cover !important;
                 background-position: center center;
             }
         }
@@ -45,34 +43,16 @@
         #gameOverScreen { background: rgba(0,0,0,0.95); display: none; }
         
         .login-box { background: rgba(0,0,0,0.9); padding: 30px; border: 3px solid #ffcc00; border-radius: 20px; width: 85%; max-width: 350px; }
-        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; background: #222; color: white; }
-        .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; }
+        .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; width: 100%; }
+        .btn-tg { background: #0088cc; color: white; box-shadow: 0px 5px 0px #005580; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .share-btn { background: #000; color: white; border: 2px solid #555; padding: 12px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; margin-top: 10px; font-weight: bold; }
         
         #ui { position: absolute; top: 20px; left: 20px; z-index: 850; display: none; pointer-events: none; }
         .score-text { font-size: 40px; color: white; text-shadow: 3px 3px 0 #000; margin: 0; }
         .record-ui { color: #ffcc00; font-size: 20px; text-shadow: 2px 2px 0 #000; margin: 0; }
         
-        #levelContainer {
-            position: absolute;
-            top: 15%;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 800;
-            text-align: center;
-            width: 100%;
-            display: none;
-            pointer-events: none;
-        }
-        #levelText { 
-            font-size: 55px; 
-            color: #ffcc00; 
-            font-weight: bold; 
-            text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
-            margin: 0;
-            opacity: 0.8;
-        }
-
+        #levelContainer { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 800; text-align: center; width: 100%; display: none; pointer-events: none; }
+        #levelText { font-size: 55px; color: #ffcc00; font-weight: bold; text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; margin: 0; opacity: 0.8; }
         canvas { display: none; image-rendering: -webkit-optimize-contrast; }
     </style>
 </head>
@@ -86,10 +66,13 @@
 
     <div id="loginMenu">
         <div class="login-box">
-            <h2 style="color:#ffcc00; margin-top:0;">REGISTRO</h2>
-            <input type="text" id="tgUser" placeholder="@tu_usuario">
-            <input type="text" id="solWallet" placeholder="Wallet Solana">
-            <button class="btn" onclick="guardarYEntrar()">LISTO</button>
+            <h2 style="color:#ffcc00; margin-top:0; letter-spacing: 2px;">REGISTRO AIRDROP</h2>
+            <p style="font-size: 14px; margin-bottom: 20px;">Conecta tu cuenta para participar</p>
+            
+            <button class="btn btn-tg" onclick="loginTelegram()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.35-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.36-.48.99-.74 3.84-1.67 6.41-2.77 7.7-3.31 3.64-1.53 4.4-1.8 4.89-1.81.11 0 .35.03.5.16.13.11.17.26.18.37 0 .07.01.21 0 .33z"/></svg>
+                ENTRAR CON TELEGRAM
+            </button>
         </div>
     </div>
 
@@ -154,17 +137,19 @@
             }
         }
 
-        function guardarYEntrar() {
+        // NUEVA FUNCIÓN DE LOGIN SIMULADO POR TELEGRAM
+        function loginTelegram() {
             sndClick.play();
-            const u = document.getElementById("tgUser").value;
-            const w = document.getElementById("solWallet").value;
-            if(u.length > 2) {
-                localStorage.setItem('venecoUser', u);
-                localStorage.setItem('venecoWallet', w);
-                document.getElementById("loginMenu").style.display = "none";
-                document.getElementById("logoutBtn").style.display = "none";
-                prepararJuego();
-            }
+            // Aquí simulamos que obtenemos el usuario de Telegram
+            // En una App real, usarías el SDK de Telegram WebApps (window.Telegram.WebApp)
+            const tgMockUser = "TG_User_" + Math.floor(Math.random() * 9999); 
+            
+            localStorage.setItem('venecoUser', tgMockUser);
+            localStorage.setItem('venecoWallet', "Telegram_Auth"); // Placeholder para no romper lógica de Excel
+            
+            document.getElementById("loginMenu").style.display = "none";
+            document.getElementById("logoutBtn").style.display = "none";
+            prepararJuego();
         }
 
         function prepararJuego() { 
@@ -184,11 +169,10 @@
             ctx.scale(dpr, dpr); 
             chig.suelo = window.innerHeight - 220; chig.y = chig.suelo;
 
-            // AJUSTE DE POSICIÓN PARA MÓVIL
             if(window.innerWidth < 600) {
-                chig.x = 25; // Súper a la izquierda en vertical para ganar tiempo
+                chig.x = 25; 
             } else {
-                chig.x = 100; // Normal en PC
+                chig.x = 100; 
             }
         }
 
@@ -211,7 +195,7 @@
         }
 
         function compartirX() {
-            const msg = `🏆 ¡He conseguido ${score} puntos en Veneco Run! 🚀 Récord: ${recordGlobal}. #VenecoRun #Solana`;
+            const msg = `🏆 ¡He conseguido ${score} puntos en Veneco Run! 🚀 #VenecoRun #Airdrop`;
             window.open(`https://twitter.com/intent/tweet?text=${msg}`, '_blank');
         }
 
@@ -224,9 +208,7 @@
         function spawn() {
             if(!activo) return;
             let esDoble = score >= 200 && Math.random() > 0.6;
-            // Spawneamos el barril un poco más afuera de la pantalla (+150) para dar tiempo
             obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
-
             let baseFreq = 1100 / (vel * 0.07);
             if (score > 800) {
                 let randomFactor = 0.7 + (Math.random() * 0.5);
