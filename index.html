@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Sistema de Récords</title>
+    <title>Veneco Run</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
@@ -45,12 +45,14 @@
     <div id="mainMenu">
         <div id="userProfile">
             <span id="userNameDisplay">Cargando...</span>
-            <div id="userPointsDisplay">PUNTOS: <span id="currentScoreMenu">0</span></div>
+            <div id="userPointsDisplay">RÉCORD: <span id="currentScoreMenu">0</span></div>
         </div>
         <div class="play-circle" onclick="prepararJuego()">JUGAR</div>
         <div class="menu-opt" onclick="cargarRanking()"><b>🏆 RANKING TOP 10</b><span>Ver líderes</span></div>
         <div class="menu-opt" onclick="abrirModal('modalAirdrop')"><b>💰 REGISTRAR WALLET</b><span>Wallet BNB</span></div>
-        <div class="menu-opt" id="btnTGTask" onclick="unirseTelegramTask()"><b>📢 UNIRSE A TELEGRAM</b><span>¡Gana +1000 puntos!</span></div>
+        
+        <div class="menu-opt" onclick="window.open('https://t.me/venecoinu', '_blank')"><b>📢 CANAL DE TELEGRAM</b><span>Únete a la comunidad</span></div>
+        
         <div class="menu-opt" style="background: rgba(46, 204, 113, 0.2); border-color: #2ecc71;" onclick="compartirJuego()"><b>🔗 COMPARTIR JUEGO</b><span>Invita a tus amigos</span></div>
     </div>
 
@@ -117,49 +119,15 @@
             try {
                 const res = await fetch(URL_SCRIPT + "?tipo=getUserData&id=" + myID);
                 const data = await res.json();
-                
-                // GUARDAMOS EL RÉCORD REAL DE LA BASE DE DATOS
                 recordGlobalBD = parseInt(data.puntos) || 0;
                 document.getElementById("currentScoreMenu").innerText = recordGlobalBD;
                 document.getElementById("highScoreText").innerText = recordGlobalBD;
-                
                 if(data.wallet) document.getElementById("walletInput").value = data.wallet;
-                if(data.bono === true) marcarTareaCompletada();
             } catch(e) { console.log("Sincronizando..."); }
         }
 
-        async function unirseTelegramTask() {
-            if(localStorage.getItem('taskTGDone') === 'true') return;
-
-            // 1. Enviamos el bono primero
-            await postData({
-                accion: "bono_tg",
-                usuario: localStorage.getItem('venecoUser'),
-                wallet: localStorage.getItem('venecoTGID')
-            });
-            
-            localStorage.setItem('taskTGDone', 'true');
-            marcarTareaCompletada();
-            
-            // 2. Abrimos canal
-            setTimeout(() => {
-                window.open("https://t.me/venecoinu", "_blank");
-                alert("¡Bono solicitado! Los puntos se actualizarán en segundos.");
-                setTimeout(mostrarMenu, 3000);
-            }, 500);
-        }
-
-        function marcarTareaCompletada() {
-            const btn = document.getElementById('btnTGTask');
-            if(btn) {
-                btn.style.opacity = "0.5";
-                btn.onclick = null;
-                btn.innerHTML = "<b>✅ COMPLETADO</b><span>+1000 pts recibidos</span>";
-            }
-        }
-
         function compartirJuego() {
-            const texto = "¡Mira Veneco Run! 🏃‍♂️💨 Juega y gana puntos aquí:";
+            const texto = "¡Juega Veneco Run! 🏃‍♂️💨";
             const url = "https://t.me/venecotoken_bot/venecorun";
             if (tg.shareExternalLink) {
                 tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(texto)}`);
@@ -235,18 +203,10 @@
 
         function morir() {
             activo = false; chig.vivo = false;
-            
-            // LÓGICA DE RÉCORD: Solo envía si superamos la marca de la base de datos
             if (score > recordGlobalBD) {
-                recordGlobalBD = score; // Actualizamos récord localmente
-                postData({ 
-                    accion: "puntos", 
-                    usuario: localStorage.getItem('venecoUser'), 
-                    wallet: localStorage.getItem('venecoTGID'), 
-                    puntaje: score 
-                });
+                recordGlobalBD = score;
+                postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: score });
             }
-
             document.getElementById("finalScore").innerText = score; 
             document.getElementById("gameOverScreen").style.display = "flex";
         }
