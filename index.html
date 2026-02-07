@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Fase 5 Final</title>
+    <title>Veneco Run - Final Fix</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
@@ -24,8 +24,6 @@
         #ui { position: absolute; top: 15px; left: 15px; z-index: 850; display: none; pointer-events: none; }
         #scoreDisplay { font-size: 22px; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
         #bestDisplay { font-size: 14px; color: #ffcc00; text-shadow: 1px 1px 0 #000; margin: 0; }
-        #levelContainer { position: absolute; top: 15px; right: 15px; z-index: 800; text-align: right; display: none; pointer-events: none; }
-        #levelText { font-size: 18px; color: #ffcc00; font-weight: bold; text-shadow: 2px 2px 0 #000; margin: 0; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; flex-direction: column; align-items: center; justify-content: center; }
         .modal-content { background: #1a1a1a; padding: 25px; border-radius: 25px; width: 85%; border: 2px solid #ffcc00; max-height: 80vh; overflow-y: auto; }
         canvas { display: none; image-rendering: -webkit-optimize-contrast; cursor: pointer; }
@@ -46,17 +44,15 @@
     </div>
     <div id="mainMenu">
         <div id="userProfile">
-            <span id="userNameDisplay">Sincronizando...</span>
+            <span id="userNameDisplay">Cargando...</span>
             <div id="userPointsDisplay">PUNTOS: <span id="currentScoreMenu">0</span></div>
         </div>
         <div class="play-circle" onclick="prepararJuego()">JUGAR</div>
-        <div class="menu-opt" onclick="cargarReferidos()"><b>👥 MIS REFERIDOS</b><span>Gana +150 pts</span></div>
-        <div class="menu-opt" onclick="cargarRanking()"><b>🏆 RANKING TOP 10</b><span>Ver tabla</span></div>
+        <div class="menu-opt" onclick="cargarRanking()"><b>🏆 RANKING TOP 10</b><span>Ver líderes</span></div>
         <div class="menu-opt" onclick="abrirModal('modalAirdrop')"><b>💰 REGISTRAR WALLET</b><span>Wallet BNB</span></div>
         <div class="menu-opt" id="btnTGTask" onclick="unirseTelegramTask()"><b>📢 CANAL TELEGRAM</b><span>Gana +100 puntos</span></div>
     </div>
 
-    <div id="modalRef" class="modal"><div class="modal-content"><h3>REFERIDOS</h3><input type="text" id="refLink" readonly><button class="btn" onclick="copiarRef()">COPIAR LINK</button><div id="listaRefs"></div><button class="btn" onclick="cerrarModales()">VOLVER</button></div></div>
     <div id="modalRank" class="modal"><div class="modal-content"><h3>TOP 10 LÍDERES</h3><div id="rankList"></div><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
     <div id="modalAirdrop" class="modal"><div class="modal-content"><h3>REGISTRO WALLET</h3><input type="text" id="walletInput" placeholder="0x..."><button class="btn" onclick="guardarWallet()">GUARDAR WALLET</button><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
 
@@ -64,14 +60,13 @@
         <p id="scoreDisplay">SCORE: <span id="score">0</span></p>
         <p id="bestDisplay">BEST: <span id="highScoreText">0</span></p>
     </div>
-    <div id="levelContainer"><p id="levelText">PRINCIPIANTE</p></div>
     <div id="gameOverScreen"><h1>¡FIN DEL JUEGO!</h1><p>Puntos: <span id="finalScore">0</span></p><button class="btn" onclick="location.reload()">VOLVER</button></div>
     <canvas id="gameCanvas"></canvas>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        // URL ACTUALIZADA
+        // REEMPLAZA ESTA URL CON TU NUEVA IMPLEMENTACIÓN SI ES NECESARIO
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbz8k3c8d1dAIryTE9r7FCVOoVv14e92aJ3M8f7uCYUcl8ZEBcXx74T65ZsXgCCzLHjY/exec";
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
@@ -84,7 +79,6 @@
         const ctx = canvas.getContext("2d");
         let activo = false, score = 0, vel = 11, obst = [], bgX = 0, recordGlobalBD = 0;
         let chig = { x: 80, y: 0, w: 100, h: 100, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
-        let nivelActual = "";
 
         function clicPortada() {
             document.getElementById("introScreen").style.display = "none";
@@ -123,8 +117,7 @@
                     recordGlobalBD = data.puntos || 0;
                     document.getElementById("highScoreText").innerText = recordGlobalBD;
                     if(data.wallet) document.getElementById("walletInput").value = data.wallet;
-                }).catch(e => console.log("Error perfil"));
-            
+                }).catch(e => console.log("Error sync"));
             checkTaskStatus();
         }
 
@@ -140,18 +133,8 @@
                         <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
                             <span>${i+1}. ${u.usuario}</span> <b style="color:#ffcc00;">${u.puntaje} pts</b>
                         </div>`).join('');
-                } else { list.innerHTML = "Sin datos aún."; }
-            } catch(e) { list.innerHTML = "Error de conexión."; }
-        }
-
-        function cargarReferidos() {
-            abrirModal('modalRef');
-            const myID = localStorage.getItem('venecoTGID');
-            document.getElementById("refLink").value = `https://t.me/venecotoken_bot/venecorun?startapp=${myID}`;
-            document.getElementById("listaRefs").innerHTML = "Cargando...";
-            fetch(URL_SCRIPT + "?tipo=getReferidos&id=" + myID).then(r => r.json()).then(data => {
-                document.getElementById("listaRefs").innerHTML = `<p>Total: ${data.length}</p>` + data.map(r => `<div style="font-size:12px;">👤 ${r}</div>`).join('');
-            }).catch(() => document.getElementById("listaRefs").innerHTML = "Sin referidos.");
+                } else { list.innerHTML = "Sin datos."; }
+            } catch(e) { list.innerHTML = "Error de red."; }
         }
 
         function unirseTelegramTask() {
@@ -159,7 +142,7 @@
             if(localStorage.getItem('taskTGDone') !== 'true') {
                 fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: 100 }) });
                 localStorage.setItem('taskTGDone', 'true');
-                alert("¡+100 Puntos sumados!");
+                alert("+100 Puntos!");
                 setTimeout(mostrarMenu, 1500);
             }
         }
@@ -174,6 +157,7 @@
 
         function guardarWallet() {
             const w = document.getElementById("walletInput").value;
+            if(!w) return;
             fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), walletAddress: w })});
             alert("Wallet Guardada!"); cerrarModales();
         }
@@ -182,7 +166,6 @@
             document.getElementById("mainMenu").style.display = "none";
             document.getElementById("logoutBtn").style.display = "none";
             canvas.style.display = "block"; document.getElementById("ui").style.display = "block";
-            document.getElementById("levelContainer").style.display = "block";
             ajustar(); iniciar();
         }
 
@@ -201,8 +184,7 @@
             if(!activo) return;
             let esDoble = score >= 200 && Math.random() > 0.6;
             obst.push({ x: window.innerWidth + 150, w: esDoble ? 130 : 75, h: 85, doble: esDoble });
-            let delay = Math.max(1100 / (vel * 0.07), esDoble ? 1200 : 750);
-            setTimeout(spawn, delay);
+            setTimeout(spawn, Math.max(1100 / (vel * 0.07), esDoble ? 1200 : 750));
         }
 
         function bucle() {
@@ -214,15 +196,10 @@
             if(activo) {
                 chig.dy += chig.g; chig.y += chig.dy;
                 if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
-                if(score > recordGlobalBD) { recordGlobalBD = score; document.getElementById("highScoreText").innerText = recordGlobalBD; }
-                let nL = "PRINCIPIANTE";
-                if(score >= 2000) nL = "CAOS"; else if(score >= 1000) nL = "AREPA"; else if(score >= 500) nL = "MANGO"; else if(score >= 200) nL = "GUACAMAYA";
-                if (nL !== nivelActual) { nivelActual = nL; document.getElementById("levelText").innerText = nivelActual; }
                 for(let i = obst.length - 1; i >= 0; i--) {
                     obst[i].x -= vel;
                     let bY = chig.suelo + (chig.h - obst[i].h);
-                    if(obst[i].doble) { ctx.drawImage(imgB, obst[i].x, bY, 75, obst[i].h); ctx.drawImage(imgB, obst[i].x + 55, bY, 75, obst[i].h); }
-                    else { ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h); }
+                    ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
                     if (chig.x + 30 < obst[i].x + obst[i].w - 30 && chig.x + chig.w - 30 > obst[i].x + 30 && chig.y + 30 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
                     if(obst[i].x < -200) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.15; }
                 }
@@ -238,12 +215,11 @@
             document.getElementById("gameOverScreen").style.display = "flex";
         }
 
-        const saltar = (e) => { if(e && e.type === "touchstart") e.preventDefault(); if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.currentTime = 0; sndSalto.play(); } };
+        const saltar = (e) => { if(e && e.type === "touchstart") e.preventDefault(); if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.play(); } };
         window.addEventListener("touchstart", saltar, {passive: false}); window.addEventListener("mousedown", saltar);
         function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
         function cerrarSesion() { localStorage.clear(); location.reload(); }
-        function copiarRef() { const c = document.getElementById("refLink"); c.select(); document.execCommand("copy"); alert("Copiado!"); }
     </script>
 </body>
 </html>
