@@ -27,7 +27,6 @@
         .menu-opt span { display: block; font-size: 10px; color: #aaa; }
         
         #ui { position: absolute; top: 15px; left: 15px; z-index: 850; display: none; pointer-events: none; }
-        /* SOMBRA MÁS JUNTA PARA MEJOR LECTURA */
         #scoreDisplay { font-size: 22px; color: white; text-shadow: 1px 1px 0 #000; margin: 0; }
         #bestDisplay { font-size: 14px; color: #ffcc00; text-shadow: 1px 1px 0 #000; margin: 0; }
 
@@ -62,9 +61,7 @@
         </div>
         <div class="play-circle" onclick="prepararJuego()">JUGAR</div>
         <div class="menu-opt" onclick="cargarRanking()"><b>🏆 RANKING TOP 10</b><span>Ver líderes</span></div>
-        
         <div class="menu-opt" onclick="abrirModal('modalAirdrop')"><b>💰 REGISTRAR WALLET</b><span>Wallet BNB BEP20 (MetaMask / Trust)</span></div>
-        
         <div class="menu-opt" onclick="window.open('https://t.me/venecoinu', '_blank')"><b>📢 CANAL DE TELEGRAM</b><span>Comunidad</span></div>
         <div class="menu-opt" style="background: rgba(46, 204, 113, 0.2); border-color: #2ecc71;" onclick="compartirJuego()"><b>🔗 COMPARTIR JUEGO</b><span>Invita amigos</span></div>
     </div>
@@ -99,17 +96,24 @@
         
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxS64u2ud1QZ2G93d0sQpD7T2iXemvRwVvBXcVw9dvgIjpAZROBsdqnjY1OPPAopSAh/exec";
 
-        const imgC = new Image(); imgC.src = 'chiguire.png';
+        // --- CARGA DE IMÁGENES ---
+        const chigSprites = [new Image(), new Image(), new Image(), new Image()];
+        chigSprites[0].src = 'chiguire.png';
+        chigSprites[1].src = 'chiguire2.png';
+        chigSprites[2].src = 'chiguire3.png';
+        chigSprites[3].src = 'chiguire4.png';
+        
         const imgB = new Image(); imgB.src = 'barril.png';
-        const imgF = new Image(); imgF.src = 'fondo.png';
         const imgD = new Image(); imgD.src = 'derrota.png';
+        const imgCielo = new Image(); imgCielo.src = 'cielo.png';
+        const imgSuelo = new Image(); imgSuelo.src = 'suelo.png';
         const sndSalto = new Audio('salto.mp3');
 
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        let activo = false, score = 0, vel = 11, obst = [], bgX = 0, recordGlobalBD = 0;
-        let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
+        let activo = false, score = 0, vel = 11, obst = [], bgX = 0, skyX = 0, recordGlobalBD = 0;
+        let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true, frame: 0, tick: 0 };
         let estela = [];
         let nivelActual = "";
 
@@ -154,7 +158,7 @@
                 document.getElementById("currentScoreMenu").innerText = recordGlobalBD;
                 document.getElementById("highScoreText").innerText = recordGlobalBD;
                 if(data.wallet) document.getElementById("walletInput").value = data.wallet;
-            } catch(e) { console.log("Sincronizando..."); }
+            } catch(e) {}
         }
 
         function prepararJuego() {
@@ -188,10 +192,7 @@
             let esDoble = score >= 200 && Math.random() > 0.6;
             obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
             let baseFreq = 1100 / (vel * 0.07);
-            if (score > 800) {
-                let randomFactor = 0.7 + (Math.random() * 0.5);
-                baseFreq = baseFreq * randomFactor;
-            }
+            if (score > 800) baseFreq *= (0.7 + Math.random() * 0.5);
             let delay = Math.max(baseFreq, esDoble ? 1100 : 700); 
             setTimeout(spawn, delay);
         }
@@ -199,22 +200,45 @@
         function bucle() {
             if(!activo && !chig.vivo) return;
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            bgX -= vel * 0.4;
+            
+            // --- PARALLAX FONDO ---
+            skyX -= vel * 0.15; // El cielo se mueve lento
+            bgX -= vel;         // El suelo se mueve a la velocidad del juego
+            
+            if(skyX <= -window.innerWidth) skyX = 0;
             if(bgX <= -window.innerWidth) bgX = 0;
-            ctx.drawImage(imgF, bgX, 0, window.innerWidth, window.innerHeight);
-            ctx.drawImage(imgF, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
+
+            // Dibujar Cielo
+            ctx.drawImage(imgCielo, skyX, 0, window.innerWidth, window.innerHeight);
+            ctx.drawImage(imgCielo, skyX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
+            
+            // Dibujar Suelo
+            ctx.drawImage(imgSuelo, bgX, 0, window.innerWidth, window.innerHeight);
+            ctx.drawImage(imgSuelo, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
 
             if(activo) {
                 chig.dy += chig.g; chig.y += chig.dy;
-                if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
+                if(chig.y > chig.suelo) { 
+                    chig.y = chig.suelo; 
+                    chig.dy = 0; 
+                    // Animación de correr solo en el suelo
+                    chig.tick++;
+                    if(chig.tick > (15 / (vel/10))) { 
+                        chig.frame = (chig.frame + 1) % 4;
+                        chig.tick = 0;
+                    }
+                } else {
+                    // Imagen fija de salto si está en el aire (usamos el sprite 2 que suele ser el de salto)
+                    chig.frame = 1;
+                }
 
                 if(score >= 800) {
-                    estela.push({x: chig.x, y: chig.y, o: 0.4});
+                    estela.push({x: chig.x, y: chig.y, o: 0.4, f: chig.frame});
                     if(estela.length > 5) estela.shift();
                 }
                 estela.forEach((p, i) => {
                     ctx.globalAlpha = p.o * (i / estela.length);
-                    ctx.drawImage(imgC, p.x - (estela.length - i) * 10, p.y, chig.w, chig.h);
+                    ctx.drawImage(chigSprites[p.f], p.x - (estela.length - i) * 10, p.y, chig.w, chig.h);
                     ctx.globalAlpha = 1;
                 });
 
@@ -226,8 +250,7 @@
 
                 if (nuevoLvl !== nivelActual) {
                     nivelActual = nuevoLvl;
-                    let el = document.getElementById("levelText");
-                    el.innerText = nivelActual;
+                    document.getElementById("levelText").innerText = nivelActual;
                 }
 
                 if(score >= 800) vel += 0.005;
@@ -255,7 +278,9 @@
                     }
                 }
             }
-            ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
+            
+            const currentImg = chig.vivo ? chigSprites[chig.frame] : imgD;
+            ctx.drawImage(currentImg, chig.x, chig.y, chig.w, chig.h);
             requestAnimationFrame(bucle);
         }
 
@@ -270,9 +295,8 @@
             document.getElementById("gameOverScreen").style.display = "flex";
         }
 
-        // --- CONTROLES DE SALTO UNIFICADOS ---
         const saltar = (e) => { 
-            if(e && e.type === "touchstart") e.preventDefault(); // Evita scroll en móvil
+            if(e && e.type === "touchstart") e.preventDefault();
             if(activo && chig.y >= chig.suelo - 10) { 
                 chig.dy = chig.salto; 
                 sndSalto.currentTime = 0;
@@ -282,12 +306,7 @@
         
         window.addEventListener("touchstart", saltar, {passive: false});
         window.addEventListener("mousedown", saltar);
-        window.addEventListener("keydown", (e) => {
-            if(e.code === "Space") {
-                e.preventDefault(); // Evita que la página baje al pulsar espacio
-                saltar();
-            }
-        });
+        window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
         
         function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
