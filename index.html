@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Fase 5 Corregida</title>
+    <title>Veneco Run - Fase 5 Master Fix</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
@@ -108,7 +108,7 @@
                 if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                     container.innerHTML = `<button class="btn" onclick="loginTG()">ENTRAR CON TELEGRAM</button>`;
                 } else {
-                    container.innerHTML = `<a href="https://t.me/venecotoken_bot/venecorun" target="_blank" class="btn" style="text-decoration:none; display:block;">IR AL BOT DE TELEGRAM</a>`;
+                    container.innerHTML = `<a href="https://t.me/venecotoken_bot" target="_blank" class="btn" style="text-decoration:none; display:block;">IR AL BOT DE TELEGRAM</a>`;
                 }
             }
         }
@@ -140,7 +140,6 @@
             checkTaskStatus();
         }
 
-        // --- REPARACIÓN RANKING ---
         async function cargarRanking() {
             abrirModal('modalRank');
             const list = document.getElementById("rankList");
@@ -148,13 +147,16 @@
             try {
                 const res = await fetch(URL_SCRIPT + "?tipo=getRanking");
                 const data = await res.json();
-                // Ajustado para leer correctamente campos 'usuario' y 'puntaje' según el script
-                list.innerHTML = data.map((u, i) => `
-                    <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
-                        <span>${i+1}. ${u.usuario || u.user}</span> 
-                        <b style="color:#ffcc00;">${u.puntaje || u.pts} pts</b>
-                    </div>`).join('');
-            } catch(e) { list.innerHTML = "<p>Error al obtener ranking.</p>"; }
+                if(data && Array.isArray(data) && data.length > 0) {
+                    list.innerHTML = data.map((u, i) => {
+                        let nombre = u.usuario || u.user || "Jugador";
+                        let pts = u.puntaje || u.pts || 0;
+                        return `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
+                            <span>${i+1}. ${nombre}</span> <b style="color:#ffcc00;">${pts} pts</b>
+                        </div>`;
+                    }).join('');
+                } else { list.innerHTML = "<p>Aún no hay puntuaciones.</p>"; }
+            } catch(e) { list.innerHTML = "<p>Error de conexión.</p>"; }
         }
 
         function cargarReferidos() {
@@ -165,34 +167,24 @@
             fetch(URL_SCRIPT + "?tipo=getReferidos&id=" + myID)
                 .then(r => r.json()).then(data => {
                     document.getElementById("listaRefs").innerHTML = `<p>Total: ${data.length}</p>` + data.map(r => `<div style="font-size:12px; margin-bottom:5px;">👤 ${r}</div>`).join('');
-                }).catch(() => document.getElementById("listaRefs").innerHTML = "Sin referidos aún.");
+                }).catch(() => document.getElementById("listaRefs").innerHTML = "Sin referidos.");
         }
 
-        // --- REPARACIÓN TAREA TELEGRAM (+100 Puntos) ---
         function unirseTelegramTask() {
             window.open("https://t.me/venecoinu", "_blank");
             if(localStorage.getItem('taskTGDone') !== 'true') {
-                const uName = localStorage.getItem('venecoUser');
-                const tID = localStorage.getItem('venecoTGID');
-                // Enviamos los 100 puntos al script
-                fetch(URL_SCRIPT, { 
-                    method: "POST", 
-                    mode: "no-cors", 
-                    body: JSON.stringify({ accion: "puntos", usuario: uName, wallet: tID, puntaje: 100 }) 
-                }).then(() => {
-                    localStorage.setItem('taskTGDone', 'true');
-                    alert("¡+100 Puntos sumados!");
-                    mostrarMenu(); // Recarga los puntos en el menú
-                });
+                fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: 100 }) });
+                localStorage.setItem('taskTGDone', 'true');
+                alert("¡+100 Puntos sumados!");
+                setTimeout(mostrarMenu, 1000);
             }
         }
 
         function checkTaskStatus() {
             if(localStorage.getItem('taskTGDone') === 'true') {
                 const btn = document.getElementById('btnTGTask');
-                btn.style.opacity = "0.5";
-                btn.onclick = null;
-                btn.innerHTML = "<b>✅ TAREA COMPLETADA</b><span>Ya recibiste tus puntos</span>";
+                btn.style.opacity = "0.5"; btn.onclick = null;
+                btn.innerHTML = "<b>✅ TAREA COMPLETADA</b><span>Puntos recibidos</span>";
             }
         }
 
@@ -204,7 +196,6 @@
             cerrarModales();
         }
 
-        // --- MOTOR DE JUEGO ---
         function prepararJuego() {
             document.getElementById("mainMenu").style.display = "none";
             document.getElementById("logoutBtn").style.display = "none";
@@ -247,11 +238,7 @@
             if(activo) {
                 chig.dy += chig.g; chig.y += chig.dy;
                 if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
-                
-                if(score > recordGlobalBD) { 
-                    recordGlobalBD = score; 
-                    document.getElementById("highScoreText").innerText = recordGlobalBD; 
-                }
+                if(score > recordGlobalBD) { recordGlobalBD = score; document.getElementById("highScoreText").innerText = recordGlobalBD; }
 
                 let nL = "PRINCIPIANTE";
                 if(score >= 2000) nL = "CAOS"; else if(score >= 1000) nL = "AREPA"; else if(score >= 500) nL = "MANGO"; else if(score >= 200) nL = "GUACAMAYA";
@@ -260,12 +247,8 @@
                 for(let i = obst.length - 1; i >= 0; i--) {
                     obst[i].x -= vel;
                     let bY = chig.suelo + (chig.h - obst[i].h);
-                    if(obst[i].doble) { 
-                        ctx.drawImage(imgB, obst[i].x, bY, 75, obst[i].h); 
-                        ctx.drawImage(imgB, obst[i].x + 55, bY, 75, obst[i].h); 
-                    } else { 
-                        ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h); 
-                    }
+                    if(obst[i].doble) { ctx.drawImage(imgB, obst[i].x, bY, 75, obst[i].h); ctx.drawImage(imgB, obst[i].x + 55, bY, 75, obst[i].h); }
+                    else { ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h); }
                     if (chig.x + 30 < obst[i].x + obst[i].w - 30 && chig.x + chig.w - 30 > obst[i].x + 30 && chig.y + 30 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
                     if(obst[i].x < -200) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.15; }
                 }
