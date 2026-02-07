@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Fase 3</title>
+    <title>Veneco Run - Fase 4</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
@@ -18,31 +18,28 @@
         #mainMenu { background: radial-gradient(circle, #1a1a1a, #000); display: none; overflow-y: auto; padding: 20px 0; }
         #gameOverScreen { background: rgba(0,0,0,0.95); display: none; }
 
+        /* PERFIL DE USUARIO EN MENÚ */
+        #userProfile { background: rgba(255, 204, 0, 0.15); border: 1px solid #ffcc00; padding: 10px 20px; border-radius: 20px; margin-bottom: 20px; }
+        #userNameDisplay { color: #ffcc00; font-size: 18px; display: block; }
+        #userPointsDisplay { font-size: 22px; color: #fff; text-shadow: 0 0 10px #ffcc00; }
+
         .play-circle { 
-            width: 125px; height: 125px; background: #2ecc71; border-radius: 50%; 
+            width: 120px; height: 120px; background: #2ecc71; border-radius: 50%; 
             display: flex; align-items: center; justify-content: center; 
             font-size: 24px; color: white; cursor: pointer; 
-            box-shadow: 0 0 20px #2ecc71; border: 4px solid white; animation: pulse 2s infinite; margin-bottom: 20px; flex-shrink: 0;
+            box-shadow: 0 0 20px #2ecc71; border: 4px solid white; animation: pulse 2s infinite; margin-bottom: 20px;
         }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
         
-        .menu-opt { 
-            width: 85%; max-width: 320px; background: rgba(255,255,255,0.08); 
-            margin: 6px 0; padding: 12px; border-radius: 18px; cursor: pointer; 
-            border: 1px solid #444; transition: 0.3s; flex-shrink: 0;
-        }
-        .menu-opt:hover { background: rgba(255,255,255,0.15); border-color: #ffcc00; }
-        .menu-opt b { font-size: 16px; }
-        .menu-opt span { display: block; font-size: 10px; color: #aaa; margin-top: 2px; font-family: sans-serif; }
+        .menu-opt { width: 85%; max-width: 320px; background: rgba(255,255,255,0.08); margin: 6px 0; padding: 12px; border-radius: 18px; cursor: pointer; border: 1px solid #444; }
+        .menu-opt span { display: block; font-size: 10px; color: #aaa; font-family: sans-serif; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; flex-direction: column; align-items: center; justify-content: center; }
         .modal-content { background: #1a1a1a; padding: 25px; border-radius: 25px; width: 85%; border: 2px solid #ffcc00; max-height: 75vh; overflow-y: auto; }
         
         #ui { position: absolute; top: 20px; left: 20px; z-index: 800; display: none; pointer-events: none; }
         canvas { display: none; }
-
         .btn { padding: 15px; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 16px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; background: #333; color: white; box-sizing: border-box; text-align: center; }
     </style>
 </head>
 <body>
@@ -50,71 +47,76 @@
     <button id="logoutBtn" onclick="cerrarSesion()">SALIR ✖</button>
 
     <div id="introScreen" onclick="clicPortada()">
-        <div style="background:rgba(0,0,0,0.7); width:100%; padding:20px; margin-bottom:50px; font-size: 18px;">TOCA PARA INICIAR</div>
+        <div style="background:rgba(0,0,0,0.7); width:100%; padding:20px; margin-bottom:50px;">TOCA PARA INICIAR</div>
     </div>
 
     <div id="loginMenu">
         <div style="background:rgba(0,0,0,0.85); padding:30px; border-radius:25px; border:2px solid #ffcc00; width: 80%;">
-            <h2 style="color:#ffcc00; margin-top:0;">¡BIENVENIDO!</h2>
+            <h2 style="color:#ffcc00;">¡BIENVENIDO!</h2>
             <div id="loginContainer"></div>
         </div>
     </div>
 
     <div id="mainMenu">
+        <div id="userProfile">
+            <span id="userNameDisplay">@Usuario</span>
+            <div id="userPointsDisplay">MIS PUNTOS: <span id="currentScoreMenu">0</span></div>
+        </div>
+
         <div class="play-circle" onclick="prepararJuego()">JUGAR</div>
         
         <div class="menu-opt" onclick="cargarReferidos()">
             <b>👥 MIS REFERIDOS</b>
-            <span>Gana +150 pts por cada pana invitado</span>
+            <span>Gana +150 pts por amigo</span>
         </div>
         
         <div class="menu-opt" onclick="cargarRanking()">
             <b>🏆 RANKING TOP 10</b>
-            <span>Mira quién lidera la tabla</span>
+            <span>Mira a los mejores</span>
         </div>
         
         <div class="menu-opt" onclick="abrirModal('modalAirdrop')">
             <b>💰 RECIBIR AIRDROP</b>
-            <span>Registra tu Wallet BNB (BEP-20)</span>
+            <span>Wallet BNB (BEP-20)</span>
         </div>
 
         <div class="menu-opt" id="btnTGTask" onclick="unirseTelegramTask()">
-            <b>📢 UNIRSE AL TELEGRAM</b>
-            <span>Gana +100 pts uniéndote al canal</span>
+            <b>📢 CANAL TELEGRAM</b>
+            <span>Gana +100 puntos</span>
         </div>
     </div>
 
     <div id="modalRef" class="modal">
         <div class="modal-content">
-            <h3 style="color:#ffcc00;">TUS REFERIDOS</h3>
-            <input type="text" id="refLink" readonly onclick="this.select()">
+            <h3>TUS REFERIDOS</h3>
+            <input type="text" id="refLink" readonly>
             <button class="btn" style="background:#24A1DE; color:white;" onclick="copiarRef()">COPIAR LINK</button>
-            <div id="listaRefs" style="font-size:14px; text-align:left; margin:15px 0;"></div>
-            <button class="btn" style="background:#444; color:white;" onclick="cerrarModales()">VOLVER</button>
+            <div id="listaRefs" style="margin:15px 0;"></div>
+            <button class="btn" onclick="cerrarModales()">VOLVER</button>
         </div>
     </div>
 
     <div id="modalRank" class="modal">
         <div class="modal-content">
-            <h3 style="color:#ffcc00;">TOP 10 LÍDERES</h3>
-            <div id="rankList" style="text-align:left; font-size:15px; line-height: 1.8;"></div>
+            <h3>TOP 10 LÍDERES</h3>
+            <div id="rankList"></div>
             <button class="btn" onclick="cerrarModales()">CERRAR</button>
         </div>
     </div>
 
     <div id="modalAirdrop" class="modal">
         <div class="modal-content">
-            <h3>WALLET BEP-20</h3>
+            <h3>WALLET</h3>
             <input type="text" id="walletInput" placeholder="0x...">
-            <button class="btn" onclick="guardarWallet()">GUARDAR WALLET</button>
-            <button class="btn" style="background:#444; color:white;" onclick="cerrarModales()">CERRAR</button>
+            <button class="btn" onclick="guardarWallet()">GUARDAR</button>
+            <button class="btn" onclick="cerrarModales()">CERRAR</button>
         </div>
     </div>
 
     <div id="ui"><p style="font-size:25px; margin:0;">PUNTOS: <span id="score">0</span></p></div>
 
     <div id="gameOverScreen">
-        <h1 id="failMsg" style="color:#ff4444;">¡TE MATARON!</h1>
+        <h1>¡FIN DEL JUEGO!</h1>
         <p>Puntaje: <span id="finalScore">0</span></p>
         <button class="btn" onclick="location.reload()">VOLVER AL MENÚ</button>
     </div>
@@ -154,6 +156,7 @@
             const userName = u.username ? "@" + u.username : u.first_name;
             localStorage.setItem('venecoUser', userName);
             localStorage.setItem('venecoTGID', u.id.toString());
+            localStorage.setItem('venecoPoints', '0'); // Puntos iniciales
             fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: userName, wallet: u.id.toString(), puntaje: 0, invitadoPor: inviter ? "ID: " + inviter : "" })});
             mostrarMenu();
         }
@@ -162,29 +165,39 @@
             document.getElementById("loginMenu").style.display = "none";
             document.getElementById("mainMenu").style.display = "flex";
             document.getElementById("logoutBtn").style.display = "block";
+            
+            // Actualizar Perfil Visual
+            document.getElementById("userNameDisplay").innerText = localStorage.getItem('venecoUser');
+            document.getElementById("currentScoreMenu").innerText = localStorage.getItem('venecoPoints') || 0;
+            
             document.getElementById("refLink").value = "https://t.me/venecotoken_bot/venecorun?startapp=" + localStorage.getItem('venecoTGID');
             checkTaskStatus();
         }
 
-        // LÓGICA FASE 3
         function unirseTelegramTask() {
             if(localStorage.getItem('taskTGDone') === 'true') {
-                tg.showAlert("Ya reclamaste estos puntos.");
+                tg.showAlert("Puntos ya reclamados.");
                 return;
             }
             window.open("https://t.me/venecoinu", "_blank");
             setTimeout(() => {
                 localStorage.setItem('taskTGDone', 'true');
+                
+                // Sumar puntos localmente y enviar al Excel
+                let p = parseInt(localStorage.getItem('venecoPoints') || 0) + 100;
+                localStorage.setItem('venecoPoints', p.toString());
+                document.getElementById("currentScoreMenu").innerText = p;
+
                 fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: 100 })});
                 checkTaskStatus();
-                tg.showAlert("¡+100 puntos sumados!");
+                tg.showAlert("¡+100 puntos sumados a tu perfil!");
             }, 2000);
         }
 
         function checkTaskStatus() {
             if(localStorage.getItem('taskTGDone') === 'true') {
                 const btn = document.getElementById('btnTGTask');
-                if(btn) { btn.style.opacity = "0.5"; btn.innerHTML = "<b>✅ TAREA COMPLETADA</b><span>+100 puntos sumados</span>"; }
+                if(btn) { btn.style.opacity = "0.5"; btn.innerHTML = "<b>✅ TAREA COMPLETADA</b><span>Puntos sumados</span>"; }
             }
         }
 
@@ -246,10 +259,9 @@
         }
         function morir() {
             activo = false;
-            fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: score })});
-            document.getElementById("finalScore").innerText = score; document.getElementById("gameOverScreen").style.display = "flex";
-        }
-        window.addEventListener("touchstart", () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.play(); } });
-    </script>
-</body>
-</html>
+            // Actualizar puntos si el nuevo score es mayor al anterior guardado
+            let pGuardados = parseInt(localStorage.getItem('venecoPoints') || 0);
+            if(score > pGuardados) {
+                localStorage.setItem('venecoPoints', score.toString());
+            }
+            fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('veneco
