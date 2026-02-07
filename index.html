@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Fase 5 Oficial</title>
+    <title>Veneco Run - Fase 5 Final</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
@@ -71,8 +71,8 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        // REEMPLAZA ESTA URL CON LA DE TU NUEVA IMPLEMENTACIÓN
-        const URL_SCRIPT = "TU_URL_AQUI_EJEMPLO/exec";
+        // URL ACTUALIZADA
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbz8k3c8d1dAIryTE9r7FCVOoVv14e92aJ3M8f7uCYUcl8ZEBcXx74T65ZsXgCCzLHjY/exec";
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
         const imgB = new Image(); imgB.src = 'barril.png';
@@ -115,14 +115,16 @@
             document.getElementById("logoutBtn").style.display = "block";
             const myID = localStorage.getItem('venecoTGID');
             document.getElementById("userNameDisplay").innerText = localStorage.getItem('venecoUser');
-            try {
-                const res = await fetch(URL_SCRIPT + "?tipo=getUserData&id=" + myID);
-                const data = await res.json();
-                document.getElementById("currentScoreMenu").innerText = data.puntos || 0;
-                recordGlobalBD = data.puntos || 0;
-                document.getElementById("highScoreText").innerText = recordGlobalBD;
-                if(data.wallet) document.getElementById("walletInput").value = data.wallet;
-            } catch (e) { }
+            
+            fetch(URL_SCRIPT + "?tipo=getUserData&id=" + myID)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("currentScoreMenu").innerText = data.puntos || 0;
+                    recordGlobalBD = data.puntos || 0;
+                    document.getElementById("highScoreText").innerText = recordGlobalBD;
+                    if(data.wallet) document.getElementById("walletInput").value = data.wallet;
+                }).catch(e => console.log("Error perfil"));
+            
             checkTaskStatus();
         }
 
@@ -133,13 +135,13 @@
             try {
                 const res = await fetch(URL_SCRIPT + "?tipo=getRanking&t=" + Date.now());
                 const data = await res.json();
-                if(data && data.length > 0) {
+                if(data && Array.isArray(data)) {
                     list.innerHTML = data.map((u, i) => `
                         <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
                             <span>${i+1}. ${u.usuario}</span> <b style="color:#ffcc00;">${u.puntaje} pts</b>
                         </div>`).join('');
-                } else { list.innerHTML = "No hay puntuaciones."; }
-            } catch(e) { list.innerHTML = "Error al cargar."; }
+                } else { list.innerHTML = "Sin datos aún."; }
+            } catch(e) { list.innerHTML = "Error de conexión."; }
         }
 
         function cargarReferidos() {
