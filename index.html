@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Sistema Activo</title>
+    <title>Veneco Run - 1000 PTS Task</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
@@ -18,7 +18,7 @@
         #userPointsDisplay { font-size: 22px; color: #fff; text-shadow: 0 0 10px #ffcc00; font-weight: bold; }
         .play-circle { width: 110px; height: 110px; background: #2ecc71; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; cursor: pointer; box-shadow: 0 0 20px #2ecc71; border: 4px solid white; animation: pulse 2s infinite; margin-bottom: 20px; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-        .menu-opt { width: 85%; max-width: 320px; background: rgba(255,255,255,0.08); margin: 6px 0; padding: 12px; border-radius: 18px; cursor: pointer; border: 1px solid #444; }
+        .menu-opt { width: 85%; max-width: 320px; background: rgba(255,255,255,0.08); margin: 6px 0; padding: 12px; border-radius: 18px; cursor: pointer; border: 1px solid #444; transition: 0.3s; }
         .menu-opt b { font-size: 16px; display: block; }
         .menu-opt span { display: block; font-size: 10px; color: #aaa; }
         #ui { position: absolute; top: 15px; left: 15px; z-index: 850; display: none; pointer-events: none; }
@@ -51,10 +51,10 @@
         <div class="menu-opt" onclick="abrirModal('modalRef')"><b>👥 MIS REFERIDOS</b><span>Gana +150 pts</span></div>
         <div class="menu-opt" onclick="cargarRanking()"><b>🏆 RANKING TOP 10</b><span>Ver líderes</span></div>
         <div class="menu-opt" onclick="abrirModal('modalAirdrop')"><b>💰 REGISTRAR WALLET</b><span>Wallet BNB</span></div>
-        <div class="menu-opt" id="btnTGTask" onclick="unirseTelegramTask()"><b>📢 CANAL TELEGRAM</b><span>Gana +100 puntos</span></div>
+        <div class="menu-opt" id="btnTGTask" onclick="unirseTelegramTask()"><b>📢 CANAL TELEGRAM</b><span>¡Gana +1000 puntos!</span></div>
     </div>
 
-    <div id="modalRef" class="modal"><div class="modal-content"><h3>REFERIDOS</h3><input type="text" id="refLink" readonly><button class="btn" onclick="copiarRef()">COPIAR LINK</button><p style="font-size:12px; margin-top:15px; color:#aaa;">Comparte tu link para ganar puntos.</p><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
+    <div id="modalRef" class="modal"><div class="modal-content"><h3>REFERIDOS</h3><input type="text" id="refLink" readonly><button class="btn" onclick="copiarRef()">COPIAR LINK</button><p style="font-size:12px; margin-top:15px; color:#aaa;">Invita amigos y suma puntos.</p><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
     <div id="modalRank" class="modal"><div class="modal-content"><h3>TOP 10 LÍDERES</h3><div id="rankList"></div><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
     <div id="modalAirdrop" class="modal"><div class="modal-content"><h3>REGISTRO WALLET</h3><input type="text" id="walletInput" placeholder="0x..."><button class="btn" onclick="guardarWallet()">GUARDAR WALLET</button><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
 
@@ -66,7 +66,6 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         
-        // URL DE TU NUEVO SCRIPT
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxS64u2ud1QZ2G93d0sQpD7T2iXemvRwVvBXcVw9dvgIjpAZROBsdqnjY1OPPAopSAh/exec";
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
@@ -117,15 +116,48 @@
             document.getElementById("userNameDisplay").innerText = localStorage.getItem('venecoUser');
             document.getElementById("refLink").value = "https://t.me/venecotoken_bot/venecorun?startapp=" + myID;
             
-            fetch(URL_SCRIPT + "?tipo=getUserData&id=" + myID)
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById("currentScoreMenu").innerText = data.puntos || 0;
-                    recordGlobalBD = data.puntos || 0;
-                    document.getElementById("highScoreText").innerText = recordGlobalBD;
-                    if(data.wallet) document.getElementById("walletInput").value = data.wallet;
-                }).catch(e => console.log("Sync error"));
-            checkTaskStatus();
+            try {
+                const res = await fetch(URL_SCRIPT + "?tipo=getUserData&id=" + myID);
+                const data = await res.json();
+                document.getElementById("currentScoreMenu").innerText = data.puntos || 0;
+                recordGlobalBD = data.puntos || 0;
+                document.getElementById("highScoreText").innerText = recordGlobalBD;
+                if(data.wallet) document.getElementById("walletInput").value = data.wallet;
+                
+                // Si la BD dice que ya tiene el bono, bloqueamos el botón
+                if(data.bono === true) {
+                    marcarTareaCompletada();
+                }
+            } catch(e) { console.log("Sync..."); }
+        }
+
+        async function unirseTelegramTask() {
+            if(localStorage.getItem('taskTGDone') === 'true') return;
+            
+            window.open("https://t.me/venecoinu", "_blank");
+            
+            const uName = localStorage.getItem('venecoUser');
+            const uID = localStorage.getItem('venecoTGID');
+
+            await postData({
+                accion: "bono_tg",
+                usuario: uName,
+                wallet: uID
+            });
+            
+            localStorage.setItem('taskTGDone', 'true');
+            alert("¡Felicidades! +1000 Puntos sumados.");
+            setTimeout(mostrarMenu, 1500);
+        }
+
+        function marcarTareaCompletada() {
+            const btn = document.getElementById('btnTGTask');
+            if(btn) {
+                btn.style.opacity = "0.5";
+                btn.onclick = null;
+                btn.innerHTML = "<b>✅ TAREA COMPLETADA</b><span>Ya recibiste 1000 pts</span>";
+                localStorage.setItem('taskTGDone', 'true');
+            }
         }
 
         async function cargarRanking() {
@@ -140,33 +172,15 @@
                         <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
                             <span>${i+1}. ${u.usuario}</span> <b style="color:#ffcc00;">${u.puntaje} pts</b>
                         </div>`).join('');
-                } else { list.innerHTML = "No hay registros."; }
-            } catch(e) { list.innerHTML = "Error al conectar."; }
-        }
-
-        function unirseTelegramTask() {
-            window.open("https://t.me/venecoinu", "_blank");
-            if(localStorage.getItem('taskTGDone') !== 'true') {
-                postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: 100 });
-                localStorage.setItem('taskTGDone', 'true');
-                alert("¡+100 Puntos!");
-                setTimeout(mostrarMenu, 1500);
-            }
-        }
-
-        function checkTaskStatus() {
-            if(localStorage.getItem('taskTGDone') === 'true') {
-                const btn = document.getElementById('btnTGTask');
-                btn.style.opacity = "0.5"; btn.onclick = null;
-                btn.innerHTML = "<b>✅ TAREA COMPLETADA</b>";
-            }
+                } else { list.innerHTML = "Sin datos."; }
+            } catch(e) { list.innerHTML = "Error de conexión."; }
         }
 
         function guardarWallet() {
             const w = document.getElementById("walletInput").value;
             if(!w) return;
             postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), walletAddress: w });
-            alert("Billetera guardada."); cerrarModales();
+            alert("Wallet Guardada!"); cerrarModales();
         }
 
         function prepararJuego() {
