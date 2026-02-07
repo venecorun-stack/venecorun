@@ -250,4 +250,72 @@
                     let barrilY = chig.suelo + (chig.h - obst[i].h);
                     ctx.drawImage(imgB, obst[i].x, barrilY, obst[i].w, obst[i].h);
                     
-                    if (chig.x + 3
+                    if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 > obst[i].x + 35 && chig.y + 35 < barrilY + obst[i].h && chig.y + chig.h - 15 > barrilY) morir();
+
+                    if(obst[i].x < -200) { 
+                        obst.splice(i, 1); score += 10; 
+                        document.getElementById("score").innerText = score; 
+                        vel += 0.12;
+                    }
+                }
+            }
+            ctx.drawImage(chig.vivo ? chigSprites[chig.frame] : imgD, chig.x, chig.y, chig.w, chig.h);
+            requestAnimationFrame(bucle);
+        }
+
+        function morir() {
+            activo = false; chig.vivo = false;
+            musFondo.pause();
+            sndPerder.play().catch(() => {});
+            touchLayer.style.display = "none";
+            if (score > recordGlobalBD) {
+                recordGlobalBD = score;
+                postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: score });
+            }
+            document.getElementById("finalScore").innerText = score; 
+            document.getElementById("levelContainer").style.display = "none";
+            document.getElementById("gameOverScreen").style.display = "flex";
+        }
+
+        const manejarSalto = (e) => { 
+            if (e && e.cancelable) e.preventDefault();
+            if(activo && chig.y >= chig.suelo - 20) { 
+                chig.dy = chig.salto; 
+                sndSalto.currentTime = 0;
+                sndSalto.play().catch(() => {});
+            } 
+        };
+        
+        touchLayer.addEventListener("touchstart", manejarSalto, {passive: false});
+        touchLayer.addEventListener("mousedown", manejarSalto);
+        window.addEventListener("keydown", (e) => { if(e.code === "Space") manejarSalto(e); });
+        
+        function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
+        function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
+        function cerrarSesion() { localStorage.clear(); location.reload(); }
+        
+        function guardarWallet() {
+            const w = document.getElementById("walletInput").value;
+            if(!w) return;
+            postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), walletAddress: w });
+            alert("Wallet Guardada!"); cerrarModales();
+        }
+
+        function compartirJuego() {
+            const url = "https://t.me/venecotoken_bot/venecorun";
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("¡Mira mi récord en Veneco Run! 🏃‍♂️💨")}`);
+        }
+
+        async function cargarRanking() {
+            abrirModal('modalRank');
+            const list = document.getElementById("rankList");
+            list.innerHTML = "Cargando...";
+            try {
+                const res = await fetch(URL_SCRIPT + "?tipo=getRanking&t=" + Date.now());
+                const data = await res.json();
+                list.innerHTML = data.map((u, i) => `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;"><span>${i+1}. ${u.usuario}</span> <b style="color:#ffcc00;">${u.puntaje} pts</b></div>`).join('');
+            } catch(e) { list.innerHTML = "Error conexión"; }
+        }
+    </script>
+</body>
+</html>
