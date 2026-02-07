@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Sistema Completo</title>
+    <title>Veneco Run - Sistema Activo</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
@@ -54,14 +54,11 @@
         <div class="menu-opt" id="btnTGTask" onclick="unirseTelegramTask()"><b>📢 CANAL TELEGRAM</b><span>Gana +100 puntos</span></div>
     </div>
 
-    <div id="modalRef" class="modal"><div class="modal-content"><h3>REFERIDOS</h3><input type="text" id="refLink" readonly><button class="btn" onclick="copiarRef()">COPIAR LINK</button><p style="font-size:12px; margin-top:15px; color:#aaa;">Comparte tu link para ganar puntos extras.</p><button class="btn" onclick="cerrarModales()">VOLVER</button></div></div>
+    <div id="modalRef" class="modal"><div class="modal-content"><h3>REFERIDOS</h3><input type="text" id="refLink" readonly><button class="btn" onclick="copiarRef()">COPIAR LINK</button><p style="font-size:12px; margin-top:15px; color:#aaa;">Invita amigos y gana puntos.</p><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
     <div id="modalRank" class="modal"><div class="modal-content"><h3>TOP 10 LÍDERES</h3><div id="rankList"></div><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
     <div id="modalAirdrop" class="modal"><div class="modal-content"><h3>REGISTRO WALLET</h3><input type="text" id="walletInput" placeholder="0x..."><button class="btn" onclick="guardarWallet()">GUARDAR WALLET</button><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
 
-    <div id="ui">
-        <p id="scoreDisplay">SCORE: <span id="score">0</span></p>
-        <p id="bestDisplay">BEST: <span id="highScoreText">0</span></p>
-    </div>
+    <div id="ui"><p id="scoreDisplay">SCORE: <span id="score">0</span></p><p id="bestDisplay">BEST: <span id="highScoreText">0</span></p></div>
     <div id="gameOverScreen"><h1>¡FIN DEL JUEGO!</h1><p>Puntos: <span id="finalScore">0</span></p><button class="btn" onclick="location.reload()">VOLVER</button></div>
     <canvas id="gameCanvas"></canvas>
 
@@ -69,7 +66,7 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         
-        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzECq9M3ZjDVG0dr8MoMelidzdR0AToHz1ynuWijIGiLlJtoqubBVgqAxk-N_5FO6eVWw/exec";
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbweKlsJU4X8f81xIx8IgzPwOGoUYio9bM3IxrO3GkmcW7I9zZ4mIiBx8nnDgL7LgK1WQg/exec";
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
         const imgB = new Image(); imgB.src = 'barril.png';
@@ -81,6 +78,13 @@
         const ctx = canvas.getContext("2d");
         let activo = false, score = 0, vel = 11, obst = [], bgX = 0, recordGlobalBD = 0;
         let chig = { x: 80, y: 0, w: 100, h: 100, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
+
+        async function postData(body) {
+            try {
+                // El modo no-cors es necesario para Google Apps Script
+                await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(body) });
+            } catch(e) { console.error("Error al enviar datos"); }
+        }
 
         function clicPortada() {
             document.getElementById("introScreen").style.display = "none";
@@ -94,12 +98,6 @@
                     container.innerHTML = `<a href="https://t.me/venecotoken_bot" class="btn">IR AL BOT DE TELEGRAM</a>`;
                 }
             }
-        }
-
-        async function postData(body) {
-            try {
-                await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(body) });
-            } catch(e) { console.log("Error posting"); }
         }
 
         function loginTG() {
@@ -126,24 +124,24 @@
                     recordGlobalBD = data.puntos || 0;
                     document.getElementById("highScoreText").innerText = recordGlobalBD;
                     if(data.wallet) document.getElementById("walletInput").value = data.wallet;
-                }).catch(e => console.log("Error sync"));
+                }).catch(e => console.log("Sync..."));
             checkTaskStatus();
         }
 
         async function cargarRanking() {
             abrirModal('modalRank');
             const list = document.getElementById("rankList");
-            list.innerHTML = "Cargando líderes...";
+            list.innerHTML = "Cargando...";
             try {
                 const res = await fetch(URL_SCRIPT + "?tipo=getRanking&t=" + Date.now());
                 const data = await res.json();
-                if(data && Array.isArray(data)) {
+                if(data && Array.isArray(data) && data.length > 0) {
                     list.innerHTML = data.map((u, i) => `
                         <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
                             <span>${i+1}. ${u.usuario}</span> <b style="color:#ffcc00;">${u.puntaje} pts</b>
                         </div>`).join('');
-                } else { list.innerHTML = "Sin datos registrados."; }
-            } catch(e) { list.innerHTML = "Error de conexión."; }
+                } else { list.innerHTML = "No hay records aún."; }
+            } catch(e) { list.innerHTML = "Error al conectar."; }
         }
 
         function unirseTelegramTask() {
@@ -151,7 +149,7 @@
             if(localStorage.getItem('taskTGDone') !== 'true') {
                 postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: 100 });
                 localStorage.setItem('taskTGDone', 'true');
-                alert("¡+100 puntos!");
+                alert("+100 Puntos!");
                 setTimeout(mostrarMenu, 1500);
             }
         }
@@ -168,7 +166,7 @@
             const w = document.getElementById("walletInput").value;
             if(!w) return;
             postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), walletAddress: w });
-            alert("Billetera guardada."); cerrarModales();
+            alert("Wallet Guardada!"); cerrarModales();
         }
 
         function prepararJuego() {
