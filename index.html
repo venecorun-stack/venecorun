@@ -11,10 +11,11 @@
         #introScreen, #loginMenu, #mainMenu, #gameOverScreen { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 1000; }
         .btn { background: #ffcc00; color: #000; padding: 15px; width: 80%; border-radius: 30px; border: none; font-weight: bold; margin: 10px 0; cursor: pointer; text-align: center; }
         .menu-opt { background: #222; padding: 12px; width: 80%; border-radius: 15px; margin: 5px; border: 1px solid #444; }
-        #ui { position: absolute; top: 10px; left: 10px; z-index: 900; display: none; }
+        #ui { position: absolute; top: 10px; left: 10px; z-index: 900; display: none; pointer-events: none; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; }
-        .modal-content { background: #111; padding: 20px; border-radius: 20px; width: 80%; border: 1px solid #ffcc00; }
+        .modal-content { background: #111; padding: 20px; border-radius: 20px; width: 80%; border: 1px solid #ffcc00; max-height: 70vh; overflow-y: auto; }
         canvas { display: none; width: 100%; height: 100%; }
+        input { width: 100%; padding: 10px; box-sizing: border-box; border-radius: 10px; margin: 10px 0; }
     </style>
 </head>
 <body onpointerdown="saltar()">
@@ -33,11 +34,11 @@
         <div class="menu-opt" id="btnTGTask" onclick="unirseTelegramTask()">CANAL TELEGRAM (+1000 pts)</div>
     </div>
 
-    <div id="modalRef" class="modal"><div class="modal-content"><h3>LINK</h3><input type="text" id="refLink" style="width:100%"><button class="btn" onclick="copiarRef()">COPIAR</button><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
-    <div id="modalRank" class="modal"><div class="modal-content"><h3>RANKING</h3><div id="rankList"></div><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
-    <div id="modalAirdrop" class="modal"><div class="modal-content"><h3>WALLET</h3><input type="text" id="walletInput" placeholder="0x..." style="width:100%"><button class="btn" onclick="guardarWallet()">GUARDAR</button><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
+    <div id="modalRef" class="modal"><div class="modal-content"><h3>TU LINK</h3><input type="text" id="refLink" readonly><button class="btn" onclick="copiarRef()">COPIAR</button><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
+    <div id="modalRank" class="modal"><div class="modal-content"><h3>TOP 10</h3><div id="rankList"></div><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
+    <div id="modalAirdrop" class="modal"><div class="modal-content"><h3>WALLET BNB</h3><input type="text" id="walletInput" placeholder="0x..."><button class="btn" onclick="guardarWallet()">GUARDAR</button><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
 
-    <div id="ui">SCORE: <span id="score">0</span> | BEST: <span id="highScoreText">0</span></div>
+    <div id="ui">SCORE: <span id="score">0</span></div>
     <div id="gameOverScreen"><h1>GAME OVER</h1><p>SCORE: <span id="finalScore">0</span></p><button class="btn" onclick="location.reload()">REINTENTAR</button></div>
     <canvas id="gameCanvas"></canvas>
 
@@ -55,8 +56,8 @@
 
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        let activo = false, score = 0, vel = 10, obst = [], bgX = 0;
-        let chig = { x: 50, y: 0, w: 80, h: 80, dy: 0, g: 1.5, salto: -18, suelo: 0, vivo: true };
+        let activo = false, score = 0, vel = 8, obst = [], bgX = 0;
+        let chig = { x: 50, y: 0, w: 70, h: 70, dy: 0, g: 1.2, salto: -16, suelo: 0, vivo: true };
 
         async function postData(body) {
             await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(body) });
@@ -70,6 +71,7 @@
 
         function loginTG() {
             const u = tg.initDataUnsafe.user;
+            if(!u) return;
             const userName = u.username ? "@" + u.username : u.first_name;
             localStorage.setItem('venecoUser', userName);
             localStorage.setItem('venecoTGID', u.id.toString());
@@ -89,7 +91,6 @@
                 const res = await fetch(URL_SCRIPT + "?tipo=getUserData&id=" + myID);
                 const data = await res.json();
                 document.getElementById("currentScoreMenu").innerText = data.puntos || 0;
-                document.getElementById("highScoreText").innerText = data.puntos || 0;
                 if(data.wallet) document.getElementById("walletInput").value = data.wallet;
                 if(data.bono) document.getElementById('btnTGTask').style.opacity = "0.5";
             } catch(e) {}
@@ -98,21 +99,23 @@
         async function unirseTelegramTask() {
             window.open("https://t.me/venecoinu", "_blank");
             await postData({ accion: "bono_tg", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID') });
-            alert("Bono enviado. Reinicia para ver los cambios.");
-            setTimeout(mostrarMenu, 1500);
+            alert("Bono enviado. Los puntos se verán al reiniciar.");
+            setTimeout(mostrarMenu, 2000);
         }
 
         async function cargarRanking() {
             abrirModal('modalRank');
             document.getElementById("rankList").innerHTML = "Cargando...";
-            const res = await fetch(URL_SCRIPT + "?tipo=getRanking");
-            const data = await res.json();
-            document.getElementById("rankList").innerHTML = data.map((u, i) => `<div>${i+1}. ${u.usuario} - ${u.puntaje}</div>`).join('');
+            try {
+                const res = await fetch(URL_SCRIPT + "?tipo=getRanking");
+                const data = await res.json();
+                document.getElementById("rankList").innerHTML = data.map((u, i) => `<div style="padding:5px; border-bottom:1px solid #333;">${i+1}. ${u.usuario} - ${u.puntaje} pts</div>`).join('');
+            } catch(e) { document.getElementById("rankList").innerHTML = "Error al cargar"; }
         }
 
         async function guardarWallet() {
             await postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), walletAddress: document.getElementById("walletInput").value });
-            alert("Guardado"); cerrarModales();
+            alert("Wallet Guardada"); cerrarModales();
         }
 
         function prepararJuego() {
@@ -121,23 +124,37 @@
             ajustar(); activo = true; chig.vivo = true; score = 0; obst = []; bucle(); spawn();
         }
 
-        function ajustar() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; chig.suelo = canvas.height - 120; chig.y = chig.suelo; }
-        function spawn() { if(activo) { obst.push({ x: canvas.width + 50, w: 50, h: 60 }); setTimeout(spawn, 1500 + Math.random() * 1000); } }
+        function ajustar() { 
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight; 
+            chig.suelo = canvas.height - 100; chig.y = chig.suelo; 
+        }
+
+        function spawn() { if(activo) { obst.push({ x: canvas.width + 100, w: 50, h: 50 }); setTimeout(spawn, 1800 + Math.random() * 1000); } }
 
         function bucle() {
             if(!activo && !chig.vivo) return;
             ctx.clearRect(0,0,canvas.width,canvas.height);
-            bgX -= 4; if(bgX <= -canvas.width) bgX = 0;
+            bgX -= 3; if(bgX <= -canvas.width) bgX = 0;
             ctx.drawImage(imgF, bgX, 0, canvas.width, canvas.height);
             ctx.drawImage(imgF, bgX + canvas.width, 0, canvas.width, canvas.height);
+            
             if(activo) {
                 chig.dy += chig.g; chig.y += chig.dy;
                 if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
-                obst.forEach((o, i) => {
-                    o.x -= vel; ctx.drawImage(imgB, o.x, chig.suelo + 20, o.w, o.h);
-                    if(chig.x < o.x + o.w && chig.x + chig.w > o.x && chig.y < chig.suelo + o.h && chig.y + chig.h > chig.suelo) morir();
-                    if(o.x < -50) { obst.splice(i,1); score += 10; document.getElementById("score").innerText = score; }
-                });
+                
+                for(let i=obst.length-1; i>=0; i--) {
+                    let o = obst[i];
+                    o.x -= vel;
+                    let barrilY = chig.suelo + (chig.h - o.h);
+                    ctx.drawImage(imgB, o.x, barrilY, o.w, o.h);
+                    
+                    // COLISIÓN CORREGIDA: Detecta si el chigüire toca el barril
+                    if (chig.x + 10 < o.x + o.w - 10 && chig.x + chig.w - 10 > o.x + 10 && chig.y + 10 < barrilY + o.h && chig.y + chig.h - 10 > barrilY) {
+                        morir();
+                    }
+                    
+                    if(o.x < -100) { obst.splice(i,1); score += 10; document.getElementById("score").innerText = score; }
+                }
             }
             ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
             requestAnimationFrame(bucle);
@@ -150,11 +167,11 @@
             document.getElementById("gameOverScreen").style.display = "flex";
         }
 
-        function saltar() { if(activo && chig.y >= chig.suelo - 2) { chig.dy = chig.salto; sndSalto.play(); } }
+        function saltar() { if(activo && chig.y >= chig.suelo - 5) { chig.dy = chig.salto; if(sndSalto) sndSalto.play(); } }
         function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
         function cerrarSesion() { localStorage.clear(); location.reload(); }
-        function copiarRef() { const c = document.getElementById("refLink"); c.select(); document.execCommand("copy"); alert("Copiado"); }
+        function copiarRef() { const c = document.getElementById("refLink"); c.select(); document.execCommand("copy"); alert("Copiado!"); }
     </script>
 </body>
 </html>
