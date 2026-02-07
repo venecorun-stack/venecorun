@@ -6,7 +6,7 @@
     <title>Veneco Run</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
+        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; }
         #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 2000; background: #ff4444; color: white; border: 2px solid white; padding: 10px; border-radius: 10px; cursor: pointer; display: none; font-weight: bold; }
         
         #introScreen, #loginMenu, #mainMenu, #gameOverScreen { position: absolute; width: 100%; height: 100%; background-position: center; background-repeat: no-repeat; background-size: cover; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; text-align: center; }
@@ -35,7 +35,7 @@
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; flex-direction: column; align-items: center; justify-content: center; }
         .modal-content { background: #1a1a1a; padding: 25px; border-radius: 25px; width: 85%; border: 2px solid #ffcc00; max-height: 80vh; overflow-y: auto; }
-        canvas { display: none; image-rendering: -webkit-optimize-contrast; cursor: pointer; }
+        canvas { display: none; image-rendering: -webkit-optimize-contrast; cursor: pointer; touch-action: none; }
         .btn { padding: 15px; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 16px; text-decoration: none; display: block; }
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; background: #333; color: white; text-align: center; box-sizing: border-box; }
     </style>
@@ -167,7 +167,8 @@
             canvas.style.display = "block"; 
             document.getElementById("ui").style.display = "block";
             document.getElementById("levelContainer").style.display = "block";
-            ajustar(); iniciar();
+            ajustar(); 
+            iniciar();
         }
 
         function ajustar() {
@@ -235,11 +236,10 @@
                     ctx.globalAlpha = 1;
                 });
 
-                // --- LÓGICA DE DIFICULTAD Y RESPIRO ---
                 let nuevoLvl = nivelActual;
                 
                 if (score === 500 && !faseAlivioActivada) {
-                    vel = 11; // Bajamos la velocidad al inicio
+                    vel = 11; 
                     faseAlivioActivada = true;
                     nuevoLvl = "¡RESPIRA! VIENE LO BUENO";
                     setTimeout(() => { if(score < 600) nivelActual = "NIVEL GUACAMAYA"; }, 3000);
@@ -256,7 +256,6 @@
                     document.getElementById("levelText").innerText = nivelActual;
                 }
 
-                // Incremento de velocidad (siempre sube, pero tras el reset de los 500 vuelve a subir poco a poco)
                 if(score >= 800) vel += 0.005;
                 else if(score >= 600) vel += 0.004;
                 else if(score >= 400) vel += 0.003;
@@ -300,17 +299,19 @@
         }
 
         const saltar = (e) => { 
-            if(e && e.type === "touchstart") e.preventDefault();
-            if(activo && chig.y >= chig.suelo - 10) { 
+            if (e && (e.type === "touchstart" || e.type === "touchmove")) {
+                e.preventDefault();
+            }
+            if(activo && chig.y >= chig.suelo - 15) { 
                 chig.dy = chig.salto; 
                 sndSalto.currentTime = 0;
-                sndSalto.play(); 
+                sndSalto.play().catch(() => {}); 
             } 
         };
         
         window.addEventListener("touchstart", saltar, {passive: false});
-        window.addEventListener("mousedown", saltar);
-        window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
+        window.addEventListener("mousedown", (e) => { if(e.button === 0) saltar(e); });
+        window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(e); } });
         
         function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
