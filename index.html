@@ -66,8 +66,9 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        // REEMPLAZA ESTA URL CON TU NUEVA IMPLEMENTACIÓN SI ES NECESARIO
-        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbz8k3c8d1dAIryTE9r7FCVOoVv14e92aJ3M8f7uCYUcl8ZEBcXx74T65ZsXgCCzLHjY/exec";
+        
+        // URL ACTUALIZADA SEGÚN TU ÚLTIMA IMPLEMENTACIÓN
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxX_sEVS7PpoECIXIkAEUKrPBuyqbM_d3g0GdYozH87LaL4lzYMonLe7Zh1Htmbdgg/exec";
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
         const imgB = new Image(); imgB.src = 'barril.png';
@@ -133,8 +134,8 @@
                         <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
                             <span>${i+1}. ${u.usuario}</span> <b style="color:#ffcc00;">${u.puntaje} pts</b>
                         </div>`).join('');
-                } else { list.innerHTML = "Sin datos."; }
-            } catch(e) { list.innerHTML = "Error de red."; }
+                } else { list.innerHTML = "Sin datos aún."; }
+            } catch(e) { list.innerHTML = "Error de conexión."; }
         }
 
         function unirseTelegramTask() {
@@ -142,7 +143,7 @@
             if(localStorage.getItem('taskTGDone') !== 'true') {
                 fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: 100 }) });
                 localStorage.setItem('taskTGDone', 'true');
-                alert("+100 Puntos!");
+                alert("¡+100 Puntos sumados!");
                 setTimeout(mostrarMenu, 1500);
             }
         }
@@ -159,7 +160,7 @@
             const w = document.getElementById("walletInput").value;
             if(!w) return;
             fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), walletAddress: w })});
-            alert("Wallet Guardada!"); cerrarModales();
+            alert("Billetera guardada correctamente."); cerrarModales();
         }
 
         function prepararJuego() {
@@ -215,7 +216,7 @@
             document.getElementById("gameOverScreen").style.display = "flex";
         }
 
-        const saltar = (e) => { if(e && e.type === "touchstart") e.preventDefault(); if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.play(); } };
+        const saltar = (e) => { if(e && e.type === "touchstart") e.preventDefault(); if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; if(sndSalto.paused) sndSalto.play(); else { sndSalto.currentTime = 0; sndSalto.play(); } } };
         window.addEventListener("touchstart", saltar, {passive: false}); window.addEventListener("mousedown", saltar);
         function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
