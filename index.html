@@ -3,175 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run</title>
+    <title>Veneco Run - Menú Oficial</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; color: #fff; touch-action: none; }
-        #logoutBtn { position: absolute; top: 10px; right: 10px; z-index: 2000; background: red; color: #fff; border: none; padding: 8px; border-radius: 5px; display: none; }
-        #introScreen, #loginMenu, #mainMenu, #gameOverScreen { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 1000; }
-        .btn { background: #ffcc00; color: #000; padding: 15px; width: 80%; border-radius: 30px; border: none; font-weight: bold; margin: 10px 0; cursor: pointer; text-align: center; }
-        .menu-opt { background: #222; padding: 12px; width: 80%; border-radius: 15px; margin: 5px; border: 1px solid #444; }
-        #ui { position: absolute; top: 10px; left: 10px; z-index: 900; display: none; pointer-events: none; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; }
-        .modal-content { background: #111; padding: 20px; border-radius: 20px; width: 80%; border: 1px solid #ffcc00; max-height: 70vh; overflow-y: auto; }
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
+        #introScreen, #loginMenu, #mainMenu, #gameOverScreen { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 1000; text-align: center; }
+        .btn { background: #ffcc00; color: #000; padding: 15px; width: 220px; border-radius: 30px; border: none; font-weight: bold; margin: 10px 0; cursor: pointer; }
+        .menu-opt { background: #222; padding: 12px; width: 220px; border-radius: 15px; margin: 5px; border: 1px solid #444; cursor: pointer; }
+        #ui { position: absolute; top: 15px; left: 15px; z-index: 900; display: none; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; align-items: center; justify-content: center; }
+        .modal-content { background: #111; padding: 25px; border-radius: 20px; width: 80%; border: 2px solid #ffcc00; }
         canvas { display: none; width: 100%; height: 100%; }
-        input { width: 100%; padding: 10px; box-sizing: border-box; border-radius: 10px; margin: 10px 0; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; text-align: center; }
     </style>
 </head>
 <body onpointerdown="saltar()">
-    <button id="logoutBtn" onclick="cerrarSesion()">SALIR</button>
-    <div id="introScreen" onclick="clicPortada()"><h1>VENECO RUN</h1><p>TOCA PARA INICIAR</p></div>
-    <div id="loginMenu"><h2>REGISTRO</h2><button class="btn" onclick="loginTG()">ENTRAR CON TELEGRAM</button></div>
-    <div id="mainMenu">
-        <div style="border: 1px solid #ffcc00; padding: 15px; border-radius: 15px; margin-bottom: 20px;">
-            <span id="userNameDisplay">...</span><br>
-            <b>PUNTOS: <span id="currentScoreMenu">0</span></b>
-        </div>
-        <div class="btn" onclick="prepararJuego()">JUGAR</div>
-        <div class="menu-opt" onclick="abrirModal('modalRef')">REFERIDOS (+150 pts)</div>
-        <div class="menu-opt" onclick="cargarRanking()">RANKING TOP 10</div>
-        <div class="menu-opt" onclick="abrirModal('modalAirdrop')">MI WALLET</div>
-        <div class="menu-opt" id="btnTGTask" onclick="unirseTelegramTask()">CANAL TELEGRAM (+1000 pts)</div>
+
+    <div id="introScreen" onclick="clicPortada()">
+        <h1>VENECO RUN</h1>
+        <p>TOCA PARA ENTRAR</p>
     </div>
 
-    <div id="modalRef" class="modal"><div class="modal-content"><h3>TU LINK</h3><input type="text" id="refLink" readonly><button class="btn" onclick="copiarRef()">COPIAR</button><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
-    <div id="modalRank" class="modal"><div class="modal-content"><h3>TOP 10</h3><div id="rankList"></div><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
-    <div id="modalAirdrop" class="modal"><div class="modal-content"><h3>WALLET BNB</h3><input type="text" id="walletInput" placeholder="0x..."><button class="btn" onclick="guardarWallet()">GUARDAR</button><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
+    <div id="loginMenu" style="display:none;">
+        <button class="btn" onclick="loginTG()">ENTRAR CON TELEGRAM</button>
+    </div>
 
-    <div id="ui">SCORE: <span id="score">0</span></div>
-    <div id="gameOverScreen"><h1>GAME OVER</h1><p>SCORE: <span id="finalScore">0</span></p><button class="btn" onclick="location.reload()">REINTENTAR</button></div>
-    <canvas id="gameCanvas"></canvas>
+    <div id="mainMenu" style="display:none;">
+        <div style="border: 2px solid #ffcc00; padding: 15px; border-radius: 20px; margin-bottom: 20px;">
+            <span id="userNameDisplay">USUARIO</span><br>
+            <b style="font-size: 20px;">PUNTOS: <span id="currentScoreMenu">0</span></b>
+        </div>
+        <div class="btn" style="font-size: 20px; background: #2ecc71; color: white;" onclick="prepararJuego()">¡JUGAR!</div>
+        <div class="menu-opt" onclick="abrirModal('modalRef')">👥 REFERIDOS (+150)</div>
+        <div class="menu-opt" onclick="cargarRanking()">🏆 RANKING TOP 10</div>
+        <div class="menu-opt" onclick="abrirModal('modalAirdrop')">💰 MI WALLET</div>
+        <div class="menu-opt" id="btnTGTask" onclick="unirseTelegramTask()">📢 CANAL (+1000 PTS)</div>
+        <p onclick="cerrarSesion()" style="color: #666; font-size: 12px; margin-top: 20px;">Cerrar Sesión</p>
+    </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxS64u2ud1QZ2G93d0sQpD7T2iXemvRwVvBXcVw9dvgIjpAZROBsdqnjY1OPPAopSAh/exec";
-        const referidoPor = tg.initDataUnsafe.start_param || null;
-
-        const imgC = new Image(); imgC.src = 'chiguire.png';
-        const imgB = new Image(); imgB.src = 'barril.png';
-        const imgF = new Image(); imgF.src = 'fondo.png';
-        const imgD = new Image(); imgD.src = 'derrota.png';
-        const sndSalto = new Audio('salto.mp3');
-
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        let activo = false, score = 0, vel = 8, obst = [], bgX = 0;
-        let chig = { x: 50, y: 0, w: 70, h: 70, dy: 0, g: 1.2, salto: -16, suelo: 0, vivo: true };
-
-        async function postData(body) {
-            await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(body) });
-        }
-
-        function clicPortada() {
-            document.getElementById("introScreen").style.display = "none";
-            if(localStorage.getItem('venecoUser')) mostrarMenu();
-            else document.getElementById("loginMenu").style.display = "flex";
-        }
-
-        function loginTG() {
-            const u = tg.initDataUnsafe.user;
-            if(!u) return;
-            const userName = u.username ? "@" + u.username : u.first_name;
-            localStorage.setItem('venecoUser', userName);
-            localStorage.setItem('venecoTGID', u.id.toString());
-            postData({ accion: "puntos", usuario: userName, wallet: u.id.toString(), puntaje: 0, invitadoPor: referidoPor });
-            mostrarMenu();
-        }
-
-        async function mostrarMenu() {
-            document.getElementById("loginMenu").style.display = "none";
-            document.getElementById("mainMenu").style.display = "flex";
-            document.getElementById("logoutBtn").style.display = "block";
-            const myID = localStorage.getItem('venecoTGID');
-            document.getElementById("userNameDisplay").innerText = localStorage.getItem('venecoUser');
-            document.getElementById("refLink").value = "https://t.me/venecotoken_bot/venecorun?startapp=" + myID;
-            
-            try {
-                const res = await fetch(URL_SCRIPT + "?tipo=getUserData&id=" + myID);
-                const data = await res.json();
-                document.getElementById("currentScoreMenu").innerText = data.puntos || 0;
-                if(data.wallet) document.getElementById("walletInput").value = data.wallet;
-                if(data.bono) document.getElementById('btnTGTask').style.opacity = "0.5";
-            } catch(e) {}
-        }
-
-        async function unirseTelegramTask() {
-            window.open("https://t.me/venecoinu", "_blank");
-            await postData({ accion: "bono_tg", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID') });
-            alert("Bono enviado. Los puntos se verán al reiniciar.");
-            setTimeout(mostrarMenu, 2000);
-        }
-
-        async function cargarRanking() {
-            abrirModal('modalRank');
-            document.getElementById("rankList").innerHTML = "Cargando...";
-            try {
-                const res = await fetch(URL_SCRIPT + "?tipo=getRanking");
-                const data = await res.json();
-                document.getElementById("rankList").innerHTML = data.map((u, i) => `<div style="padding:5px; border-bottom:1px solid #333;">${i+1}. ${u.usuario} - ${u.puntaje} pts</div>`).join('');
-            } catch(e) { document.getElementById("rankList").innerHTML = "Error al cargar"; }
-        }
-
-        async function guardarWallet() {
-            await postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), walletAddress: document.getElementById("walletInput").value });
-            alert("Wallet Guardada"); cerrarModales();
-        }
-
-        function prepararJuego() {
-            document.getElementById("mainMenu").style.display = "none";
-            canvas.style.display = "block"; document.getElementById("ui").style.display = "block";
-            ajustar(); activo = true; chig.vivo = true; score = 0; obst = []; bucle(); spawn();
-        }
-
-        function ajustar() { 
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight; 
-            chig.suelo = canvas.height - 100; chig.y = chig.suelo; 
-        }
-
-        function spawn() { if(activo) { obst.push({ x: canvas.width + 100, w: 50, h: 50 }); setTimeout(spawn, 1800 + Math.random() * 1000); } }
-
-        function bucle() {
-            if(!activo && !chig.vivo) return;
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            bgX -= 3; if(bgX <= -canvas.width) bgX = 0;
-            ctx.drawImage(imgF, bgX, 0, canvas.width, canvas.height);
-            ctx.drawImage(imgF, bgX + canvas.width, 0, canvas.width, canvas.height);
-            
-            if(activo) {
-                chig.dy += chig.g; chig.y += chig.dy;
-                if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
-                
-                for(let i=obst.length-1; i>=0; i--) {
-                    let o = obst[i];
-                    o.x -= vel;
-                    let barrilY = chig.suelo + (chig.h - o.h);
-                    ctx.drawImage(imgB, o.x, barrilY, o.w, o.h);
-                    
-                    // COLISIÓN CORREGIDA: Detecta si el chigüire toca el barril
-                    if (chig.x + 10 < o.x + o.w - 10 && chig.x + chig.w - 10 > o.x + 10 && chig.y + 10 < barrilY + o.h && chig.y + chig.h - 10 > barrilY) {
-                        morir();
-                    }
-                    
-                    if(o.x < -100) { obst.splice(i,1); score += 10; document.getElementById("score").innerText = score; }
-                }
-            }
-            ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
-            requestAnimationFrame(bucle);
-        }
-
-        function morir() {
-            activo = false; chig.vivo = false;
-            postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: score });
-            document.getElementById("finalScore").innerText = score;
-            document.getElementById("gameOverScreen").style.display = "flex";
-        }
-
-        function saltar() { if(activo && chig.y >= chig.suelo - 5) { chig.dy = chig.salto; if(sndSalto) sndSalto.play(); } }
-        function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
-        function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
-        function cerrarSesion() { localStorage.clear(); location.reload(); }
-        function copiarRef() { const c = document.getElementById("refLink"); c.select(); document.execCommand("copy"); alert("Copiado!"); }
-    </script>
-</body>
-</html>
+    <div id="modalRef" class="modal"><div class="modal-content
