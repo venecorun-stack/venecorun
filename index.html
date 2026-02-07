@@ -33,18 +33,15 @@
 </head>
 <body>
     <button id="logoutBtn" onclick="cerrarSesion()">SALIR ✖</button>
-    
     <div id="introScreen" onclick="clicPortada()">
         <div style="background:rgba(0,0,0,0.7); width:100%; padding:20px; margin-bottom:50px;">TOCA PARA INICIAR</div>
     </div>
-
     <div id="loginMenu">
         <div style="background:rgba(0,0,0,0.85); padding:30px; border-radius:25px; border:2px solid #ffcc00; width: 80%;">
             <h2 style="color:#ffcc00;">REGISTRO</h2>
             <div id="loginContainer"></div>
         </div>
     </div>
-
     <div id="mainMenu">
         <div id="userProfile">
             <span id="userNameDisplay">Cargando...</span>
@@ -68,7 +65,7 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         
-        // REEMPLAZA ESTA URL CON TU NUEVA IMPLEMENTACIÓN DE GOOGLE SCRIPT
+        // REEMPLAZA ESTA URL CON TU NUEVA IMPLEMENTACIÓN DE GOOGLE SCRIPT CADA VEZ QUE ACTUALICES EL SCRIPT
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxS64u2ud1QZ2G93d0sQpD7T2iXemvRwVvBXcVw9dvgIjpAZROBsdqnjY1OPPAopSAh/exec";
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
@@ -84,6 +81,7 @@
 
         async function postData(body) {
             try {
+                // Usamos fetch normal para asegurar el envío
                 await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(body) });
             } catch(e) { console.log("Error envío"); }
         }
@@ -125,29 +123,30 @@
                 recordGlobalBD = data.puntos || 0;
                 document.getElementById("highScoreText").innerText = recordGlobalBD;
                 if(data.wallet) document.getElementById("walletInput").value = data.wallet;
-                
-                // Si en la DB el bono ya es true (o sea, "SI")
-                if(data.bono === true) {
-                    marcarTareaCompletada();
-                }
+                if(data.bono === true) marcarTareaCompletada();
             } catch(e) { console.log("Cargando perfil..."); }
         }
 
         async function unirseTelegramTask() {
             if(localStorage.getItem('taskTGDone') === 'true') return;
-            window.open("https://t.me/venecoinu", "_blank");
-            
+
+            // 1. Enviamos puntos PRIMERO
             await postData({
                 accion: "bono_tg",
                 usuario: localStorage.getItem('venecoUser'),
                 wallet: localStorage.getItem('venecoTGID')
             });
             
+            // 2. Marcamos localmente y visualmente
             localStorage.setItem('taskTGDone', 'true');
-            alert("¡Felicidades! +1000 Puntos. Se actualizarán en segundos.");
             marcarTareaCompletada();
-            // Recarga el menú tras un momento para ver los puntos nuevos
-            setTimeout(mostrarMenu, 3000);
+            
+            // 3. Esperamos un instante y abrimos el link
+            setTimeout(() => {
+                window.open("https://t.me/venecoinu", "_blank");
+                alert("¡Bono solicitado! Los puntos se actualizarán en unos segundos.");
+                setTimeout(mostrarMenu, 2000);
+            }, 500);
         }
 
         function marcarTareaCompletada() {
@@ -169,7 +168,7 @@
             }
         }
 
-        // --- FUNCIONES DE JUEGO ---
+        // --- LÓGICA DE JUEGO (SIN TOCAR FASES) ---
         async function cargarRanking() {
             abrirModal('modalRank');
             const list = document.getElementById("rankList");
