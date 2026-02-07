@@ -30,7 +30,6 @@
         #scoreDisplay { font-size: 22px; color: white; text-shadow: 1px 1px 0 #000; margin: 0; }
         #bestDisplay { font-size: 14px; color: #ffcc00; text-shadow: 1px 1px 0 #000; margin: 0; }
 
-        /* SOMBRA REFORZADA EN NIVELES */
         #levelContainer { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 800; text-align: center; width: 100%; display: none; pointer-events: none; }
         #levelText { font-size: 35px; color: #ffcc00; font-weight: bold; text-shadow: 2px 2px 4px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; margin: 0; opacity: 1; }
 
@@ -116,6 +115,7 @@
         let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true, frame: 0, tick: 0 };
         let estela = [];
         let nivelActual = "";
+        let faseAlivioActivada = false;
 
         async function postData(body) {
             try { await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(body) }); } catch(e) {}
@@ -181,6 +181,7 @@
 
         function iniciar() { 
             activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = []; 
+            faseAlivioActivada = false;
             document.getElementById("score").innerText = "0";
             nivelActual = "NIVEL MANGO";
             document.getElementById("levelText").innerText = nivelActual;
@@ -201,16 +202,14 @@
             if(!activo && !chig.vivo) return;
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
             
-            // --- PARALLAX OPTIMIZADO PARA EVITAR MAREOS ---
-            skyX -= vel * 0.05; // CIELO MUCHO MÁS LENTO
-            bgX -= vel;         // SUELO A VELOCIDAD REAL
+            skyX -= vel * 0.05;
+            bgX -= vel;
             
             if(skyX <= -window.innerWidth) skyX = 0;
             if(bgX <= -window.innerWidth) bgX = 0;
 
             ctx.drawImage(imgCielo, skyX, 0, window.innerWidth, window.innerHeight);
             ctx.drawImage(imgCielo, skyX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
-            
             ctx.drawImage(imgSuelo, bgX, 0, window.innerWidth, window.innerHeight);
             ctx.drawImage(imgSuelo, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
 
@@ -224,9 +223,7 @@
                         chig.frame = (chig.frame + 1) % 4;
                         chig.tick = 0;
                     }
-                } else {
-                    chig.frame = 1;
-                }
+                } else { chig.frame = 1; }
 
                 if(score >= 800) {
                     estela.push({x: chig.x, y: chig.y, o: 0.4, f: chig.frame});
@@ -238,17 +235,28 @@
                     ctx.globalAlpha = 1;
                 });
 
-                let nuevoLvl = "NIVEL MANGO";
-                if(score >= 800) nuevoLvl = "NIVEL GUARIMBA";
-                else if(score >= 600) nuevoLvl = "NIVEL CAOS";
-                else if(score >= 400) nuevoLvl = "NIVEL GUACAMAYA";
-                else if(score >= 200) nuevoLvl = "NIVEL AREPA";
+                // --- LÓGICA DE DIFICULTAD Y RESPIRO ---
+                let nuevoLvl = nivelActual;
+                
+                if (score === 500 && !faseAlivioActivada) {
+                    vel = 11; // Bajamos la velocidad al inicio
+                    faseAlivioActivada = true;
+                    nuevoLvl = "¡RESPIRA! VIENE LO BUENO";
+                    setTimeout(() => { if(score < 600) nivelActual = "NIVEL GUACAMAYA"; }, 3000);
+                } else {
+                    if(score >= 800) nuevoLvl = "NIVEL GUARIMBA";
+                    else if(score >= 600) nuevoLvl = "NIVEL CAOS";
+                    else if(score >= 400 && score < 500) nuevoLvl = "NIVEL GUACAMAYA";
+                    else if(score >= 200 && score < 400) nuevoLvl = "NIVEL AREPA";
+                    else if(score < 200) nuevoLvl = "NIVEL MANGO";
+                }
 
                 if (nuevoLvl !== nivelActual) {
                     nivelActual = nuevoLvl;
                     document.getElementById("levelText").innerText = nivelActual;
                 }
 
+                // Incremento de velocidad (siempre sube, pero tras el reset de los 500 vuelve a subir poco a poco)
                 if(score >= 800) vel += 0.005;
                 else if(score >= 600) vel += 0.004;
                 else if(score >= 400) vel += 0.003;
