@@ -67,7 +67,7 @@
     <div id="loginMenu">
         <div class="login-box">
             <h2 style="color:#ffcc00; margin-top:0;">REGISTRO AIRDROP</h2>
-            <input type="text" id="tgUser" placeholder="Usuario de Telegram">
+            <input type="text" id="tgUser" placeholder="Cargando usuario..." readonly>
             <input type="text" id="bnbWallet" placeholder="Wallet BNB BEP20 (Metamask)">
             <button class="btn" onclick="autenticarYEntrar()">REGISTRARSE / ENTRAR</button>
             <button class="btn btn-fun" onclick="mostrarAdvertencia()">JUGAR POR DIVERSIÓN</button>
@@ -92,6 +92,7 @@
             <p id="menuBestScore" style="margin: 0 0 5px 0; color: #00ffff; font-size: 14px;">Record: 0 pts</p>
             
             <button id="btnTaskTG" class="btn btn-task" onclick="realizarTareaTelegram()">🚀 SEGUIR TELEGRAM (+100 PTS)</button>
+            <button class="btn" style="background:#ffcc00; color:#000; font-size:12px; margin-top:10px;" onclick="compartirReferido()">🔗 INVITAR AMIGO (+50 PTS)</button>
             
             <button class="btn" style="background:transparent; border:1px solid #00ffff; color:#00ffff; margin-top:15px;" onclick="verRanking()">🏆 RANKING GLOBAL</button>
             <div class="social-grid">
@@ -100,7 +101,6 @@
                 <a href="https://www.tiktok.com/@venecotoken" target="_blank" class="social-item">TikTok</a>
                 <a href="https://veneco.lol/" target="_blank" class="social-item">Website</a>
             </div>
-            <button id="btnReferir" class="btn" style="background:#ffcc00; color:#000; font-size:12px; margin-top:10px;" onclick="compartirReferido()">🔗 INVITAR AMIGO (+50 PTS)</button>
             <button class="btn" style="background:transparent; color:#ff4444; border:1px solid #ff4444; font-size:12px; margin-top:15px;" onclick="cerrarSesion()">CERRAR SESIÓN ✖</button>
         </div>
     </div>
@@ -136,10 +136,12 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        tg.ready();
 
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzowQ8z7hoY0lWT-l1KqrBO2Zfq7VtmXUAsjRair1mCSlYS-JpuGizgWCPpEv1ev4B0cg/exec";
+        const BOT_USER = "venecotoken_bot";
 
         const imgC1 = new Image(); imgC1.src = 'chiguire.png';
         const imgC2 = new Image(); imgC2.src = 'chiguire2.png';
@@ -162,10 +164,12 @@
         let estela = [], ultimoTiempo = 0, muted = false;
         const fpsObjetivo = 1000 / 60; 
 
-        // AUTO-DETECTAR USUARIO TELEGRAM
         window.onload = () => {
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 document.getElementById("tgUser").value = tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name;
+            } else {
+                document.getElementById("tgUser").removeAttribute("readonly");
+                document.getElementById("tgUser").placeholder = "Usuario Manual";
             }
         };
 
@@ -175,70 +179,58 @@
             const btn = document.getElementById("muteBtn");
             btn.innerText = muted ? "🔇" : "🔊";
             [sndClick, sndSalto, sndPerder, musFondo, sndIntro].forEach(s => { s.muted = muted; if(muted) s.pause(); });
-            if(!muted) {
-                if(activo) musFondo.play();
-                else if(document.getElementById("introScreen").style.display === "none") sndIntro.play();
-            }
+            if(!muted) { if(activo) musFondo.play(); else if(document.getElementById("introScreen").style.display === "none") sndIntro.play(); }
         }
 
         function mostrarAdvertencia() { document.getElementById("funWarning").style.display = "flex"; }
         function ocultarAdvertencia() { document.getElementById("funWarning").style.display = "none"; }
-        function entrarComoInvitado() { localStorage.setItem('venecoUser', 'Invitado'); localStorage.setItem('venecoWallet', 'no-wallet'); localStorage.setItem('venecoRunHighScore', 0); recordGlobal = 0; ocultarAdvertencia(); document.getElementById("loginMenu").style.display = "none"; mostrarMenuPrincipal(); }
+        function entrarComoInvitado() { localStorage.setItem('venecoUser', 'Invitado'); localStorage.setItem('venecoWallet', 'no-wallet'); recordGlobal = 0; ocultarAdvertencia(); document.getElementById("loginMenu").style.display = "none"; mostrarMenuPrincipal(); }
 
         async function autenticarYEntrar() {
             const u = document.getElementById("tgUser").value.trim();
             const w = document.getElementById("bnbWallet").value.trim();
-            const ref = tg.initDataUnsafe.start_param || ""; // CAPTURA REFERIDO
+            const ref = tg.initDataUnsafe.start_param || "";
 
-            if(u.length < 3 || !/^0x[a-fA-F0-9]{40}$/.test(w)) { alert("Datos inválidos"); return; }
+            if(u.length < 3 || !/^0x[a-fA-F0-9]{40}$/.test(w)) { alert("Ingresa una Wallet BNB BEP20 válida."); return; }
             document.getElementById("loadingLogin").style.display = "block";
             try {
-                // Enviamos acción de login y referido a Apps Script
-                const response = await fetch(URL_SCRIPT + "?action=getScore&wallet=" + w + "&user=" + u + "&ref=" + ref);
+                const response = await fetch(`${URL_SCRIPT}?action=getScore&wallet=${w}&user=${u}&ref=${ref}`);
                 const data = await response.json();
-                localStorage.setItem('venecoUser', u); 
-                localStorage.setItem('venecoWallet', w);
-                recordGlobal = data.score || 0; 
+                localStorage.setItem('venecoUser', u); localStorage.setItem('venecoWallet', w);
+                recordGlobal = data.score || 0;
                 localStorage.setItem('venecoRunHighScore', recordGlobal);
-                document.getElementById("loginMenu").style.display = "none"; 
-                mostrarMenuPrincipal();
-            } catch (e) { alert("Error de conexión"); }
+                document.getElementById("loginMenu").style.display = "none"; mostrarMenuPrincipal();
+            } catch (e) { alert("Error al conectar con la base de datos."); }
             document.getElementById("loadingLogin").style.display = "none";
         }
 
-        // TAREA DE TELEGRAM
         async function realizarTareaTelegram() {
-            window.open("https://t.me/venecoinu", "_blank");
+            tg.openTelegramLink("https://t.me/venecoinu");
             const u = localStorage.getItem('venecoUser');
             const w = localStorage.getItem('venecoWallet');
-            
-            // Simulación de verificación con retraso para dar sensación de seguridad
+            alert("Verificando... vuelve en 5 segundos.");
             setTimeout(async () => {
                 try {
-                    const res = await fetch(URL_SCRIPT + "?action=taskTelegram&wallet=" + w + "&user=" + u);
+                    const res = await fetch(`${URL_SCRIPT}?action=taskTelegram&wallet=${w}&user=${u}`);
                     const data = await res.json();
                     if(data.success) {
-                        alert("¡Bonos de +100 puntos acreditados!");
+                        alert("¡Bono +100 acreditado!");
                         recordGlobal = parseInt(recordGlobal) + 100;
-                        localStorage.setItem('venecoRunHighScore', recordGlobal);
                         document.getElementById("menuBestScore").innerText = "Record: " + recordGlobal;
                         document.getElementById("btnTaskTG").style.display = "none";
-                    } else {
-                        alert(data.message || "Ya has reclamado este premio.");
-                    }
-                } catch(e) { alert("Error al validar tarea."); }
+                    } else { alert(data.message); }
+                } catch(e) { alert("Error de validación."); }
             }, 5000);
         }
 
         function compartirReferido() {
             const user = localStorage.getItem('venecoUser');
-            const botUser = "TU_BOT_USERNAME"; // CAMBIA ESTO POR TU USUARIO DE BOT
-            const link = `https://t.me/${botUser}/play?startapp=${user}`;
-            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=¡Juega Veneco Run y acumula puntos para el Airdrop! 🚀`);
+            const link = `https://t.me/${BOT_USER}/play?startapp=${user}`;
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=¡Únete a Veneco Run! Usa mi link y ganamos puntos extra los dos 🚀`);
         }
 
         function clicPortada() { if(!muted) { sndClick.play(); sndIntro.play(); } document.getElementById("introScreen").style.display = "none"; if(localStorage.getItem('venecoUser')) mostrarMenuPrincipal(); else document.getElementById("loginMenu").style.display = "flex"; }
-        function mostrarMenuPrincipal() { document.getElementById("mainMenu").style.display = "flex"; document.getElementById("userNameTitle").innerText = localStorage.getItem('venecoUser').toUpperCase(); document.getElementById("menuBestScore").innerText = "Record: " + (localStorage.getItem('venecoRunHighScore') || 0); }
+        function mostrarMenuPrincipal() { document.getElementById("mainMenu").style.display = "flex"; document.getElementById("userNameTitle").innerText = localStorage.getItem('venecoUser').toUpperCase(); document.getElementById("menuBestScore").innerText = "Record: " + recordGlobal; }
         function prepararJuego() { document.getElementById("mainMenu").style.display = "none"; document.getElementById("ui").style.display = "block"; document.getElementById("levelContainer").style.display = "block"; canvas.style.display = "block"; ajustar(); sndIntro.pause(); musFondo.currentTime = 0; if(!muted) musFondo.play(); document.getElementById("highScoreText").innerText = recordGlobal; iniciar(); }
         function ajustar() { const dpr = window.devicePixelRatio || 1; canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr; canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px'; ctx.scale(dpr, dpr); chig.suelo = window.innerHeight - 220; chig.y = chig.suelo; chig.x = window.innerWidth < 600 ? 30 : 100; }
         function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; frameAnim = 0; estela = []; bgX_cielo = 0; bgX_suelo = 0; ultimoTiempo = performance.now(); requestAnimationFrame(bucle); setTimeout(spawn, 2000); }
@@ -246,19 +238,19 @@
         async function enviarDatosExcel(puntos) { 
             if(localStorage.getItem('venecoWallet') === 'no-wallet') return; 
             const datos = { usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoWallet'), puntaje: puntos }; 
-            try { fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) }); } catch (e) {} 
+            fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(datos) });
         }
 
-        function morir() { activo = false; chig.vivo = false; musFondo.pause(); if(!muted) sndPerder.play(); if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); } enviarDatosExcel(recordGlobal); document.getElementById("finalScore").innerText = score; document.getElementById("finalBest").innerText = recordGlobal; document.getElementById("gameOverScreen").style.display = "flex"; }
+        function morir() { activo = false; chig.vivo = false; musFondo.pause(); if(!muted) sndPerder.play(); if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); enviarDatosExcel(recordGlobal); } document.getElementById("finalScore").innerText = score; document.getElementById("finalBest").innerText = recordGlobal; document.getElementById("gameOverScreen").style.display = "flex"; }
         function reiniciarRapido() { document.getElementById("gameOverScreen").style.display = "none"; musFondo.currentTime = 0; if(!muted) musFondo.play(); iniciar(); }
         function volverAlMenu() { document.getElementById("gameOverScreen").style.display = "none"; canvas.style.display = "none"; document.getElementById("ui").style.display = "none"; document.getElementById("levelContainer").style.display = "none"; if(!muted) sndIntro.play(); mostrarMenuPrincipal(); }
         function cerrarSesion() { localStorage.clear(); location.reload(); }
 
         const saltar = (e) => { if(e && e.target.id === 'muteBtn') return; if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; if(!muted) { sndSalto.currentTime = 0; sndSalto.play(); } } };
-        window.addEventListener("mousedown", saltar); window.addEventListener("touchstart", (e) => { if(activo) { if(e.target.id !== 'muteBtn') e.preventDefault(); saltar(e); } }, {passive: false});
+        window.addEventListener("mousedown", saltar); window.addEventListener("touchstart", (e) => { if(activo && e.target.id !== 'muteBtn') { e.preventDefault(); saltar(e); } }, {passive: false});
         window.addEventListener("keydown", (e) => { if(e.code === "Space") { e.preventDefault(); saltar(); } });
 
-        function spawn() { if(!activo) return; let esDoble = score >= 200 && Math.random() > 0.6; obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble }); let delay = Math.max(1100 / (vel * 0.07), esDoble ? 1100 : 700); setTimeout(spawn, delay); }
+        function spawn() { if(!activo) return; let esDoble = score >= 200 && Math.random() > 0.6; obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble }); setTimeout(spawn, Math.max(1100 / (vel * 0.07), esDoble ? 1100 : 700)); }
 
         function actualizarNivel() {
             const lbl = document.getElementById("levelText");
@@ -298,7 +290,7 @@
 
         async function verRanking() { 
             document.getElementById("rankingModal").style.display = "flex"; document.getElementById("rankingBody").innerHTML = ""; document.getElementById("loadingRank").style.display = "block";
-            try { const res = await fetch(URL_SCRIPT + "?action=getRanking"); const data = await res.json(); document.getElementById("loadingRank").style.display = "none"; data.forEach((p, i) => { document.getElementById("rankingBody").innerHTML += `<tr><td>${i+1}</td><td>${p.usuario}</td><td>${p.puntaje}</td></tr>`; }); } catch (e) { document.getElementById("loadingRank").innerText = "Error."; } 
+            try { const res = await fetch(`${URL_SCRIPT}?action=getRanking`); const data = await res.json(); document.getElementById("loadingRank").style.display = "none"; data.forEach((p, i) => { document.getElementById("rankingBody").innerHTML += `<tr><td>${i+1}</td><td>${p.usuario}</td><td>${p.puntaje}</td></tr>`; }); } catch (e) { document.getElementById("loadingRank").innerText = "Error."; } 
         }
         function cerrarRanking() { document.getElementById("rankingModal").style.display = "none"; }
     </script>
