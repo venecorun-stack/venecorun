@@ -6,56 +6,76 @@
     <title>Veneco Run - Fase 2</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial', sans-serif; color: white; }
+        body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
         
-        /* Menú Principal Post-Login */
-        #mainMenu { 
-            position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, #1a1a1a, #000);
-            display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000;
+        /* Botón Cerrar Sesión Superior */
+        #logoutBtn { 
+            position: absolute; top: 15px; right: 15px; z-index: 1100; 
+            background: #ff4444; color: white; border: 2px solid white; 
+            padding: 8px 12px; border-radius: 10px; cursor: pointer; 
+            font-size: 12px; display: none; font-weight: bold;
         }
 
+        /* Pantallas de fondo */
+        #introScreen, #loginMenu, #mainMenu, #gameOverScreen { 
+            position: absolute; width: 100%; height: 100%; 
+            background-color: #000; background-position: center; 
+            background-repeat: no-repeat; background-size: cover; /* Cambiado a COVER para imagen vertical */
+            display: flex; flex-direction: column; justify-content: center; 
+            align-items: center; z-index: 900; text-align: center; 
+        }
+
+        /* Ajuste para usar la imagen vertical anterior */
+        #introScreen { background-image: url('portada_mobile.png'); cursor: pointer; justify-content: flex-end; }
+        #loginMenu { background-image: url('portada_mobile.png'); display: none; }
+        
+        /* Estilos del Menú Principal */
+        #mainMenu { background: radial-gradient(circle, #1a1a1a, #000); display: none; z-index: 1000; }
+
         .play-circle {
-            width: 120px; height: 120px; background: #2ecc71; border-radius: 50%;
+            width: 130px; height: 130px; background: #2ecc71; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 24px; font-weight: bold; color: white; cursor: pointer;
-            box-shadow: 0 0 20px #2ecc71, 0 0 40px #2ecc71;
-            border: 4px solid white; animation: pulse 2s infinite; margin-bottom: 40px;
+            font-size: 26px; font-weight: bold; color: white; cursor: pointer;
+            box-shadow: 0 0 25px #2ecc71, 0 0 50px #2ecc71;
+            border: 4px solid white; animation: pulse 2s infinite; margin-bottom: 30px;
         }
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
         .menu-opt {
-            width: 80%; max-width: 300px; background: rgba(255,255,255,0.1);
-            margin: 10px 0; padding: 15px; border-radius: 15px; text-align: center;
+            width: 85%; max-width: 320px; background: rgba(255,255,255,0.1);
+            margin: 8px 0; padding: 18px; border-radius: 20px; text-align: center;
             cursor: pointer; border: 1px solid #444; transition: 0.3s;
         }
-        .menu-opt:hover { background: rgba(255,255,255,0.2); }
-        .menu-opt span { display: block; font-size: 12px; color: #aaa; }
+        .menu-opt:hover { background: rgba(255,255,255,0.2); border-color: #ffcc00; }
+        .menu-opt b { color: #ffcc00; display: block; font-size: 18px; }
+        .menu-opt span { font-size: 11px; color: #ccc; }
 
-        /* Ventanas Modales */
+        /* Modales */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); z-index: 2000; flex-direction: column; align-items: center; justify-content: center;
         }
-        .modal-content { background: #222; padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; border: 2px solid #ffcc00; }
-        input { width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px; border: none; box-sizing: border-box; }
+        .modal-content { background: #222; padding: 25px; border-radius: 25px; width: 80%; max-width: 350px; border: 2px solid #ffcc00; }
+        input { width: 100%; padding: 12px; margin: 15px 0; border-radius: 10px; border: none; font-size: 14px; text-align: center; }
 
-        /* Estilos base del juego */
-        #ui, #introScreen, #loginMenu, #gameOverScreen { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 900; }
-        #introScreen { background: url('portada.png') center/contain no-repeat #000; justify-content: flex-end; }
+        .btn { padding: 15px; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 16px; }
+        
         canvas { display: none; }
-        .btn { padding: 15px 35px; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
     </style>
 </head>
 <body>
 
+    <button id="logoutBtn" onclick="cerrarSesion()">CERRAR SESIÓN ✖</button>
+
     <div id="introScreen" onclick="clicPortada()">
-        <div style="margin-bottom:80px;">TOCA PARA EMPEZAR</div>
+        <div style="font-size:20px; color:white; margin-bottom:60px; text-shadow: 0 0 10px #000; background: rgba(0,0,0,0.6); width:100%; padding: 10px 0;">TOCA PARA EMPEZAR</div>
     </div>
 
-    <div id="loginMenu" style="display:none;">
-        <div style="background:rgba(0,0,0,0.8); padding:30px; border-radius:20px; border:2px solid #ffcc00;">
-            <h2>REGISTRO</h2>
+    <div id="loginMenu">
+        <div style="background:rgba(0,0,0,0.85); padding:30px; border-radius:25px; border:2px solid #ffcc00; width: 80%;">
+            <h2 style="color:#ffcc00;">REGISTRO</h2>
+            <p style="font-size:14px;">Para guardar tus puntos y participar en el Airdrop, inicia sesión.</p>
             <div id="loginContainer"></div>
         </div>
     </div>
@@ -64,22 +84,25 @@
         <div class="play-circle" onclick="prepararJuego()">JUGAR</div>
         
         <div class="menu-opt" onclick="abrirModal('modalRef')">
-            👥 REFERIDOS <span>Gana +150 puntos por amigo</span>
+            <b>👥 REFERIDOS</b>
+            <span>Gana +150 puntos por cada amigo</span>
         </div>
         
         <div class="menu-opt" onclick="cargarRanking()">
-            🏆 RANKING TOP 10 <span>Mira quién lidera</span>
+            <b>🏆 RANKING TOP 10</b>
+            <span>Mira quién lidera la tabla</span>
         </div>
         
         <div class="menu-opt" onclick="abrirModal('modalAirdrop')">
-            💰 RECIBIR AIRDROP <span>Registra tu Wallet BNB</span>
+            <b>💰 RECIBIR AIRDROP</b>
+            <span>Registra tu Wallet BNB (BEP-20)</span>
         </div>
     </div>
 
     <div id="modalRef" class="modal">
         <div class="modal-content">
-            <h3>TUS REFERIDOS</h3>
-            <p style="font-size:12px;">Comparte tu link:</p>
+            <h3>INVITA AMIGOS</h3>
+            <p style="font-size:13px; color: #aaa;">Copia tu link único y envíalo:</p>
             <input type="text" id="refLink" readonly>
             <button class="btn" onclick="copiarRef()">COPIAR LINK</button>
             <button class="btn" style="background:#444; color:white;" onclick="cerrarModales()">CERRAR</button>
@@ -88,8 +111,8 @@
 
     <div id="modalRank" class="modal">
         <div class="modal-content">
-            <h3>TOP 10 LÍDERES</h3>
-            <div id="rankList" style="text-align:left; font-size:14px; margin-bottom:15px;">Cargando...</div>
+            <h3 style="color:#ffcc00;">TOP 10 LÍDERES</h3>
+            <div id="rankList" style="text-align:left; font-size:15px; margin: 15px 0; line-height: 1.6;">Cargando...</div>
             <button class="btn" onclick="cerrarModales()">CERRAR</button>
         </div>
     </div>
@@ -97,15 +120,11 @@
     <div id="modalAirdrop" class="modal">
         <div class="modal-content">
             <h3>REGISTRO WALLET</h3>
-            <p style="font-size:12px;">Wallet BNB BEP-20 (Metamask/Trust):</p>
+            <p style="font-size:13px; color: #aaa;">Ingresa tu dirección de Metamask o Trust Wallet:</p>
             <input type="text" id="walletInput" placeholder="0x...">
-            <button class="btn" onclick="guardarWallet()">REGISTRAR WALLET</button>
+            <button class="btn" onclick="guardarWallet()">GUARDAR WALLET</button>
             <button class="btn" style="background:#444; color:white;" onclick="cerrarModales()">CERRAR</button>
         </div>
-    </div>
-
-    <div id="ui" style="display:none; pointer-events:none;">
-        <p>PUNTOS: <span id="score">0</span></p>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -113,9 +132,10 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        const URL_SCRIPT = "TU_NUEVA_URL_AQUI";
+        
+        // REEMPLAZA ESTO CON TU URL DE APPS SCRIPT
+        const URL_SCRIPT = "ESCRIBE_AQUI_TU_NUEVA_URL";
 
-        // Obtener ID del referente desde la URL de Telegram (si existe)
         const params = new URLSearchParams(window.location.search);
         const inviter = params.get('tgWebAppStartParam');
 
@@ -131,26 +151,29 @@
 
         function verificarEntorno() {
             const container = document.getElementById("loginContainer");
-            if (tg.initDataUnsafe.user) {
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 container.innerHTML = `<button class="btn" onclick="loginTG()">INICIAR CON TELEGRAM</button>`;
             } else {
-                container.innerHTML = `<a href="https://t.me/venecotoken_bot/venecorun" class="btn">ABRIR EN TELEGRAM</a>`;
+                container.innerHTML = `<a href="tg://resolve?domain=venecotoken_bot&appname=venecorun" class="btn" style="text-decoration:none; display:block;">ABRIR EN TELEGRAM</a>`;
             }
         }
 
         function loginTG() {
             const u = tg.initDataUnsafe.user;
-            localStorage.setItem('venecoUser', u.username ? "@" + u.username : u.first_name);
-            localStorage.setItem('venecoTGID', u.id.toString());
+            const userName = u.username ? "@" + u.username : u.first_name;
+            const userID = u.id.toString();
             
-            // Enviar registro inicial con referido
+            localStorage.setItem('venecoUser', userName);
+            localStorage.setItem('venecoTGID', userID);
+            
+            // Registro inicial y manejo de referidos
             fetch(URL_SCRIPT, {
                 method: "POST",
                 mode: "no-cors",
                 body: JSON.stringify({
                     accion: "puntos",
-                    usuario: localStorage.getItem('venecoUser'),
-                    wallet: localStorage.getItem('venecoTGID'),
+                    usuario: userName,
+                    wallet: userID,
                     puntaje: 0,
                     invitadoPor: inviter ? "ID: " + inviter : ""
                 })
@@ -161,6 +184,7 @@
         function mostrarMenu() {
             document.getElementById("loginMenu").style.display = "none";
             document.getElementById("mainMenu").style.display = "flex";
+            document.getElementById("logoutBtn").style.display = "block";
             document.getElementById("refLink").value = "https://t.me/venecotoken_bot/venecorun?startapp=" + localStorage.getItem('venecoTGID');
         }
 
@@ -171,26 +195,29 @@
             const copyText = document.getElementById("refLink");
             copyText.select();
             document.execCommand("copy");
-            tg.showAlert("¡Link copiado! Pásalo a tus amigos.");
+            if(tg.showAlert) tg.showAlert("¡Link de referido copiado!");
         }
 
         async function cargarRanking() {
             abrirModal('modalRank');
-            document.getElementById("rankList").innerHTML = "Cargando...";
+            document.getElementById("rankList").innerHTML = "Cargando líderes...";
             try {
                 const res = await fetch(URL_SCRIPT);
                 const data = await res.json();
                 let html = "";
                 data.forEach((user, i) => {
-                    html += `<p>${i+1}. ${user.nombre} - ${user.puntos} pts</p>`;
+                    html += `<b>${i+1}.</b> ${user.nombre} <span style="float:right; color:#ffcc00;">${user.puntos}</span><br>`;
                 });
-                document.getElementById("rankList").innerHTML = html;
-            } catch (e) { document.getElementById("rankList").innerHTML = "Error al cargar ranking."; }
+                document.getElementById("rankList").innerHTML = html || "Aún no hay récords.";
+            } catch (e) { document.getElementById("rankList").innerHTML = "Error al conectar con la base de datos."; }
         }
 
         function guardarWallet() {
             const wall = document.getElementById("walletInput").value;
-            if(wall.length < 20) return alert("Wallet inválida");
+            if(wall.length < 30) {
+                alert("Por favor, ingresa una wallet válida.");
+                return;
+            }
             
             fetch(URL_SCRIPT, {
                 method: "POST",
@@ -201,15 +228,18 @@
                     direccion: wall
                 })
             });
-            tg.showAlert("¡Wallet registrada en la base de datos!");
+            if(tg.showAlert) tg.showAlert("¡Tu wallet ha sido registrada con éxito!");
             cerrarModales();
         }
 
-        // --- LÓGICA DE JUEGO SIMPLIFICADA (Integrar con tu bucle anterior) ---
+        function cerrarSesion() {
+            localStorage.clear();
+            location.reload();
+        }
+
         function prepararJuego() {
-            document.getElementById("mainMenu").style.display = "none";
-            // Aquí llamas a tu función iniciar() de antes
-            alert("Iniciando juego... (conecta aquí tu bucle de chigüire)");
+            // Aquí llamarás a la función de iniciar el juego que tenías antes
+            alert("¡Listo! Aquí conectaremos el juego del Chigüire.");
         }
     </script>
 </body>
