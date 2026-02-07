@@ -48,13 +48,10 @@
             <div id="userPointsDisplay">PUNTOS: <span id="currentScoreMenu">0</span></div>
         </div>
         <div class="play-circle" onclick="prepararJuego()">JUGAR</div>
-        <div class="menu-opt" onclick="abrirModal('modalRef')"><b>👥 MIS REFERIDOS</b><span>Gana +150 pts</span></div>
         <div class="menu-opt" onclick="cargarRanking()"><b>🏆 RANKING TOP 10</b><span>Ver líderes</span></div>
         <div class="menu-opt" onclick="abrirModal('modalAirdrop')"><b>💰 REGISTRAR WALLET</b><span>Wallet BNB</span></div>
-        <div class="menu-opt" id="btnTGTask" onclick="unirseTelegramTask()"><b>📢 CANAL TELEGRAM</b><span>¡Gana +1000 puntos!</span></div>
     </div>
 
-    <div id="modalRef" class="modal"><div class="modal-content"><h3>REFERIDOS</h3><input type="text" id="refLink" readonly><button class="btn" onclick="copiarRef()">COPIAR LINK</button><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
     <div id="modalRank" class="modal"><div class="modal-content"><h3>TOP 10 LÍDERES</h3><div id="rankList"></div><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
     <div id="modalAirdrop" class="modal"><div class="modal-content"><h3>REGISTRO WALLET</h3><input type="text" id="walletInput" placeholder="0x..."><button class="btn" onclick="guardarWallet()">GUARDAR WALLET</button><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
 
@@ -114,7 +111,6 @@
             document.getElementById("logoutBtn").style.display = "block";
             const myID = localStorage.getItem('venecoTGID');
             document.getElementById("userNameDisplay").innerText = localStorage.getItem('venecoUser');
-            document.getElementById("refLink").value = "https://t.me/venecotoken_bot/venecorun?startapp=" + myID;
             
             try {
                 const res = await fetch(URL_SCRIPT + "?tipo=getUserData&id=" + myID);
@@ -123,35 +119,7 @@
                 recordGlobalBD = data.puntos || 0;
                 document.getElementById("highScoreText").innerText = recordGlobalBD;
                 if(data.wallet) document.getElementById("walletInput").value = data.wallet;
-                if(data.bono === true) {
-                    marcarTareaCompletada();
-                }
             } catch(e) { console.log("Cargando perfil..."); }
-        }
-
-        async function unirseTelegramTask() {
-            if(localStorage.getItem('taskTGDone') === 'true') return;
-            window.open("https://t.me/venecoinu", "_blank");
-            
-            await postData({
-                accion: "bono_tg",
-                usuario: localStorage.getItem('venecoUser'),
-                wallet: localStorage.getItem('venecoTGID')
-            });
-            
-            localStorage.setItem('taskTGDone', 'true');
-            alert("¡Felicidades! +1000 Puntos. Se actualizarán en segundos.");
-            marcarTareaCompletada();
-            setTimeout(mostrarMenu, 2000);
-        }
-
-        function marcarTareaCompletada() {
-            const btn = document.getElementById('btnTGTask');
-            if(btn) {
-                btn.style.opacity = "0.5";
-                btn.onclick = null;
-                btn.innerHTML = "<b>✅ TAREA COMPLETADA</b><span>Ya recibiste 1000 pts</span>";
-            }
         }
 
         // --- FUNCIONES DE JUEGO IGUALES ---
@@ -212,7 +180,7 @@
                     obst[i].x -= vel;
                     let bY = chig.suelo + (chig.h - obst[i].h);
                     ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
-                    if (chig.x + 30 < obst[i].x + obst[i].w - 30 && chig.x + chig.w - 30 > obst[i].x + 30 && chig.y + 30 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
+                    if (chig.x + 30 <  obst[i].x + obst[i].w - 30 && chig.x + chig.w - 30 > obst[i].x + 30 && chig.y + 30 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
                     if(obst[i].x < -200) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.15; }
                 }
             }
@@ -232,7 +200,6 @@
         function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
         function cerrarSesion() { localStorage.clear(); location.reload(); }
-        function copiarRef() { const c = document.getElementById("refLink"); c.select(); document.execCommand("copy"); alert("Link copiado!"); }
     </script>
 </body>
 </html>
