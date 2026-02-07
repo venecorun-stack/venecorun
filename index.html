@@ -32,9 +32,9 @@
         #scoreDisplay { font-size: 22px; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
         #bestDisplay { font-size: 14px; color: #ffcc00; text-shadow: 1px 1px 0 #000; margin: 0; }
 
-        /* TEXTO DE NIVEL */
+        /* TEXTO DE NIVEL AJUSTADO (MÁS PEQUEÑO) */
         #levelContainer { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 800; text-align: center; width: 100%; display: none; pointer-events: none; }
-        #levelText { font-size: 45px; color: #ffcc00; font-weight: bold; text-shadow: 3px 3px 0 #000; margin: 0; opacity: 0.9; }
+        #levelText { font-size: 35px; color: #ffcc00; font-weight: bold; text-shadow: 3px 3px 0 #000; margin: 0; opacity: 0.9; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; flex-direction: column; align-items: center; justify-content: center; }
         .modal-content { background: #1a1a1a; padding: 25px; border-radius: 25px; width: 85%; border: 2px solid #ffcc00; max-height: 80vh; overflow-y: auto; }
@@ -74,7 +74,7 @@
 
     <div id="ui"><p id="scoreDisplay">SCORE: <span id="score">0</span></p><p id="bestDisplay">BEST: <span id="highScoreText">0</span></p></div>
     
-    <div id="levelContainer"><p id="levelText">PRINCIPIANTE</p></div>
+    <div id="levelContainer"><p id="levelText">NIVEL MANGO</p></div>
 
     <div id="gameOverScreen">
         <h1>¡FIN DEL JUEGO!</h1>
@@ -88,7 +88,6 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         
-        // --- TU URL DE SCRIPT ---
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxS64u2ud1QZ2G93d0sQpD7T2iXemvRwVvBXcVw9dvgIjpAZROBsdqnjY1OPPAopSAh/exec";
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
@@ -170,6 +169,8 @@
         function iniciar() { 
             activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = []; 
             document.getElementById("score").innerText = "0";
+            nivelActual = "NIVEL MANGO";
+            document.getElementById("levelText").innerText = nivelActual;
             bucle(); spawn(); 
         }
 
@@ -200,8 +201,8 @@
                 chig.dy += chig.g; chig.y += chig.dy;
                 if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
 
-                // LÓGICA DE ESTELA (SOLO EN NIVELES ALTOS)
-                if(score >= 1000) {
+                // LÓGICA DE ESTELA (AHORA EMPIEZA EN 800 - NIVEL GUARIMBA)
+                if(score >= 800) {
                     estela.push({x: chig.x, y: chig.y, o: 0.4});
                     if(estela.length > 5) estela.shift();
                 }
@@ -211,12 +212,12 @@
                     ctx.globalAlpha = 1;
                 });
 
-                // LÓGICA DE NIVELES
-                let nuevoLvl = "PRINCIPIANTE";
-                if(score >= 2000) nuevoLvl = "NIVEL CAOS";
-                else if(score >= 1000) nuevoLvl = "NIVEL AREPA";
-                else if(score >= 500) nuevoLvl = "NIVEL MANGO";
-                else if(score >= 200) nuevoLvl = "NIVEL GUACAMAYA";
+                // NUEVA ESCALA DE NIVELES
+                let nuevoLvl = "NIVEL MANGO";
+                if(score >= 800) nuevoLvl = "NIVEL GUARIMBA";
+                else if(score >= 600) nuevoLvl = "NIVEL CAOS";
+                else if(score >= 400) nuevoLvl = "NIVEL GUACAMAYA";
+                else if(score >= 200) nuevoLvl = "NIVEL AREPA";
 
                 if (nuevoLvl !== nivelActual) {
                     nivelActual = nuevoLvl;
@@ -226,10 +227,10 @@
                     setTimeout(() => { el.style.color = "#ffcc00"; }, 200);
                 }
 
-                // INCREMENTO DE VELOCIDAD POR NIVEL
-                if(score >= 2000) vel += 0.005;
-                else if(score >= 1000) vel += 0.004;
-                else if(score >= 500) vel += 0.003;
+                // VELOCIDAD
+                if(score >= 800) vel += 0.005;
+                else if(score >= 600) vel += 0.004;
+                else if(score >= 400) vel += 0.003;
                 else if(score >= 200) vel += 0.002;
 
                 for(let i = obst.length - 1; i >= 0; i--) {
@@ -243,7 +244,6 @@
                         ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
                     }
                     
-                    // COLISIÓN AJUSTADA
                     if (chig.x + 35 < obst[i].x + obst[i].w - 35 && 
                         chig.x + chig.w - 35 > obst[i].x + 35 && 
                         chig.y + 35 < bY + obst[i].h && 
@@ -278,7 +278,6 @@
         window.addEventListener("touchstart", saltar, {passive: false});
         window.addEventListener("mousedown", saltar);
         
-        // MANTENER FUNCIONALIDADES DE MENÚ
         function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
         function cerrarSesion() { localStorage.clear(); location.reload(); }
