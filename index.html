@@ -95,6 +95,7 @@
         tg.expand();
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxS64u2ud1QZ2G93d0sQpD7T2iXemvRwVvBXcVw9dvgIjpAZROBsdqnjY1OPPAopSAh/exec";
 
+        // SONIDOS
         const sndSalto = new Audio('salto.mp3');
         const sndPerder = new Audio('perder.mp3');
         const musIntro = new Audio('intro.mp3'); 
@@ -113,7 +114,6 @@
         const ctx = canvas.getContext("2d");
         const touchLayer = document.getElementById("touchLayer");
 
-        // VELOCIDAD INICIAL SUAVIZADA (7 es más lento que el anterior)
         let activo = false, score = 0, vel = 7, obst = [], bgX = 0, skyX = 0, recordGlobalBD = 0;
         let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true, frame: 0, tick: 0 };
         let nivelActual = "";
@@ -237,11 +237,17 @@
                     obst[i].x -= vel;
                     let bY = chig.suelo + (chig.h - obst[i].h);
                     ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
-                    if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 > obst[i].x + 35 && chig.y + 35 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
+                    
+                    // COLISIÓN MEJORADA (Hitbox más pequeña y justa)
+                    if (chig.x + 45 < obst[i].x + obst[i].w - 45 && 
+                        chig.x + chig.w - 45 > obst[i].x + 45 && 
+                        chig.y + 45 < bY + obst[i].h && 
+                        chig.y + chig.h - 25 > bY) morir();
+
                     if(obst[i].x < -200) { 
                         obst.splice(i, 1); score += 10; 
                         document.getElementById("score").innerText = score; 
-                        vel += 0.08; // Incremento más sutil (antes 0.12)
+                        vel += 0.08;
                     }
                 }
             }
