@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Sistema 1000 Puntos</title>
+    <title>Veneco Run - Sistema de Récords</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
@@ -65,7 +65,6 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         
-        // REEMPLAZA ESTA URL CON TU NUEVA IMPLEMENTACIÓN DE GOOGLE SCRIPT CADA VEZ QUE ACTUALICES EL SCRIPT
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxS64u2ud1QZ2G93d0sQpD7T2iXemvRwVvBXcVw9dvgIjpAZROBsdqnjY1OPPAopSAh/exec";
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
@@ -81,7 +80,6 @@
 
         async function postData(body) {
             try {
-                // Usamos fetch normal para asegurar el envío
                 await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(body) });
             } catch(e) { console.log("Error envío"); }
         }
@@ -119,33 +117,35 @@
             try {
                 const res = await fetch(URL_SCRIPT + "?tipo=getUserData&id=" + myID);
                 const data = await res.json();
-                document.getElementById("currentScoreMenu").innerText = data.puntos || 0;
-                recordGlobalBD = data.puntos || 0;
+                
+                // GUARDAMOS EL RÉCORD REAL DE LA BASE DE DATOS
+                recordGlobalBD = parseInt(data.puntos) || 0;
+                document.getElementById("currentScoreMenu").innerText = recordGlobalBD;
                 document.getElementById("highScoreText").innerText = recordGlobalBD;
+                
                 if(data.wallet) document.getElementById("walletInput").value = data.wallet;
                 if(data.bono === true) marcarTareaCompletada();
-            } catch(e) { console.log("Cargando perfil..."); }
+            } catch(e) { console.log("Sincronizando..."); }
         }
 
         async function unirseTelegramTask() {
             if(localStorage.getItem('taskTGDone') === 'true') return;
 
-            // 1. Enviamos puntos PRIMERO
+            // 1. Enviamos el bono primero
             await postData({
                 accion: "bono_tg",
                 usuario: localStorage.getItem('venecoUser'),
                 wallet: localStorage.getItem('venecoTGID')
             });
             
-            // 2. Marcamos localmente y visualmente
             localStorage.setItem('taskTGDone', 'true');
             marcarTareaCompletada();
             
-            // 3. Esperamos un instante y abrimos el link
+            // 2. Abrimos canal
             setTimeout(() => {
                 window.open("https://t.me/venecoinu", "_blank");
-                alert("¡Bono solicitado! Los puntos se actualizarán en unos segundos.");
-                setTimeout(mostrarMenu, 2000);
+                alert("¡Bono solicitado! Los puntos se actualizarán en segundos.");
+                setTimeout(mostrarMenu, 3000);
             }, 500);
         }
 
@@ -154,12 +154,12 @@
             if(btn) {
                 btn.style.opacity = "0.5";
                 btn.onclick = null;
-                btn.innerHTML = "<b>✅ COMPLETADO</b><span>Ya recibiste 1000 pts</span>";
+                btn.innerHTML = "<b>✅ COMPLETADO</b><span>+1000 pts recibidos</span>";
             }
         }
 
         function compartirJuego() {
-            const texto = "¡Juega Veneco Run! 🏃‍♂️💨 Suma puntos y registra tu wallet:";
+            const texto = "¡Mira Veneco Run! 🏃‍♂️💨 Juega y gana puntos aquí:";
             const url = "https://t.me/venecotoken_bot/venecorun";
             if (tg.shareExternalLink) {
                 tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(texto)}`);
@@ -168,7 +168,6 @@
             }
         }
 
-        // --- LÓGICA DE JUEGO (SIN TOCAR FASES) ---
         async function cargarRanking() {
             abrirModal('modalRank');
             const list = document.getElementById("rankList");
@@ -236,7 +235,18 @@
 
         function morir() {
             activo = false; chig.vivo = false;
-            postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: score });
+            
+            // LÓGICA DE RÉCORD: Solo envía si superamos la marca de la base de datos
+            if (score > recordGlobalBD) {
+                recordGlobalBD = score; // Actualizamos récord localmente
+                postData({ 
+                    accion: "puntos", 
+                    usuario: localStorage.getItem('venecoUser'), 
+                    wallet: localStorage.getItem('venecoTGID'), 
+                    puntaje: score 
+                });
+            }
+
             document.getElementById("finalScore").innerText = score; 
             document.getElementById("gameOverScreen").style.display = "flex";
         }
