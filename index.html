@@ -14,97 +14,106 @@
         @media (max-aspect-ratio: 1/1) { .screen { background-image: url('portada_mobile.png') !important; background-size: cover !important; } }
         .login-box { background: rgba(10, 10, 10, 0.95); padding: 25px; border: 1px solid #ffcc00; border-radius: 30px; width: 85%; max-width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); backdrop-filter: blur(15px); }
         input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #333; font-size: 14px; background: #000; color: white; outline: none; }
-        .btn { padding: 12px 25px; font-size: 16px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; margin-top: 10px; width: 100%; box-shadow: 0px 4px 0px #b38f00; }
-        .btn-play-neon { width: 110px; height: 110px; border-radius: 50%; background: #ffcc00; font-size: 20px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 0 20px #ffcc00; animation: pulse 1.5s infinite; }
+        .btn { padding: 12px 25px; font-size: 16px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; margin-top: 10px; width: 100%; box-shadow: 0px 4px 0px #b38f00; transition: 0.2s; }
+        .btn-play-neon { width: 110px; height: 110px; border-radius: 50%; background: #ffcc00; font-size: 20px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 0 20px #ffcc00; animation: pulse 1.5s infinite; margin: 15px 0; display: flex; align-items: center; justify-content: center; color: black; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        #ui { position: absolute; top: 10px; left: 10px; z-index: 850; display: none; }
-        canvas { display: none; width: 100vw; height: 100vh; }
+        #ui { position: absolute; top: 10px; left: 10px; z-index: 850; display: none; pointer-events: none; }
+        canvas { display: none; width: 100vw; height: 100vh; image-rendering: -webkit-optimize-contrast; }
     </style>
 </head>
 <body>
     <div id="muteBtn" onclick="toggleMute(event)">🔊</div>
 
     <div id="introScreen" class="screen" onclick="clicPortada()">
-        <div style="font-size:24px; color:white; margin-bottom:80px; text-shadow: 0 0 15px #ffcc00;">TOCA PARA EMPEZAR</div>
+        <div style="font-size:20px; color:white; margin-bottom:80px; text-shadow: 0 0 10px #ffcc00;">TOCA PARA CONTINUAR</div>
     </div>
 
     <div id="loginMenu" class="screen">
         <div class="login-box">
             <h2 style="color:#ffcc00;">INICIAR SESIÓN</h2>
-            <p style="font-size:12px;">Se usará tu cuenta de Telegram: <br><b id="displayTgUser">...</b></p>
-            <button class="btn" onclick="iniciarConTelegram()">ENTRAR AL JUEGO</button>
+            <p style="font-size:12px;">Usuario Telegram:<br><b id="displayTgUser">@Cargando...</b></p>
+            <button class="btn" onclick="iniciarConTelegram()">ENTRAR CON TELEGRAM</button>
             <button class="btn" style="background:#555; color:white;" onclick="verAdvertenciaInvitado()">MODO INVITADO</button>
         </div>
     </div>
 
     <div id="warnInvitado" class="screen" style="background:rgba(0,0,0,0.95);">
         <div class="login-box" style="border-color:#ff4444;">
-            <h2 style="color:#ff4444;">¡ADVERTENCIA!</h2>
-            <p>En el modo invitado <b>NO RECIBIRÁS AIRDROP</b> ni se guardarán tus puntos de forma permanente.</p>
-            <button class="btn" onclick="entrarInvitadoConfirmado()">CONTINUAR</button>
-            <button class="btn" style="background:#333; color:white;" onclick="volverAlLogin()">ATRÁS</button>
+            <h2 style="color:#ff4444;">¡ATENCIÓN!</h2>
+            <p>En este modo <b>NO GANAS AIRDROP</b> ni se guardan tus puntos.</p>
+            <button class="btn" onclick="entrarInvitadoConfirmado()">SÍ, SOLO JUGAR</button>
+            <button class="btn" style="background:#333; color:white;" onclick="volverAlLogin()">REGRESAR</button>
         </div>
     </div>
 
     <div id="mainMenu" class="screen">
         <div class="login-box" style="border-color: #00ffff;">
-            <h2 id="userNameTitle" style="color:#fff; margin:0;">USUARIO</h2>
-            <p id="menuBestScore" style="color:#00ffff; font-size:14px;">Record: 0</p>
-            
-            <button class="btn-play-neon" onclick="prepararJuego()">JUGAR</button>
-
-            <div id="walletSection" style="margin-top:10px;">
-                <input type="text" id="walletInput" placeholder="Wallet BNB BP20 Metamask" style="display:none;">
-                <button id="btnWallet" class="btn" style="background:#f3ba2f; font-size:12px;" onclick="mostrarInputWallet()">AGREGAR WALLET BNB</button>
+            <h2 id="userNameTitle" style="color:#fff; margin:0; font-size: 24px;">USUARIO</h2>
+            <p id="menuBestScore" style="color:#00ffff; font-size:14px; margin: 5px 0;">Record: 0</p>
+            <center><button class="btn-play-neon" onclick="prepararJuego()">JUGAR</button></center>
+            <div id="walletSection">
+                <input type="text" id="walletInput" placeholder="Wallet BNB (Metamask)" style="display:none;">
+                <button id="btnWallet" class="btn" style="background:#f3ba2f; font-size:12px; height: 40px;" onclick="mostrarInputWallet()">AGREGAR WALLET</button>
             </div>
-
-            <button class="btn" style="background:#0088cc; color:white; font-size:12px;" onclick="compartirReferido()">🔗 INVITAR (Bono +150)</button>
-            <button class="btn" style="background:transparent; border:1px solid #00ffff; color:#00ffff;" onclick="verRanking()">🏆 RANKING</button>
-            <p id="msgInvitado" style="color:#ff4444; font-size:10px; display:none; margin-top:5px;">Modo Invitado: Puntos no válidos para Airdrop</p>
+            <button class="btn" style="background:#0088cc; color:white; font-size:12px;" onclick="compartirReferido()">🔗 INVITAR AMIGOS</button>
+            <button class="btn" style="background:transparent; border:1px solid #00ffff; color:#00ffff; font-size:12px;" onclick="verRanking()">🏆 RANKING GLOBAL</button>
+            <p id="msgInvitado" style="color:#ff4444; font-size:10px; display:none; margin-top:10px;">Modo Invitado Activo</p>
         </div>
     </div>
 
     <div id="rankingModal" class="screen" style="background:rgba(0,0,0,0.98);">
-        <div class="login-box" style="border-color:#00ffff; max-width:90%;">
+        <div class="login-box" style="border-color:#00ffff;">
             <h2 style="color:#00ffff;">TOP 10</h2>
-            <div id="rankingBody" style="font-size:14px; text-align:left; margin-bottom:15px;"></div>
-            <button class="btn" onclick="cerrarRanking()">CERRAR</button>
+            <div id="rankingBody" style="font-size:14px; text-align:left; max-height: 200px; overflow-y: auto;"></div>
+            <button class="btn" onclick="cerrarRanking()">VOLVER</button>
         </div>
     </div>
 
     <div id="gameOverScreen" class="screen" style="background:rgba(0,0,0,0.9);">
-        <h1>¡FIN DEL JUEGO!</h1>
+        <h1 style="color:red;">¡PERDISTE!</h1>
         <p style="font-size:24px;">Puntos: <span id="finalScore">0</span></p>
         <button class="btn" onclick="reiniciarRapido()">REINTENTAR</button>
         <button class="btn" style="background:#333; color:white;" onclick="volverAlMenu()">MENÚ</button>
     </div>
 
-    <div id="ui"><p style="font-size:20px; margin:0;">PUNTOS: <span id="score">0</span></p></div>
+    <div id="ui"><p style="font-size:22px; margin:0; text-shadow: 2px 2px #000;">PUNTOS: <span id="score">0</span></p></div>
     <canvas id="gameCanvas"></canvas>
 
     <script>
         const tg = window.Telegram.WebApp;
+        tg.expand();
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbypuD6MtKAUUuqW9VHtZIx_iRfsAT7Nf4-h-nVuE2mz8Au3l2oPM-n7zyGalhvPcxMOIg/exec";
         const BOT_USER = "venecotoken_bot";
-        
-        let userActual = localStorage.getItem('vUser') || "";
-        let esInvitado = false;
-        let walletActual = localStorage.getItem('vWallet') || "";
-        let recordGlobal = 0;
+
+        let userActual = "", esInvitado = false, walletActual = "", recordGlobal = 0;
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // IMÁGENES
+        const imgC1 = new Image(); imgC1.src = 'chiguire.png';
+        const imgC2 = new Image(); imgC2.src = 'chiguire2.png';
+        const imgC3 = new Image(); imgC3.src = 'chiguire3.png';
+        const imgC4 = new Image(); imgC4.src = 'chiguire4.png';
+        const imgB = new Image(); imgB.src = 'barril.png';
+        const imgCielo = new Image(); imgCielo.src = 'cielo.png';
+        const imgSuelo = new Image(); imgSuelo.src = 'suelo.png';
+        const imgD = new Image(); imgD.src = 'derrota.png';
+
+        // SONIDOS
+        const sndSalto = new Audio('salto.mp3');
+        const musFondo = new Audio('musicafondo.mp3'); musFondo.loop = true;
 
         window.onload = () => {
-            const tgUser = tg.initDataUnsafe?.user?.username || tg.initDataUnsafe?.user?.first_name || "Usuario";
-            document.getElementById("displayTgUser").innerText = "@" + tgUser;
+            const u = tg.initDataUnsafe?.user?.username || tg.initDataUnsafe?.user?.first_name || "Usuario";
+            document.getElementById("displayTgUser").innerText = "@" + u;
         };
 
         function clicPortada() { document.getElementById("introScreen").style.display = "none"; document.getElementById("loginMenu").style.display = "flex"; }
-        function volverAlLogin() { document.querySelectorAll('.screen').forEach(s => s.style.display="none"); document.getElementById("loginMenu").style.display = "flex"; }
+        function volverAlLogin() { document.getElementById("warnInvitado").style.display = "none"; document.getElementById("loginMenu").style.display = "flex"; }
         function verAdvertenciaInvitado() { document.getElementById("loginMenu").style.display = "none"; document.getElementById("warnInvitado").style.display = "flex"; }
-        
+
         function entrarInvitadoConfirmado() {
-            esInvitado = true;
-            userActual = "Invitado";
-            recordGlobal = 0;
+            esInvitado = true; userActual = "Invitado"; recordGlobal = 0;
             document.getElementById("warnInvitado").style.display = "none";
             document.getElementById("msgInvitado").style.display = "block";
             document.getElementById("walletSection").style.display = "none";
@@ -112,31 +121,30 @@
         }
 
         async function iniciarConTelegram() {
-            esInvitado = false;
             userActual = tg.initDataUnsafe?.user?.username || tg.initDataUnsafe?.user?.first_name || "Player";
             const ref = tg.initDataUnsafe?.start_param || "";
-            
-            document.getElementById("loginMenu").innerHTML = "Cargando perfil...";
+            document.getElementById("loginMenu").innerHTML = "Conectando...";
             try {
-                const res = await fetch(`${URL_SCRIPT}?action=getScore&user=${userActual}&ref=${ref}`);
-                const data = await res.json();
+                // Usamos JSONP o una técnica para evitar CORS
+                const resp = await fetch(`${URL_SCRIPT}?action=getScore&user=${userActual}&ref=${ref}`);
+                const data = await resp.json();
                 recordGlobal = data.score || 0;
                 walletActual = data.wallet || "";
-                localStorage.setItem('vUser', userActual);
-                localStorage.setItem('vWallet', walletActual);
                 document.getElementById("loginMenu").style.display = "none";
                 mostrarMenuPrincipal();
-            } catch(e) { alert("Error de conexión"); location.reload(); }
+            } catch(e) { 
+                alert("Error de conexión con Google Sheets. Intenta de nuevo."); 
+                location.reload(); 
+            }
         }
 
         function mostrarMenuPrincipal() {
             document.getElementById("mainMenu").style.display = "flex";
             document.getElementById("userNameTitle").innerText = userActual.toUpperCase();
             document.getElementById("menuBestScore").innerText = "Record: " + recordGlobal;
-            if(walletActual) {
+            if(walletActual && !esInvitado) {
                 document.getElementById("btnWallet").innerText = "WALLET REGISTRADA ✓";
                 document.getElementById("btnWallet").style.background = "#4CAF50";
-                document.getElementById("walletInput").style.display = "none";
             }
         }
 
@@ -144,76 +152,97 @@
             if(walletActual) return;
             const input = document.getElementById("walletInput");
             const btn = document.getElementById("btnWallet");
-            if(input.style.display === "none") {
-                input.style.display = "block";
-                btn.innerText = "CONFIRMAR AGREGAR";
-            } else {
+            if(input.style.display === "none") { input.style.display = "block"; btn.innerText = "GUARDAR"; }
+            else {
                 const val = input.value.trim();
                 if(/^0x[a-fA-F0-9]{40}$/.test(val)) {
                     walletActual = val;
-                    localStorage.setItem('vWallet', val);
-                    enviarDatosExcel(recordGlobal); // Guarda la wallet de una vez
-                    alert("Wallet agregada con éxito");
+                    enviarDatosExcel(recordGlobal);
+                    alert("Wallet Guardada!");
                     mostrarMenuPrincipal();
-                } else { alert("Wallet BNB inválida"); }
+                    input.style.display = "none";
+                } else { alert("Wallet inválida"); }
             }
         }
 
         function compartirReferido() {
             const link = `https://t.me/${BOT_USER}/play?startapp=${userActual}`;
-            const text = esInvitado ? "¡Mira este juego!" : "¡Juega y gana Airdrop con mi link!";
-            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`);
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=¡Juega Veneco Run conmigo!`);
         }
 
-        // --- LÓGICA DE JUEGO SIMPLIFICADA PARA EL EJEMPLO ---
-        let activo = false, score = 0;
+        // MOTOR DEL JUEGO
+        let activo = false, score = 0, vel = 10, obst = [], frame = 0, chig = { x: 50, y: 0, dy: 0, w: 90, h: 90 };
+        function ajustar() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; chig.suelo = canvas.height - 180; chig.y = chig.suelo; }
+
         function prepararJuego() {
             document.getElementById("mainMenu").style.display = "none";
-            document.getElementById("gameCanvas").style.display = "block";
-            document.getElementById("ui").style.display = "block";
-            iniciarJuego();
+            canvas.style.display = "block"; document.getElementById("ui").style.display = "block";
+            ajustar(); musFondo.play(); iniciar();
         }
 
-        function iniciarJuego() {
-            activo = true; score = 0;
-            // Aquí iría tu bucle de juego original...
-            // Por simplicidad, simularemos una muerte a los 5 segundos
-            setTimeout(() => { if(activo) finalizarJuego(); }, 5000);
+        function iniciar() { 
+            activo = true; score = 0; vel = 10; obst = []; chig.dy = 0; chig.y = chig.suelo;
+            requestAnimationFrame(bucle);
+            spawn();
         }
 
-        function finalizarJuego() {
-            activo = false;
-            document.getElementById("gameCanvas").style.display = "none";
-            document.getElementById("ui").style.display = "none";
+        function spawn() { if(activo) { obst.push({ x: canvas.width + 100, w: 60, h: 70 }); setTimeout(spawn, 1500 - (vel*20)); } }
+
+        function morir() { 
+            activo = false; musFondo.pause(); 
             document.getElementById("gameOverScreen").style.display = "flex";
             document.getElementById("finalScore").innerText = score;
-            if(!esInvitado && score > recordGlobal) {
-                recordGlobal = score;
-                enviarDatosExcel(score);
-            }
+            if(!esInvitado && score > recordGlobal) { recordGlobal = score; enviarDatosExcel(score); }
         }
+
+        function bucle() {
+            if(!activo) return;
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            // Fondo
+            ctx.drawImage(imgCielo, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(imgSuelo, 0, 0, canvas.width, canvas.height);
+            
+            // Chigüire
+            chig.dy += 1.5; chig.y += chig.dy;
+            if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
+            frame++;
+            let anim = (chig.y < chig.suelo - 5) ? imgC3 : [imgC1, imgC2, imgC3, imgC4][Math.floor(frame/6)%4];
+            ctx.drawImage(anim, chig.x, chig.y, chig.w, chig.h);
+
+            // Obstáculos
+            for(let i=obst.length-1; i>=0; i--) {
+                obst[i].x -= vel;
+                ctx.drawImage(imgB, obst[i].x, chig.suelo + 20, obst[i].w, obst[i].h);
+                if(chig.x < obst[i].x + 40 && chig.x + 60 > obst[i].x && chig.y + 70 > chig.suelo + 20) morir();
+                if(obst[i].x < -100) { obst.splice(i,1); score += 10; vel += 0.1; document.getElementById("score").innerText = score; }
+            }
+            requestAnimationFrame(bucle);
+        }
+
+        window.addEventListener("touchstart", () => { if(activo && chig.y >= chig.suelo - 5) { chig.dy = -22; sndSalto.play(); } });
 
         async function enviarDatosExcel(pts) {
             if(esInvitado) return;
-            const datos = { usuario: userActual, wallet: walletActual, puntaje: pts };
-            fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(datos) });
+            const d = { usuario: userActual, wallet: walletActual, puntaje: pts };
+            fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(d) });
         }
 
-        function volverAlMenu() { document.getElementById("gameOverScreen").style.display = "none"; mostrarMenuPrincipal(); }
-        function reiniciarRapido() { document.getElementById("gameOverScreen").style.display = "none"; prepararJuego(); }
+        function reiniciarRapido() { document.getElementById("gameOverScreen").style.display = "none"; iniciar(); }
+        function volverAlMenu() { location.reload(); }
 
         async function verRanking() {
-            document.getElementById("rankingModal").style.display = "flex";
+            const modal = document.getElementById("rankingModal");
+            modal.style.display = "flex";
             const body = document.getElementById("rankingBody");
             body.innerHTML = "Cargando...";
             try {
-                const res = await fetch(`${URL_SCRIPT}?action=getRanking`);
-                const data = await res.json();
-                body.innerHTML = data.map((u, i) => `<div>${i+1}. ${u.usuario} - ${u.puntaje} pts</div>`).join("");
-            } catch(e) { body.innerHTML = "Error al cargar."; }
+                const r = await fetch(`${URL_SCRIPT}?action=getRanking`);
+                const d = await r.json();
+                body.innerHTML = d.map((u, i) => `<div>${i+1}. ${u.usuario} - ${u.puntaje} pts</div>`).join("");
+            } catch(e) { body.innerHTML = "Error al conectar."; }
         }
         function cerrarRanking() { document.getElementById("rankingModal").style.display = "none"; }
-        function toggleMute() { /* Tu lógica de sonido */ }
+        function toggleMute() {}
     </script>
 </body>
 </html>
