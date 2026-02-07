@@ -66,7 +66,8 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         
-        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbweKlsJU4X8f81xIx8IgzPwOGoUYio9bM3IxrO3GkmcW7I9zZ4mIiBx8nnDgL7LgK1WQg/exec";
+        // TU NUEVA URL DE SCRIPT
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzGRb5TvGDeJei9ToxHpNOQiM8ZTqzHEdBqkxcJb12I6tIj01fTRRCIRR_ZLHmx938N/exec";
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
         const imgB = new Image(); imgB.src = 'barril.png';
@@ -81,9 +82,8 @@
 
         async function postData(body) {
             try {
-                // El modo no-cors es necesario para Google Apps Script
                 await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(body) });
-            } catch(e) { console.error("Error al enviar datos"); }
+            } catch(e) { console.error("Error envío"); }
         }
 
         function clicPortada() {
@@ -124,7 +124,7 @@
                     recordGlobalBD = data.puntos || 0;
                     document.getElementById("highScoreText").innerText = recordGlobalBD;
                     if(data.wallet) document.getElementById("walletInput").value = data.wallet;
-                }).catch(e => console.log("Sync..."));
+                }).catch(e => console.log("Sync error"));
             checkTaskStatus();
         }
 
@@ -140,7 +140,7 @@
                         <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
                             <span>${i+1}. ${u.usuario}</span> <b style="color:#ffcc00;">${u.puntaje} pts</b>
                         </div>`).join('');
-                } else { list.innerHTML = "No hay records aún."; }
+                } else { list.innerHTML = "No hay registros."; }
             } catch(e) { list.innerHTML = "Error al conectar."; }
         }
 
@@ -149,7 +149,7 @@
             if(localStorage.getItem('taskTGDone') !== 'true') {
                 postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: 100 });
                 localStorage.setItem('taskTGDone', 'true');
-                alert("+100 Puntos!");
+                alert("¡+100 Puntos añadidos!");
                 setTimeout(mostrarMenu, 1500);
             }
         }
@@ -166,7 +166,7 @@
             const w = document.getElementById("walletInput").value;
             if(!w) return;
             postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), walletAddress: w });
-            alert("Wallet Guardada!"); cerrarModales();
+            alert("Billetera guardada."); cerrarModales();
         }
 
         function prepararJuego() {
