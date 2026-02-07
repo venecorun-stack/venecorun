@@ -27,7 +27,7 @@
         #gameOverScreen { background: rgba(0,0,0,0.95); display: none; }
         
         .login-box { background: rgba(0,0,0,0.9); padding: 30px; border: 3px solid #ffcc00; border-radius: 20px; width: 85%; max-width: 350px; }
-        .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; width: 100%; text-decoration: none; display: inline-block; }
+        .btn { padding: 15px 35px; font-size: 18px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0px 5px 0px #b38f00; margin-top: 10px; width: 100%; text-decoration: none; display: inline-block; box-sizing: border-box; }
         .btn-tg { background: #24A1DE; color: white; box-shadow: 0px 5px 0px #1a719b; margin-top: 20px; }
         
         .share-btn { background: #000; color: white; border: 2px solid #555; padding: 12px 25px; border-radius: 50px; font-size: 16px; cursor: pointer; margin-top: 10px; font-weight: bold; }
@@ -55,8 +55,7 @@
             <p id="loginDesc" style="color:white; font-size:14px;">Inicia sesión con tu Telegram real para participar.</p>
             
             <div id="actionButtonContainer">
-                <button class="btn btn-tg" onclick="guardarYEntrarTelegram()">INICIAR CON TELEGRAM</button>
-            </div>
+                </div>
         </div>
     </div>
 
@@ -92,11 +91,11 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // --- IMÁGENES Y SONIDOS ---
         const imgC = new Image(); imgC.src = 'chiguire.png';
         const imgD = new Image(); imgD.src = 'derrota.png';
         const imgB = new Image(); imgB.src = 'barril.png';
         const imgF = new Image(); imgF.src = 'fondo.png';
+
         const sndClick = new Audio('click.mp3');
         const sndSalto = new Audio('salto.mp3');
         const sndPerder = new Audio('perder.mp3');
@@ -107,7 +106,8 @@
         let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
         let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
 
-        // --- LÓGICA DE DETECCIÓN WEB ---
+        function cerrarSesion() { localStorage.clear(); location.reload(); }
+
         function clicPortada() { 
             sndClick.play(); sndIntro.play(); 
             document.getElementById("introScreen").style.display = "none"; 
@@ -125,14 +125,18 @@
             const title = document.getElementById("loginTitle");
             const desc = document.getElementById("loginDesc");
 
-            // Si NO hay datos de usuario de Telegram, significa que está en la WEB normal
-            if (!tg || !tg.initDataUnsafe || !tg.initDataUnsafe.user) {
+            // Verificamos si hay una sesión real de Telegram Mini App
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                // ESTÁ EN TELEGRAM
+                container.innerHTML = `<button class="btn btn-tg" onclick="guardarYEntrarTelegram()">INICIAR CON TELEGRAM</button>`;
+            } else {
+                // ESTÁ EN LA WEB (BLOQUEAR)
                 title.innerText = "¡SÓLO EN TELEGRAM!";
-                desc.innerText = "Para participar por el AIRDROP y guardar tu récord, debes jugar desde nuestro Bot oficial.";
-                // Cambiamos el botón por un link directo al Bot
+                title.style.color = "#ff4444";
+                desc.innerText = "Para participar por el AIRDROP y guardar tu récord, debes abrir el juego desde nuestro Bot oficial.";
                 container.innerHTML = `
-                    <a href="https://t.me/TuBotNombre_bot" class="btn btn-tg">
-                        IR AL BOT DE TELEGRAM
+                    <a href="https://t.me/venecotoken_bot/venecorun" class="btn btn-tg">
+                        ABRIR EN TELEGRAM
                     </a>
                 `;
             }
@@ -140,7 +144,6 @@
 
         function guardarYEntrarTelegram() {
             sndClick.play();
-            // Esto solo se ejecuta si están DENTRO de Telegram
             if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 const u = tg.initDataUnsafe.user;
                 localStorage.setItem('venecoUser', u.username ? "@" + u.username : u.first_name);
@@ -150,7 +153,6 @@
             }
         }
 
-        // --- LÓGICA DEL JUEGO (IGUAL A LA ANTERIOR) ---
         function prepararJuego() { 
             sndIntro.pause(); musFondo.play(); 
             canvas.style.display = "block"; 
@@ -230,7 +232,6 @@
             ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
             requestAnimationFrame(bucle);
         }
-        function cerrarSesion() { localStorage.clear(); location.reload(); }
     </script>
 </body>
 </html>
