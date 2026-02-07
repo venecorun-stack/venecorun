@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Sistema 1000 Puntos</title>
+    <title>Veneco Run - Final System</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
@@ -67,6 +67,7 @@
         tg.expand();
         
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxS64u2ud1QZ2G93d0sQpD7T2iXemvRwVvBXcVw9dvgIjpAZROBsdqnjY1OPPAopSAh/exec";
+        const referidoPor = tg.initDataUnsafe.start_param || null;
 
         const imgC = new Image(); imgC.src = 'chiguire.png';
         const imgB = new Image(); imgB.src = 'barril.png';
@@ -80,23 +81,15 @@
         let chig = { x: 80, y: 0, w: 100, h: 100, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
 
         async function postData(body) {
-            try {
-                await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(body) });
-            } catch(e) { console.log("Error envío"); }
+            try { await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(body) }); } catch(e) {}
         }
 
         function clicPortada() {
             document.getElementById("introScreen").style.display = "none";
             if(localStorage.getItem('venecoUser')) mostrarMenu();
-            else {
-                document.getElementById("loginMenu").style.display = "flex";
-                const container = document.getElementById("loginContainer");
-                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                    container.innerHTML = `<button class="btn" onclick="loginTG()">ENTRAR CON TELEGRAM</button>`;
-                } else {
-                    container.innerHTML = `<a href="https://t.me/venecotoken_bot" class="btn">IR AL BOT DE TELEGRAM</a>`;
-                }
-            }
+            else document.getElementById("loginMenu").style.display = "flex";
+            const container = document.getElementById("loginContainer");
+            container.innerHTML = `<button class="btn" onclick="loginTG()">ENTRAR CON TELEGRAM</button>`;
         }
 
         function loginTG() {
@@ -104,7 +97,7 @@
             const userName = u.username ? "@" + u.username : u.first_name;
             localStorage.setItem('venecoUser', userName);
             localStorage.setItem('venecoTGID', u.id.toString());
-            postData({ accion: "puntos", usuario: userName, wallet: u.id.toString(), puntaje: 0 });
+            postData({ accion: "puntos", usuario: userName, wallet: u.id.toString(), puntaje: 0, invitadoPor: referidoPor });
             mostrarMenu();
         }
 
@@ -122,39 +115,24 @@
                 document.getElementById("currentScoreMenu").innerText = data.puntos || 0;
                 recordGlobalBD = data.puntos || 0;
                 document.getElementById("highScoreText").innerText = recordGlobalBD;
-                if(data.wallet) document.getElementById("walletInput").value = data.wallet;
-                if(data.bono === true) {
-                    marcarTareaCompletada();
-                }
-            } catch(e) { console.log("Cargando perfil..."); }
+                if(data.bono === true) marcarTareaCompletada();
+            } catch(e) {}
         }
 
         async function unirseTelegramTask() {
-            if(localStorage.getItem('taskTGDone') === 'true') return;
             window.open("https://t.me/venecoinu", "_blank");
-            
-            await postData({
-                accion: "bono_tg",
-                usuario: localStorage.getItem('venecoUser'),
-                wallet: localStorage.getItem('venecoTGID')
-            });
-            
+            await postData({ accion: "bono_tg", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID') });
             localStorage.setItem('taskTGDone', 'true');
-            alert("¡Felicidades! +1000 Puntos. Se actualizarán en segundos.");
+            alert("¡Bono solicitado! +1000 Puntos.");
             marcarTareaCompletada();
             setTimeout(mostrarMenu, 2000);
         }
 
         function marcarTareaCompletada() {
             const btn = document.getElementById('btnTGTask');
-            if(btn) {
-                btn.style.opacity = "0.5";
-                btn.onclick = null;
-                btn.innerHTML = "<b>✅ TAREA COMPLETADA</b><span>Ya recibiste 1000 pts</span>";
-            }
+            if(btn) { btn.style.opacity = "0.5"; btn.onclick = null; btn.innerHTML = "<b>✅ TAREA COMPLETADA</b>"; }
         }
 
-        // --- FUNCIONES DE JUEGO IGUALES ---
         async function cargarRanking() {
             abrirModal('modalRank');
             const list = document.getElementById("rankList");
@@ -162,15 +140,12 @@
             try {
                 const res = await fetch(URL_SCRIPT + "?tipo=getRanking&t=" + Date.now());
                 const data = await res.json();
-                if(data && Array.isArray(data)) {
-                    list.innerHTML = data.map((u, i) => `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;"><span>${i+1}. ${u.usuario}</span> <b style="color:#ffcc00;">${u.puntaje} pts</b></div>`).join('');
-                }
-            } catch(e) { list.innerHTML = "Error conexión"; }
+                if(data) list.innerHTML = data.map((u, i) => `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;"><span>${i+1}. ${u.usuario}</span> <b>${u.puntaje} pts</b></div>`).join('');
+            } catch(e) { list.innerHTML = "Error"; }
         }
 
         function guardarWallet() {
             const w = document.getElementById("walletInput").value;
-            if(!w) return;
             postData({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), walletAddress: w });
             alert("Wallet Guardada!"); cerrarModales();
         }
@@ -194,9 +169,8 @@
         function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; bucle(); spawn(); }
         function spawn() {
             if(!activo) return;
-            let esDoble = score >= 200 && Math.random() > 0.6;
-            obst.push({ x: window.innerWidth + 150, w: esDoble ? 130 : 75, h: 85 });
-            setTimeout(spawn, Math.max(1100 / (vel * 0.07), 750));
+            obst.push({ x: window.innerWidth + 150, w: 75, h: 85 });
+            setTimeout(spawn, Math.max(1100 / (vel * 0.07), 800));
         }
 
         function bucle() {
@@ -212,8 +186,8 @@
                     obst[i].x -= vel;
                     let bY = chig.suelo + (chig.h - obst[i].h);
                     ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
-                    if (chig.x + 30 < obst[i].x + obst[i].w - 30 && chig.x + chig.w - 30 > obst[i].x + 30 && chig.y + 30 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
-                    if(obst[i].x < -200) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.15; }
+                    if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 > obst[i].x + 35 && chig.y + 35 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
+                    if(obst[i].x < -200) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.12; }
                 }
             }
             ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
