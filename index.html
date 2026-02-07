@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Fase 4 Full Sync</title>
+    <title>Veneco Run - Fase 5 Master</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
-        #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 2000; background: #ff4444; color: white; border: 2px solid white; padding: 10px; border-radius: 10px; cursor: pointer; display: none; font-weight: bold; font-family: sans-serif; }
+        #logoutBtn { position: absolute; top: 15px; right: 15px; z-index: 2000; background: #ff4444; color: white; border: 2px solid white; padding: 10px; border-radius: 10px; cursor: pointer; display: none; font-weight: bold; }
         
         #introScreen, #loginMenu, #mainMenu, #gameOverScreen { 
             position: absolute; width: 100%; height: 100%; background-position: center; background-repeat: no-repeat; background-size: cover; 
@@ -19,28 +19,26 @@
         #gameOverScreen { background: rgba(0,0,0,0.95); display: none; }
 
         #userProfile { background: rgba(255, 204, 0, 0.15); border: 1px solid #ffcc00; padding: 12px 25px; border-radius: 20px; margin-bottom: 20px; min-width: 220px; }
-        #userNameDisplay { color: #ffcc00; font-size: 18px; display: block; margin-bottom: 5px; }
+        #userNameDisplay { color: #ffcc00; font-size: 18px; display: block; }
         #userPointsDisplay { font-size: 22px; color: #fff; text-shadow: 0 0 10px #ffcc00; font-weight: bold; }
 
-        .play-circle { 
-            width: 120px; height: 120px; background: #2ecc71; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 24px; color: white; cursor: pointer; 
-            box-shadow: 0 0 20px #2ecc71; border: 4px solid white; animation: pulse 2s infinite; margin-bottom: 20px; 
-        }
+        .play-circle { width: 120px; height: 120px; background: #2ecc71; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; cursor: pointer; box-shadow: 0 0 20px #2ecc71; border: 4px solid white; animation: pulse 2s infinite; margin-bottom: 20px; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
         
         .menu-opt { width: 85%; max-width: 320px; background: rgba(255,255,255,0.08); margin: 6px 0; padding: 12px; border-radius: 18px; cursor: pointer; border: 1px solid #444; }
         .menu-opt b { font-size: 16px; display: block; }
-        .menu-opt span { display: block; font-size: 10px; color: #aaa; font-family: sans-serif; }
+        .menu-opt span { display: block; font-size: 10px; color: #aaa; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; flex-direction: column; align-items: center; justify-content: center; }
         .modal-content { background: #1a1a1a; padding: 25px; border-radius: 25px; width: 85%; border: 2px solid #ffcc00; max-height: 75vh; overflow-y: auto; }
         
-        #ui { position: absolute; top: 20px; left: 20px; z-index: 800; display: none; pointer-events: none; }
-        canvas { display: none; }
+        #ui { position: absolute; top: 20px; left: 20px; z-index: 850; display: none; pointer-events: none; }
+        #levelContainer { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 800; text-align: center; width: 100%; display: none; pointer-events: none; }
+        #levelText { font-size: 45px; color: #ffcc00; font-weight: bold; text-shadow: 3px 3px 0 #000; margin: 0; opacity: 0.8; }
+        
+        canvas { display: none; image-rendering: -webkit-optimize-contrast; }
         .btn { padding: 15px; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 16px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; background: #333; color: white; text-align: center; font-size: 14px; box-sizing: border-box; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; background: #333; color: white; text-align: center; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -63,21 +61,26 @@
             <span id="userNameDisplay">Sincronizando...</span>
             <div id="userPointsDisplay">PUNTOS: <span id="currentScoreMenu">...</span></div>
         </div>
-
         <div class="play-circle" onclick="prepararJuego()">JUGAR</div>
-        
         <div class="menu-opt" onclick="cargarReferidos()"><b>👥 MIS REFERIDOS</b><span>Gana +150 pts</span></div>
         <div class="menu-opt" onclick="cargarRanking()"><b>🏆 RANKING TOP 10</b><span>Ver tabla</span></div>
-        <div class="menu-opt" onclick="abrirModal('modalAirdrop')"><b>💰 RECIBIR AIRDROP</b><span>Wallet BNB (BEP-20)</span></div>
+        <div class="menu-opt" onclick="abrirModal('modalAirdrop')"><b>💰 RECIBIR AIRDROP</b><span>Wallet BNB</span></div>
         <div class="menu-opt" id="btnTGTask" onclick="unirseTelegramTask()"><b>📢 CANAL TELEGRAM</b><span>Gana +100 puntos</span></div>
     </div>
 
-    <div id="modalRef" class="modal"><div class="modal-content"><h3>REFERIDOS</h3><input type="text" id="refLink" readonly><button class="btn" style="background:#24A1DE; color:white;" onclick="copiarRef()">COPIAR LINK</button><div id="listaRefs" style="margin:15px 0;"></div><button class="btn" onclick="cerrarModales()">VOLVER</button></div></div>
-    <div id="modalRank" class="modal"><div class="modal-content"><h3>TOP 10 LÍDERES</h3><div id="rankList"></div><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
-    <div id="modalAirdrop" class="modal"><div class="modal-content"><h3>REGISTRO WALLET</h3><p style="font-size:11px; color:#aaa;">Tu wallet guardada en el Excel:</p><input type="text" id="walletInput" placeholder="0x..."><button class="btn" onclick="guardarWallet()">GUARDAR WALLET</button><button class="btn" onclick="cerrarModales()">CERRAR</button></div></div>
+    <div id="ui">
+        <p style="font-size:35px; margin:0; text-shadow: 2px 2px 0 #000;">PUNTOS: <span id="score">0</span></p>
+    </div>
 
-    <div id="ui"><p style="font-size:25px; margin:0;">PUNTOS: <span id="score">0</span></p></div>
-    <div id="gameOverScreen"><h1>¡FIN DEL JUEGO!</h1><p>Puntaje: <span id="finalScore">0</span></p><button class="btn" onclick="location.reload()">VOLVER AL MENÚ</button></div>
+    <div id="levelContainer">
+        <p id="levelText">PRINCIPIANTE</p>
+    </div>
+
+    <div id="gameOverScreen">
+        <h1 style="color:#ff4444; font-size:40px;">¡FIN DEL JUEGO!</h1>
+        <p style="font-size:25px;">Puntos: <span id="finalScore">0</span></p>
+        <button class="btn" onclick="location.reload()">VOLVER AL MENÚ</button>
+    </div>
     
     <canvas id="gameCanvas"></canvas>
 
@@ -89,15 +92,21 @@
         const params = new URLSearchParams(window.location.search);
         const inviter = params.get('tgWebAppStartParam');
 
-        let activo = false, score = 0, vel = 11, obst = [];
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-
+        // Assets
         const imgC = new Image(); imgC.src = 'chiguire.png';
         const imgB = new Image(); imgB.src = 'barril.png';
         const imgF = new Image(); imgF.src = 'fondo.png';
+        const imgD = new Image(); imgD.src = 'derrota.png';
         const sndSalto = new Audio('salto.mp3');
 
+        // Variables de Juego Master
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        let activo = false, score = 0, vel = 11, obst = [], bgX = 0;
+        let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
+        let estela = [], nivelActual = "";
+
+        // Funciones de Menú
         function clicPortada() {
             document.getElementById("introScreen").style.display = "none";
             if(localStorage.getItem('venecoUser')) mostrarMenu();
@@ -126,105 +135,135 @@
             const uName = localStorage.getItem('venecoUser') || "Usuario";
             const myID = localStorage.getItem('venecoTGID') || "0";
             document.getElementById("userNameDisplay").innerText = uName;
-            document.getElementById("refLink").value = "https://t.me/venecotoken_bot/venecorun?startapp=" + myID;
 
-            // SINCRONIZACIÓN TOTAL: Traer puntos y wallet del Excel
             try {
                 const res = await fetch(URL_SCRIPT + "?tipo=getUserData&id=" + myID);
                 const data = await res.json();
-                
-                localStorage.setItem('venecoPoints', data.puntos);
                 document.getElementById("currentScoreMenu").innerText = data.puntos;
-                
-                if(data.wallet) {
-                    document.getElementById("walletInput").value = data.wallet;
-                    localStorage.setItem('venecoWallet', data.wallet);
-                }
             } catch (e) {
                 document.getElementById("currentScoreMenu").innerText = localStorage.getItem('venecoPoints') || "0";
-                document.getElementById("walletInput").value = localStorage.getItem('venecoWallet') || "";
-            }
-            
-            checkTaskStatus();
-        }
-
-        function unirseTelegramTask() {
-            if(localStorage.getItem('taskTGDone') === 'true') { return tg.showAlert("Ya reclamado."); }
-            window.open("https://t.me/venecoinu", "_blank");
-            setTimeout(() => {
-                localStorage.setItem('taskTGDone', 'true');
-                fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: 100 })});
-                mostrarMenu();
-                tg.showAlert("¡+100 puntos!");
-            }, 2000);
-        }
-
-        function checkTaskStatus() {
-            if(localStorage.getItem('taskTGDone') === 'true') {
-                const btn = document.getElementById('btnTGTask');
-                if(btn) { btn.style.opacity = "0.5"; btn.innerHTML = "<b>✅ TAREA COMPLETADA</b><span>Puntos sumados</span>"; }
             }
         }
 
-        function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
-        function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
-        function copiarRef() { const copyText = document.getElementById("refLink"); copyText.select(); document.execCommand("copy"); tg.showAlert("¡Link copiado!"); }
-
-        async function cargarRanking() {
-            abrirModal('modalRank');
-            document.getElementById("rankList").innerHTML = "Cargando...";
-            const res = await fetch(URL_SCRIPT + "?tipo=ranking");
-            const data = await res.json();
-            document.getElementById("rankList").innerHTML = data.map((u, i) => `<b>${i+1}.</b> ${u.nombre} <span style="float:right; color:#ffcc00;">${u.puntos}</span>`).join('<br>');
-        }
-
-        async function cargarReferidos() {
-            abrirModal('modalRef');
-            document.getElementById("listaRefs").innerHTML = "Cargando...";
-            const res = await fetch(URL_SCRIPT + "?tipo=misReferidos&id=" + localStorage.getItem('venecoTGID'));
-            const data = await res.json();
-            document.getElementById("listaRefs").innerHTML = data.length === 0 ? "Sin referidos" : data.map(n => `✅ ${n}`).join('<br>');
-        }
-
-        function guardarWallet() {
-            const w = document.getElementById("walletInput").value;
-            localStorage.setItem('venecoWallet', w);
-            fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "wallet", wallet: localStorage.getItem('venecoTGID'), direccion: w })});
-            tg.showAlert("Wallet Guardada"); 
-            cerrarModales();
-        }
-
-        function cerrarSesion() { localStorage.clear(); location.reload(); }
-
-        let chig = { x: 50, y: 0, w: 90, h: 90, dy: 0, g: 1.6, salto: -21, suelo: 0 };
+        // --- MOTOR DE JUEGO MASTER (Fase 5) ---
         function prepararJuego() {
             document.getElementById("mainMenu").style.display = "none";
             document.getElementById("logoutBtn").style.display = "none";
-            canvas.style.display = "block"; document.getElementById("ui").style.display = "block";
-            ajustar(); iniciar();
+            canvas.style.display = "block"; 
+            document.getElementById("ui").style.display = "block";
+            document.getElementById("levelContainer").style.display = "block";
+            ajustar(); 
+            iniciar();
         }
-        function ajustar() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; chig.suelo = window.innerHeight - 150; chig.y = chig.suelo; }
-        function iniciar() { activo = true; score = 0; vel = 10; obst = []; bucle(); spawn(); }
-        function spawn() { if(activo) { obst.push({ x: canvas.width + 100, w: 70, h: 70 }); setTimeout(spawn, 1500); } }
-        function bucle() {
+
+        function ajustar() {
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+            ctx.scale(dpr, dpr);
+            chig.suelo = window.innerHeight - 220;
+            chig.y = chig.suelo;
+            chig.x = (window.innerWidth < 600) ? 30 : 100;
+        }
+
+        function iniciar() {
+            activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; estela = [];
+            bucle(); 
+            spawn();
+        }
+
+        function spawn() {
             if(!activo) return;
-            ctx.clearRect(0,0,canvas.width, canvas.height); ctx.drawImage(imgF, 0, 0, canvas.width, canvas.height);
-            chig.dy += chig.g; chig.y += chig.dy;
-            if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
-            ctx.drawImage(imgC, chig.x, chig.y, chig.w, chig.h);
-            for(let i = obst.length - 1; i >= 0; i--) {
-                obst[i].x -= vel; ctx.drawImage(imgB, obst[i].x, chig.suelo + 20, obst[i].w, obst[i].h);
-                if(chig.x + 20 < obst[i].x + obst[i].w - 20 && chig.x + chig.w - 20 > obst[i].x + 20 && chig.y + 20 < chig.suelo + 90) morir();
-                if(obst[i].x < -100) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.1; }
+            let esDoble = score >= 200 && Math.random() > 0.6;
+            obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90, doble: esDoble });
+            let baseFreq = 1100 / (vel * 0.07);
+            let delay = Math.max(baseFreq, esDoble ? 1100 : 700);
+            setTimeout(spawn, delay);
+        }
+
+        function bucle() {
+            if(!activo && !chig.vivo) return;
+            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            
+            // Fondo Parallax
+            bgX -= vel * 0.4;
+            if(bgX <= -window.innerWidth) bgX = 0;
+            ctx.drawImage(imgF, bgX, 0, window.innerWidth, window.innerHeight);
+            ctx.drawImage(imgF, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
+
+            // Sombra
+            let shadowOpacity = Math.max(0.1, 0.5 - (chig.suelo - chig.y) / 400);
+            ctx.fillStyle = `rgba(0,0,0,${shadowOpacity})`;
+            ctx.beginPath();
+            ctx.ellipse(chig.x + 55, chig.suelo + 105, 40, 15, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            if(activo) {
+                chig.dy += chig.g; chig.y += chig.dy;
+                if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
+
+                // Estela Nivel Arepa
+                if(score >= 1000) {
+                    estela.push({x: chig.x, y: chig.y, o: 0.4});
+                    if(estela.length > 5) estela.shift();
+                }
+                estela.forEach((p, i) => {
+                    ctx.globalAlpha = p.o * (i / estela.length);
+                    ctx.drawImage(imgC, p.x - (estela.length - i) * 10, p.y, chig.w, chig.h);
+                    ctx.globalAlpha = 1;
+                });
+
+                // Niveles
+                let nuevoLvl = "PRINCIPIANTE";
+                if(score >= 2000) nuevoLvl = "NIVEL CAOS";
+                else if(score >= 1000) nuevoLvl = "NIVEL AREPA";
+                else if(score >= 500) nuevoLvl = "NIVEL MANGO";
+                else if(score >= 200) nuevoLvl = "NIVEL GUACAMAYA";
+
+                if (nuevoLvl !== nivelActual) {
+                    nivelActual = nuevoLvl;
+                    document.getElementById("levelText").innerText = nivelActual;
+                }
+
+                // Obstáculos y Colisión
+                for(let i = obst.length - 1; i >= 0; i--) {
+                    obst[i].x -= vel;
+                    let bY = chig.suelo + (chig.h - obst[i].h);
+                    ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
+                    
+                    if (chig.x + 35 < obst[i].x + obst[i].w - 35 && 
+                        chig.x + chig.w - 35 > obst[i].x + 35 && 
+                        chig.y + 35 < bY + obst[i].h && 
+                        chig.y + chig.h - 15 > bY) morir();
+
+                    if(obst[i].x < -200) { 
+                        obst.splice(i, 1); score += 10; 
+                        document.getElementById("score").innerText = score; 
+                        vel += 0.15;
+                    }
+                }
             }
+            ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
             requestAnimationFrame(bucle);
         }
+
         function morir() {
-            activo = false;
+            activo = false; chig.vivo = false;
             fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "puntos", usuario: localStorage.getItem('venecoUser'), wallet: localStorage.getItem('venecoTGID'), puntaje: score })});
-            document.getElementById("finalScore").innerText = score; document.getElementById("gameOverScreen").style.display = "flex";
+            document.getElementById("finalScore").innerText = score; 
+            document.getElementById("gameOverScreen").style.display = "flex";
+            document.getElementById("levelContainer").style.display = "none";
         }
-        window.addEventListener("touchstart", () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.play(); } });
+
+        const saltar = () => { if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; sndSalto.play(); } };
+        window.addEventListener("touchstart", saltar);
+        window.addEventListener("mousedown", saltar);
+        
+        function cerrarSesion() { localStorage.clear(); location.reload(); }
+        function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
+        function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
     </script>
 </body>
 </html>
