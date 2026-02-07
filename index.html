@@ -16,10 +16,7 @@
         .btn { padding: 15px 25px; font-size: 16px; font-weight: bold; background: #ffcc00; color: #000; border: none; border-radius: 50px; cursor: pointer; margin-top: 15px; width: 100%; box-shadow: 0px 4px 0px #b38f00; }
         .btn-tg { background: #0088cc; color: white; box-shadow: 0px 4px 0px #005580; display: none; }
         .btn-fun { background: #28a745; color: white; box-shadow: 0px 4px 0px #1e7e34; }
-        .btn-continue { background: #00ff00; color: #000; }
-        .btn-back { background: #ff4444; color: #fff; margin-top: 10px; }
-        canvas { display: none; width: 100vw; height: 100vh; }
-        /* Estilos UI */
+        canvas { display: none; width: 100vw; height: 100vh; image-rendering: -webkit-optimize-contrast; }
         #ui { position: absolute; top: 10px; left: 10px; z-index: 850; display: none; pointer-events: none; }
         #levelContainer { position: absolute; top: 15px; right: 80px; z-index: 800; display: none; }
     </style>
@@ -45,8 +42,8 @@
         <div class="login-box">
             <h2 style="color:#ff4444; margin-top:0;">¡ATENCIÓN!</h2>
             <p>En esta modalidad <b>no recibirá airdrop</b> ni premios oficiales.</p>
-            <button class="btn btn-continue" onclick="entrarComoInvitado()">CONTINUAR</button>
-            <button class="btn btn-back" onclick="ocultarAdvertencia()">VOLVER ATRÁS</button>
+            <button class="btn" style="background:#00ff00;" onclick="entrarComoInvitado()">CONTINUAR</button>
+            <button class="btn" style="background:#ff4444; color:white;" onclick="ocultarAdvertencia()">VOLVER ATRÁS</button>
         </div>
     </div>
 
@@ -54,17 +51,18 @@
         <div class="login-box" style="border-color: #00ffff;">
             <p style="color:#aaa; font-size: 11px; margin: 0;">PLAYER PROFILE</p>
             <h2 id="userNameTitle" style="color:#fff; margin: 5px 0 10px 0; font-size: 26px;">USUARIO</h2>
-            <button class="btn" style="background:#ffcc00;" onclick="prepararJuego()">JUGAR</button>
+            <button class="btn" style="background:#ffcc00; height:80px; border-radius:40px;" onclick="prepararJuego()">JUGAR</button>
             <p id="menuBestScore" style="color: #00ffff;">Record: 0 pts</p>
             <button class="btn" style="background:transparent; border:1px solid #00ffff; color:#00ffff;" onclick="verRanking()">🏆 RANKING</button>
-            <button class="btn" style="background:transparent; color:#ff4444; border:1px solid #ff4444;" onclick="cerrarSesion()">CERRAR SESIÓN ✖</button>
+            <button class="btn" style="background:transparent; color:#ff4444; border:1px solid #ff4444;" onclick="cerrarSesion()">SALIR ✖</button>
         </div>
     </div>
 
-    <div id="rankingModal"><div class="login-box"><h2 style="color:#00ffff;">TOP 10</h2><div id="loadingRank"></div><table id="rankingTable" style="width:100%"><tbody id="rankingBody"></tbody></table><button class="btn" onclick="cerrarRanking()">VOLVER</button></div></div>
-    <div id="ui"><p>PUNTOS: <span id="score">0</span></p><p>RECORD: <span id="highScoreText">0</span></p></div>
-    <div id="levelContainer"><p id="levelText">NIVEL AREPA</p></div>
-    <div id="gameOverScreen"><h1>¡FIN DEL JUEGO!</h1><p>Puntos: <span id="finalScore">0</span></p><button class="btn" onclick="reiniciarRapido()">REINTENTAR</button><button class="btn" onclick="volverAlMenu()">MENÚ</button></div>
+    <div id="rankingModal"><div class="login-box"><h2 style="color:#00ffff;">TOP 10</h2><div id="loadingRank"></div><table style="width:100%"><tbody id="rankingBody"></tbody></table><button class="btn" onclick="cerrarRanking()">VOLVER</button></div></div>
+    <div id="ui"><p style="font-size:20px;">PUNTOS: <span id="score">0</span></p><p style="color:#ffcc00;">RECORD: <span id="highScoreText">0</span></p></div>
+    <div id="levelContainer"><p id="levelText" style="color:#ffcc00; font-weight:bold;">NIVEL AREPA</p></div>
+    <div id="gameOverScreen"><h1>¡FIN DEL JUEGO!</h1><p style="font-size:24px;">Puntos: <span id="finalScore">0</span></p><button class="btn" onclick="reiniciarRapido()">REINTENTAR</button><button class="btn" onclick="volverAlMenu()">VOLVER AL MENÚ</button></div>
+    
     <canvas id="gameCanvas"></canvas>
 
     <script>
@@ -73,9 +71,27 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const URL_SCRIPT = "TU_URL_DE_APPS_SCRIPT_AQUI";
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzwiIvzWHqx1TL8xkLDmbYaR7e6H0LmR3W0RToxSm4nrG35XiOMQLPzHEB3Ht7pv2FjfQ/exec";
 
-        // Lógica de Inicio y Menú
+        // IMÁGENES
+        const imgC1 = new Image(); imgC1.src = 'chiguire.png';
+        const imgC2 = new Image(); imgC2.src = 'chiguire2.png';
+        const imgC3 = new Image(); imgC3.src = 'chiguire3.png';
+        const imgC4 = new Image(); imgC4.src = 'chiguire4.png';
+        const imgD = new Image(); imgD.src = 'derrota.png';
+        const imgB = new Image(); imgB.src = 'barril.png';
+        const imgCielo = new Image(); imgCielo.src = 'cielo.png';
+        const imgSuelo = new Image(); imgSuelo.src = 'suelo.png';
+
+        const sndClick = new Audio('click.mp3'); const sndSalto = new Audio('salto.mp3'); 
+        const sndPerder = new Audio('perder.mp3'); const musFondo = new Audio('musicafondo.mp3'); musFondo.loop = true;
+        const sndIntro = new Audio('intro.mp3'); sndIntro.loop = true;
+
+        let activo = false, score = 0, vel = 11, obst = [], bgX_cielo = 0, bgX_suelo = 0, frameAnim = 0;
+        let recordGlobal = localStorage.getItem('venecoRunHighScore') || 0;
+        let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
+        let estela = [], ultimoTiempo = 0, muted = false;
+
         window.onload = () => {
             const user = tg.initDataUnsafe?.user?.username || tg.initDataUnsafe?.user?.first_name;
             if (user) {
@@ -100,7 +116,7 @@
                 localStorage.setItem('venecoRunHighScore', recordGlobal);
                 document.getElementById("loginMenu").style.display = "none";
                 mostrarMenuPrincipal();
-            } catch (e) { alert("Error de conexión. Revisa la URL de tu Script."); }
+            } catch (e) { alert("Error de conexión. Verifica que tu App Script esté publicado para 'Cualquiera'."); }
             document.getElementById("loadingLogin").style.display = "none";
         }
 
@@ -113,15 +129,58 @@
             mostrarMenuPrincipal();
         }
 
-        // --- EL RESTO DEL CÓDIGO (Imágenes, Sonidos, Bucle de Juego) SE MANTIENE IGUAL ---
-        // (Por brevedad, asegúrate de mantener tus funciones: clicPortada, mostrarMenuPrincipal, prepararJuego, ajustar, iniciar, bucle, spawn, morir, etc.)
-        
-        function clicPortada() { document.getElementById("introScreen").style.display = "none"; if(localStorage.getItem('venecoUser')) mostrarMenuPrincipal(); else document.getElementById("loginMenu").style.display = "flex"; }
+        // --- MOTOR DE JUEGO ---
+        function toggleMute(e) { if(e) e.stopPropagation(); muted = !muted; document.getElementById("muteBtn").innerText = muted ? "🔇" : "🔊"; [sndClick, sndSalto, sndPerder, musFondo, sndIntro].forEach(s => { s.muted = muted; if(muted) s.pause(); }); if(!muted) { if(activo) musFondo.play(); else if(document.getElementById("introScreen").style.display === "none") sndIntro.play(); } }
+        function clicPortada() { if(!muted) { sndClick.play(); sndIntro.play(); } document.getElementById("introScreen").style.display = "none"; if(localStorage.getItem('venecoUser')) mostrarMenuPrincipal(); else document.getElementById("loginMenu").style.display = "flex"; }
         function mostrarMenuPrincipal() { document.getElementById("mainMenu").style.display = "flex"; document.getElementById("userNameTitle").innerText = localStorage.getItem('venecoUser').toUpperCase(); document.getElementById("menuBestScore").innerText = "Record: " + (localStorage.getItem('venecoRunHighScore') || 0); }
+        function prepararJuego() { document.getElementById("mainMenu").style.display = "none"; document.getElementById("ui").style.display = "block"; document.getElementById("levelContainer").style.display = "block"; canvas.style.display = "block"; ajustar(); sndIntro.pause(); musFondo.currentTime = 0; if(!muted) musFondo.play(); document.getElementById("highScoreText").innerText = recordGlobal; iniciar(); }
+        function ajustar() { const dpr = window.devicePixelRatio || 1; canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr; canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px'; ctx.scale(dpr, dpr); chig.suelo = window.innerHeight - 220; chig.y = chig.suelo; chig.x = window.innerWidth < 600 ? 30 : 100; }
+        function iniciar() { activo = true; chig.vivo = true; score = 0; vel = 11; obst = []; frameAnim = 0; ultimoTiempo = performance.now(); requestAnimationFrame(bucle); setTimeout(spawn, 2000); }
+        async function enviarDatosExcel(p) { if(localStorage.getItem('venecoUser') === 'Invitado') return; try { fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ usuario: localStorage.getItem('venecoUser'), puntaje: p }) }); } catch (e) {} }
+        function morir() { activo = false; chig.vivo = false; musFondo.pause(); if(!muted) sndPerder.play(); if(score > recordGlobal) { recordGlobal = score; localStorage.setItem('venecoRunHighScore', recordGlobal); } enviarDatosExcel(recordGlobal); document.getElementById("finalScore").innerText = score; document.getElementById("gameOverScreen").style.display = "flex"; }
+        function reiniciarRapido() { document.getElementById("gameOverScreen").style.display = "none"; musFondo.currentTime = 0; if(!muted) musFondo.play(); iniciar(); }
+        function volverAlMenu() { document.getElementById("gameOverScreen").style.display = "none"; canvas.style.display = "none"; document.getElementById("ui").style.display = "none"; document.getElementById("levelContainer").style.display = "none"; if(!muted) sndIntro.play(); mostrarMenuPrincipal(); }
         function cerrarSesion() { localStorage.clear(); location.reload(); }
+
+        const saltar = (e) => { if(e && e.target.id === 'muteBtn') return; if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; if(!muted) { sndSalto.currentTime = 0; sndSalto.play(); } } };
+        window.addEventListener("mousedown", saltar); window.addEventListener("touchstart", (e) => { if(activo && e.target.id !== 'muteBtn') { e.preventDefault(); saltar(); } }, {passive: false});
+
+        function spawn() { if(!activo) return; let esDoble = score >= 200 && Math.random() > 0.6; obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90 }); let delay = Math.max(1100 / (vel * 0.07), 700); setTimeout(spawn, delay); }
+
+        function bucle(t) {
+            if(!activo && !chig.vivo) return;
+            if (t - ultimoTiempo >= 16) {
+                ultimoTiempo = t;
+                ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                if (imgCielo.complete) { bgX_cielo -= vel * 0.1; if(bgX_cielo <= -window.innerWidth) bgX_cielo = 0; ctx.drawImage(imgCielo, bgX_cielo, 0, window.innerWidth, window.innerHeight); ctx.drawImage(imgCielo, bgX_cielo + window.innerWidth, 0, window.innerWidth, window.innerHeight); }
+                if (imgSuelo.complete) { bgX_suelo -= vel; if(bgX_suelo <= -window.innerWidth) bgX_suelo = 0; ctx.drawImage(imgSuelo, bgX_suelo, 0, window.innerWidth, window.innerHeight); ctx.drawImage(imgSuelo, bgX_suelo + window.innerWidth, 0, window.innerWidth, window.innerHeight); }
+                if(activo) {
+                    chig.dy += chig.g; chig.y += chig.dy;
+                    if(chig.y > chig.suelo) { chig.y = chig.suelo; chig.dy = 0; }
+                    frameAnim++;
+                    let imgActual = (chig.y < chig.suelo - 10) ? imgC3 : [imgC1, imgC2, imgC3, imgC4][Math.floor(frameAnim / 6) % 4];
+                    for(let i = obst.length - 1; i >= 0; i--) {
+                        obst[i].x -= vel;
+                        ctx.drawImage(imgB, obst[i].x, chig.suelo + (chig.h - 90), obst[i].w, 90);
+                        if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 > obst[i].x + 35 && chig.y + 35 < chig.suelo + chig.h) morir();
+                        if(obst[i].x < -200) { obst.splice(i, 1); score += 10; document.getElementById("score").innerText = score; vel += 0.1; }
+                    }
+                    ctx.drawImage(imgActual, chig.x, chig.y, chig.w, chig.h);
+                } else { ctx.drawImage(imgD, chig.x, chig.y, chig.w, chig.h); }
+            }
+            requestAnimationFrame(bucle);
+        }
+
+        async function verRanking() { 
+            document.getElementById("rankingModal").style.display = "flex"; 
+            document.getElementById("rankingBody").innerHTML = ""; 
+            try { 
+                const res = await fetch(URL_SCRIPT + "?action=getRanking"); 
+                const data = await res.json(); 
+                data.forEach((p, i) => { document.getElementById("rankingBody").innerHTML += `<tr><td>${i+1}</td><td>${p.usuario}</td><td>${p.puntaje}</td></tr>`; }); 
+            } catch (e) { } 
+        }
         function cerrarRanking() { document.getElementById("rankingModal").style.display = "none"; }
-        async function verRanking() { /* Tu función de ranking original */ }
-        // ... (Agrega aquí todo tu motor de juego original) ...
     </script>
 </body>
 </html>
