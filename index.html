@@ -3,38 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego Veneco</title>
+    <title>Veneco Runner</title>
     <style>
-        /* Estilos básicos para los botones y el menú */
-        body { font-family: sans-serif; background: #000; color: white; text-align: center; margin: 0; overflow: hidden; }
+        body { font-family: 'Arial', sans-serif; background: #000; color: white; text-align: center; margin: 0; overflow: hidden; }
         #mainMenu { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 15px; }
-        button { padding: 15px 25px; font-size: 18px; cursor: pointer; background: #24a1de; color: white; border: none; border-radius: 8px; font-weight: bold; }
+        button { padding: 15px 25px; font-size: 18px; cursor: pointer; background: #f1c40f; color: #000; border: none; border-radius: 8px; font-weight: bold; width: 250px; }
+        button:hover { background: #d4ac0d; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; flex-direction: column; z-index: 100; }
-        canvas { display: none; }
+        canvas { display: none; background: #222; }
+        #ui { display:none; position: fixed; top: 10px; left: 10px; font-size: 24px; font-weight: bold; color: gold; }
     </style>
 </head>
 <body>
 
     <div id="mainMenu">
-        <h1>VENECO RUNNER</h1>
+        <h1 style="color: #f1c40f;">VENECO RUNNER</h1>
         <button onclick="prepararJuego()">JUGAR</button>
         <button onclick="cargarRanking()">RANKING</button>
         
-        <button id="btnTelegram" onclick="unirseTelegram()" style="background-color: #0088cc;">
-            ÚNETE AL CANAL (+1000 Pts)
+        <button id="btnTelegram" onclick="unirseTelegram()" style="background-color: #0088cc; color: white;">
+            CANAL TELEGRAM (+1000 pts)
         </button>
 
-        <button id="logoutBtn" onclick="cerrarSesion()" style="background-color: #900;">CERRAR SESIÓN</button>
+        <button onclick="cerrarSesion()" style="background-color: #c0392b; color: white;">CERRAR SESIÓN</button>
     </div>
 
-    <div id="ui" style="display:none; position: fixed; top: 10px; left: 10px; font-size: 24px;">
-        Puntos: <span id="score">0</span>
-    </div>
+    <div id="ui">Puntos: <span id="score">0</span></div>
 
     <div id="gameOverScreen" class="modal">
-        <h2>GAME OVER</h2>
-        <p>Puntuación: <span id="finalScore">0</span></p>
-        <button onclick="location.reload()">REINTENTAR</button>
+        <h2 style="color: #e74c3c;">¡TE HAN ATRAPADO!</h2>
+        <p>Puntuación Final: <span id="finalScore">0</span></p>
+        <button onclick="location.reload()">VOLVER AL MENÚ</button>
     </div>
 
     <div id="modalRank" class="modal">
@@ -46,31 +45,29 @@
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        const URL_SCRIPT = "TU_URL_DE_GOOGLE_SCRIPT_AQUI"; // REEMPLAZA ESTO
+        // TU URL DE GOOGLE SCRIPT
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzOC2xrPJIAUHqoBeyUIzftBinD-xCZgVj7qTudPHN887dZ4o9loW-tEto_IVbdi-SI/exec";
+        
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // Variables de juego
         let score = 0, activo = false, vel = 11, obst = [], bgX = 0;
         let imgF = new Image(), imgB = new Image(), imgC = new Image(), imgD = new Image();
-        let sndSalto = new Audio(); // Añade tu ruta de sonido si tienes
-        
         let chig = { x: 50, y: 0, w: 80, h: 80, dy: 0, g: 0.8, salto: -15, suelo: 0, vivo: true };
 
-        // --- FUNCIÓN NUEVA: UNIRSE A TELEGRAM ---
+        // --- FUNCIÓN PARA SUMAR 1000 PUNTOS POR TELEGRAM ---
         async function unirseTelegram() {
-            // 1. Verificar si ya reclamó los puntos
+            // Reemplaza con el link real de tu canal
+            const linkTelegram = "https://t.me/TU_CANAL_AQUI"; 
+            window.open(linkTelegram, "_blank");
+
+            // Evitar que reclamen muchas veces en la misma sesión
             if(localStorage.getItem('tgReclamado') === 'true') {
-                window.open("https://t.me/TU_CANAL", "_blank"); // Cambia por tu link
-                alert("Ya reclamaste tus 1000 puntos anteriormente.");
+                alert("Ya has reclamado estos puntos.");
                 return;
             }
 
-            // 2. Abrir Telegram
-            window.open("https://t.me/TU_CANAL", "_blank"); // Cambia por tu link
-
-            // 3. Datos para el servidor
-            const datos = {
+            const payload = {
                 accion: "puntos",
                 usuario: localStorage.getItem('venecoUser'),
                 wallet: localStorage.getItem('venecoTGID'),
@@ -78,29 +75,34 @@
             };
 
             try {
-                const res = await postData(datos);
-                localStorage.setItem('tgReclamado', 'true'); // Guardar que ya reclamó
-                document.getElementById("btnTelegram").style.opacity = "0.5";
-                document.getElementById("btnTelegram").innerText = "CANAL UNIDO";
-                alert("¡Te has unido! Se sumaron 1000 puntos.");
+                // Usamos fetch con modo no-cors para evitar bloqueos del navegador si el script no tiene CORS
+                await fetch(URL_SCRIPT, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                
+                localStorage.setItem('tgReclamado', 'true');
+                document.getElementById("btnTelegram").innerText = "¡RECOMPENSA RECLAMADA!";
+                document.getElementById("btnTelegram").style.background = "#555";
+                alert("¡Se han sumado 1000 puntos a tu cuenta!");
             } catch (e) {
-                console.error(e);
-                alert("Error al conectar con el servidor.");
+                console.log("Error al sumar puntos:", e);
             }
         }
 
-        // --- FUNCIÓN POSTDATA (Necesaria para enviar info) ---
+        // --- FUNCIONES DEL JUEGO ---
         async function postData(data) {
-            const response = await fetch(URL_SCRIPT, {
-                method: "POST",
-                mode: "no-cors", // Dependiendo de tu configuración de Google Script
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            });
-            return response;
+            try {
+                await fetch(URL_SCRIPT, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+            } catch(e) { console.error("Error en postData", e); }
         }
-
-        // --- LÓGICA DE TU CÓDIGO ORIGINAL ---
 
         async function cargarRanking() {
             abrirModal('modalRank');
@@ -142,9 +144,8 @@
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
             bgX -= vel * 0.4; if(bgX <= -window.innerWidth) bgX = 0;
             
-            // Dibujar Fondos (imgF)
-            ctx.drawImage(imgF, bgX, 0, window.innerWidth, window.innerHeight);
-            ctx.drawImage(imgF, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
+            // Dibujar Fondos (Si tienes imgF)
+            if(imgF.src) ctx.drawImage(imgF, bgX, 0, window.innerWidth, window.innerHeight);
 
             if(activo) {
                 chig.dy += chig.g; chig.y += chig.dy;
@@ -152,12 +153,10 @@
                 for(let i = obst.length - 1; i >= 0; i--) {
                     obst[i].x -= vel;
                     let bY = chig.suelo + (chig.h - obst[i].h);
-                    ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
+                    if(imgB.src) ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
                     
-                    // Colisión
                     if (chig.x + 35 < obst[i].x + obst[i].w - 35 && chig.x + chig.w - 35 > obst[i].x + 35 && chig.y + 35 < bY + obst[i].h && chig.y + chig.h - 15 > bY) morir();
                     
-                    // Sumar puntos al pasar obstáculo
                     if(obst[i].x < -200) { 
                         obst.splice(i, 1); 
                         score += 10; 
@@ -166,7 +165,7 @@
                     }
                 }
             }
-            ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
+            if(imgC.src) ctx.drawImage(chig.vivo ? imgC : imgD, chig.x, chig.y, chig.w, chig.h);
             requestAnimationFrame(bucle);
         }
 
@@ -179,7 +178,7 @@
 
         const saltar = (e) => { 
             if(e && e.type === "touchstart") e.preventDefault(); 
-            if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; if(sndSalto.src) sndSalto.play(); } 
+            if(activo && chig.y >= chig.suelo - 10) { chig.dy = chig.salto; } 
         };
         window.addEventListener("touchstart", saltar, {passive: false}); 
         window.addEventListener("mousedown", saltar);
