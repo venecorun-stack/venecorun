@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veneco Run - Fase 5 Fix Final</title>
+    <title>Veneco Run - Fase 5 Corregida</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
@@ -99,7 +99,6 @@
         let chig = { x: 80, y: 0, w: 100, h: 100, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true };
         let nivelActual = "";
 
-        // 1) REPARACIÓN: LINK DEL BOT CORRECTO
         function clicPortada() {
             document.getElementById("introScreen").style.display = "none";
             if(localStorage.getItem('venecoUser')) mostrarMenu();
@@ -133,26 +132,29 @@
             try {
                 const res = await fetch(URL_SCRIPT + "?tipo=getUserData&id=" + myID);
                 const data = await res.json();
-                document.getElementById("currentScoreMenu").innerText = data.puntos;
-                recordGlobalBD = data.puntos;
+                document.getElementById("currentScoreMenu").innerText = data.puntos || 0;
+                recordGlobalBD = data.puntos || 0;
                 document.getElementById("highScoreText").innerText = recordGlobalBD;
                 if(data.wallet) document.getElementById("walletInput").value = data.wallet;
             } catch (e) { document.getElementById("currentScoreMenu").innerText = "0"; }
             checkTaskStatus();
         }
 
-        // 2) REPARACIÓN: RANKING (Mejor manejo de respuesta)
+        // --- REPARACIÓN RANKING ---
         async function cargarRanking() {
             abrirModal('modalRank');
             const list = document.getElementById("rankList");
-            list.innerHTML = "Cargando...";
+            list.innerHTML = "<p>Cargando Top 10...</p>";
             try {
                 const res = await fetch(URL_SCRIPT + "?tipo=getRanking");
                 const data = await res.json();
-                if(data && Array.isArray(data)) {
-                    list.innerHTML = data.map((u, i) => `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #333;"><span>${i+1}. ${u.user}</span> <b style="color:#ffcc00;">${u.pts}</b></div>`).join('');
-                } else { list.innerHTML = "No hay datos disponibles."; }
-            } catch(e) { list.innerHTML = "Error de conexión con el Ranking."; }
+                // Ajustado para leer correctamente campos 'usuario' y 'puntaje' según el script
+                list.innerHTML = data.map((u, i) => `
+                    <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
+                        <span>${i+1}. ${u.usuario || u.user}</span> 
+                        <b style="color:#ffcc00;">${u.puntaje || u.pts} pts</b>
+                    </div>`).join('');
+            } catch(e) { list.innerHTML = "<p>Error al obtener ranking.</p>"; }
         }
 
         function cargarReferidos() {
@@ -166,6 +168,34 @@
                 }).catch(() => document.getElementById("listaRefs").innerHTML = "Sin referidos aún.");
         }
 
+        // --- REPARACIÓN TAREA TELEGRAM (+100 Puntos) ---
+        function unirseTelegramTask() {
+            window.open("https://t.me/venecoinu", "_blank");
+            if(localStorage.getItem('taskTGDone') !== 'true') {
+                const uName = localStorage.getItem('venecoUser');
+                const tID = localStorage.getItem('venecoTGID');
+                // Enviamos los 100 puntos al script
+                fetch(URL_SCRIPT, { 
+                    method: "POST", 
+                    mode: "no-cors", 
+                    body: JSON.stringify({ accion: "puntos", usuario: uName, wallet: tID, puntaje: 100 }) 
+                }).then(() => {
+                    localStorage.setItem('taskTGDone', 'true');
+                    alert("¡+100 Puntos sumados!");
+                    mostrarMenu(); // Recarga los puntos en el menú
+                });
+            }
+        }
+
+        function checkTaskStatus() {
+            if(localStorage.getItem('taskTGDone') === 'true') {
+                const btn = document.getElementById('btnTGTask');
+                btn.style.opacity = "0.5";
+                btn.onclick = null;
+                btn.innerHTML = "<b>✅ TAREA COMPLETADA</b><span>Ya recibiste tus puntos</span>";
+            }
+        }
+
         function guardarWallet() {
             const w = document.getElementById("walletInput").value;
             if(!w) return alert("Ingresa una wallet");
@@ -174,6 +204,7 @@
             cerrarModales();
         }
 
+        // --- MOTOR DE JUEGO ---
         function prepararJuego() {
             document.getElementById("mainMenu").style.display = "none";
             document.getElementById("logoutBtn").style.display = "none";
@@ -257,8 +288,6 @@
         function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = "none"); }
         function cerrarSesion() { localStorage.clear(); location.reload(); }
         function copiarRef() { const c = document.getElementById("refLink"); c.select(); document.execCommand("copy"); alert("Link Copiado!"); }
-        function unirseTelegramTask() { window.open("https://t.me/venecoinu", "_blank"); localStorage.setItem('taskTGDone', 'true'); mostrarMenu(); }
-        function checkTaskStatus() { if(localStorage.getItem('taskTGDone') === 'true') { document.getElementById('btnTGTask').style.opacity = "0.5"; document.getElementById('btnTGTask').innerHTML = "<b>✅ TAREA COMPLETADA</b>"; } }
     </script>
 </body>
 </html>
