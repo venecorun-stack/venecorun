@@ -7,17 +7,17 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
-body{margin:0;background:#000;color:#fff;font-family:Arial Black}
+body{margin:0;background:#000;color:#fff;font-family:'Arial Black',sans-serif;overflow:hidden}
 #logoutBtn{position:absolute;top:15px;right:15px;z-index:2000;background:#ff4444;color:#fff;border:2px solid #fff;padding:10px;border-radius:10px;display:none}
-#introScreen,#loginMenu,#mainMenu,#gameOverScreen{position:absolute;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#introScreen,#loginMenu,#mainMenu,#gameOverScreen{position:absolute;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
 #introScreen{background:url('portada_mobile.png') center/cover;cursor:pointer}
-#loginMenu{display:none}
-#mainMenu{display:none;background:#000;padding-top:30px}
-.menu-opt{width:85%;max-width:320px;padding:14px;margin:6px;background:rgba(255,255,255,.08);border-radius:18px;cursor:pointer}
-.play-circle{width:110px;height:110px;background:#2ecc71;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;cursor:pointer}
+#loginMenu{display:none;background:url('portada_mobile.png') center/cover}
+#mainMenu{display:none;background:radial-gradient(circle,#1a1a1a,#000);overflow-y:auto;padding-top:30px}
+.menu-opt{width:85%;max-width:320px;background:rgba(255,255,255,.08);margin:6px;padding:12px;border-radius:18px;cursor:pointer;border:1px solid #444}
+.play-circle{width:110px;height:110px;background:#2ecc71;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;margin-bottom:20px}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:3000;align-items:center;justify-content:center}
-.modal-content{background:#111;padding:25px;border-radius:20px;width:85%}
-.btn{padding:15px;background:#ffcc00;border-radius:50px;border:none;font-weight:bold;width:100%;margin-top:10px}
+.modal-content{background:#111;padding:25px;border-radius:25px;width:85%}
+.btn{padding:15px;background:#ffcc00;color:#000;border:none;border-radius:50px;font-weight:bold;width:100%;margin-top:10px}
 canvas{display:none}
 </style>
 </head>
@@ -35,7 +35,7 @@ canvas{display:none}
 </div>
 
 <div id="mainMenu">
-  <div id="userProfile">
+  <div>
     <div id="userNameDisplay"></div>
     <div>PUNTOS: <span id="currentScoreMenu">0</span></div>
   </div>
@@ -52,7 +52,7 @@ canvas{display:none}
   <div class="modal-content">
     <h3>REFERIDOS</h3>
     <input id="refLink" readonly>
-    <button class="btn" onclick="copiarRef()">COPIAR</button>
+    <button class="btn" onclick="copiarRef()">COPIAR LINK</button>
     <button class="btn" onclick="cerrarModales()">CERRAR</button>
   </div>
 </div>
@@ -73,15 +73,22 @@ canvas{display:none}
   </div>
 </div>
 
+<div id="gameOverScreen">
+  <h1>FIN DEL JUEGO</h1>
+  <p>Puntos: <span id="finalScore">0</span></p>
+  <button class="btn" onclick="location.reload()">VOLVER</button>
+</div>
+
 <canvas id="gameCanvas"></canvas>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxS64u2ud1QZ2G93d0sQpD7T2iXemvRwVvBXcVw9dvgIjpAZROBsdqnjY1OPPAopSAh/exec";
-const referidoPor = tg.initDataUnsafe.start_param || null;
+const URL_SCRIPT="https://script.google.com/macros/s/AKfycbxS64u2ud1QZ2G93d0sQpD7T2iXemvRwVvBXcVw9dvgIjpAZROBsdqnjY1OPPAopSAh/exec";
+const referidoPor = tg.initDataUnsafe?.start_param || null;
 
+// ---------- UTIL ----------
 async function postData(body){
   try{
     await fetch(URL_SCRIPT,{
@@ -92,59 +99,60 @@ async function postData(body){
   }catch(e){}
 }
 
+// ---------- INTRO ----------
 function clicPortada(){
   introScreen.style.display="none";
   localStorage.getItem("venecoUser") ? mostrarMenu() : loginMenu.style.display="flex";
 }
 
+// ---------- LOGIN ----------
 function loginTG(){
   const u = tg.initDataUnsafe.user;
   const user = u.username ? "@"+u.username : u.first_name;
   const id = u.id.toString();
-  const nuevo = !localStorage.getItem("venecoUser");
+  const nuevo = !localStorage.getItem("venecoRegistrado");
 
   localStorage.setItem("venecoUser",user);
   localStorage.setItem("venecoTGID",id);
+  localStorage.setItem("venecoRegistrado","1");
 
-  postData({accion:"registro",usuario:user,wallet:id});
+  postData({accion:"registro",usuario:user,tgID:id});
 
-  if(referidoPor && nuevo && referidoPor!==id){
+  if(nuevo && referidoPor && referidoPor!==id){
     postData({accion:"sumar_referido",referidoPor:referidoPor,nuevo:id});
   }
 
   mostrarMenu();
 }
 
+// ---------- MENU ----------
 async function mostrarMenu(){
   loginMenu.style.display="none";
   mainMenu.style.display="flex";
   logoutBtn.style.display="block";
 
+  const id = localStorage.getItem("venecoTGID");
   userNameDisplay.innerText = localStorage.getItem("venecoUser");
-  refLink.value = "https://t.me/venecotoken_bot/venecorun?startapp="+localStorage.getItem("venecoTGID");
+  refLink.value = "https://t.me/venecotoken_bot/venecorun?startapp="+id;
 
   try{
-    const r = await fetch(URL_SCRIPT+"?tipo=getUserData&id="+localStorage.getItem("venecoTGID"));
+    const r = await fetch(URL_SCRIPT+"?tipo=getUserData&id="+id);
     const d = await r.json();
     currentScoreMenu.innerText = d.puntos || 0;
-    if(d.bono) marcarTareaCompletada();
+    if(d.bonoTG) marcarTareaCompletada();
   }catch(e){}
 }
 
+// ---------- TELEGRAM TASK ----------
 async function unirseTelegramTask(){
-  if(localStorage.getItem("taskTGDone")) return alert("Ya completado ✅");
+  if(localStorage.getItem("taskTGDone")) return alert("Tarea ya completada");
   window.open("https://t.me/venecoinu","_blank");
 
-  await postData({
-    accion:"bono_tg",
-    usuario:localStorage.getItem("venecoUser"),
-    wallet:localStorage.getItem("venecoTGID")
-  });
-
-  localStorage.setItem("taskTGDone","true");
+  await postData({accion:"bono_tg",tgID:localStorage.getItem("venecoTGID")});
+  localStorage.setItem("taskTGDone","1");
   marcarTareaCompletada();
-  alert("+1000 puntos 🎉");
-  setTimeout(mostrarMenu,1500);
+  alert("+1000 puntos");
+  setTimeout(mostrarMenu,1200);
 }
 
 function marcarTareaCompletada(){
@@ -153,17 +161,61 @@ function marcarTareaCompletada(){
   btnTGTask.innerHTML="✅ TAREA COMPLETADA";
 }
 
-function guardarWallet(){
-  postData({
-    accion:"guardar_wallet",
-    usuario:localStorage.getItem("venecoUser"),
-    wallet:localStorage.getItem("venecoTGID"),
-    walletAddress:walletInput.value
-  });
-  alert("Wallet guardada");
-  cerrarModales();
+// ---------- GAME ----------
+const canvas=document.getElementById("gameCanvas");
+const ctx=canvas.getContext("2d");
+let activo=false,score=0,vel=11,obst=[],bgX=0;
+let chig={x:80,y:0,w:100,h:100,dy:0,g:2.1,salto:-23,suelo:0,vivo:true};
+
+function prepararJuego(){
+  mainMenu.style.display="none";
+  logoutBtn.style.display="none";
+  canvas.style.display="block";
+  ajustar(); iniciar();
 }
 
+function ajustar(){
+  canvas.width=innerWidth;
+  canvas.height=innerHeight;
+  chig.suelo=innerHeight-200;
+  chig.y=chig.suelo;
+}
+
+function iniciar(){activo=true;score=0;vel=11;obst=[];bucle();spawn();}
+function spawn(){
+  if(!activo) return;
+  obst.push({x:innerWidth+100,w:75,h:85});
+  setTimeout(spawn,900);
+}
+
+function bucle(){
+  if(!activo) return;
+  ctx.clearRect(0,0,innerWidth,innerHeight);
+  chig.dy+=chig.g; chig.y+=chig.dy;
+  if(chig.y>chig.suelo){chig.y=chig.suelo;chig.dy=0;}
+
+  obst.forEach((o,i)=>{
+    o.x-=vel;
+    if(o.x<-200){obst.splice(i,1);score+=10;vel+=0.1;}
+    if(chig.x<o.x+o.w && chig.x+chig.w>o.x && chig.y<chig.suelo+o.h) morir();
+    ctx.fillRect(o.x,chig.suelo+15,o.w,o.h);
+  });
+
+  ctx.fillRect(chig.x,chig.y,chig.w,chig.h);
+  requestAnimationFrame(bucle);
+}
+
+function morir(){
+  activo=false;
+  postData({accion:"sumar_puntos",tgID:localStorage.getItem("venecoTGID"),puntos:score});
+  finalScore.innerText=score;
+  gameOverScreen.style.display="flex";
+}
+
+window.addEventListener("mousedown",()=>{if(activo&&chig.y>=chig.suelo)chig.dy=chig.salto});
+window.addEventListener("touchstart",e=>{e.preventDefault();if(activo&&chig.y>=chig.suelo)chig.dy=chig.salto},{passive:false});
+
+// ---------- MISC ----------
 function abrirModal(id){document.getElementById(id).style.display="flex"}
 function cerrarModales(){document.querySelectorAll(".modal").forEach(m=>m.style.display="none")}
 function cerrarSesion(){localStorage.clear();location.reload()}
