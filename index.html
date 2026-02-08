@@ -115,12 +115,10 @@
         const touchLayer = document.getElementById("touchLayer");
 
         let activo = false, score = 0, vel = 7, obst = [], bgX = 0, skyX = 0, recordGlobalBD = 0;
-        // Ajuste de gravedad inicial para compensar el sistema de DeltaTime
-        let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 1.25, salto: -24, suelo: 0, vivo: true, frame: 0, tick: 0 };
+        // VALORES DE SALTO ORIGINALES RESTAURADOS
+        let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true, frame: 0, tick: 0 };
         let nivelActual = "";
         let faseAlivioActivada = false;
-
-        // --- SISTEMA DE TIEMPO (NUEVO) ---
         let ultimoTiempo = 0;
 
         async function postData(body) {
@@ -199,22 +197,22 @@
 
         function spawn() {
             if(!activo) return;
+            // Lógica de barriles dobles mantenida
             let esDoble = score >= 200 && Math.random() > 0.6;
             obst.push({ x: window.innerWidth + 150, w: esDoble ? 125 : 80, h: 90 });
+            
+            // Tiempo de spawn ajustado a la velocidad actual
             setTimeout(spawn, Math.max(1400 / (vel * 0.1), 900));
         }
 
         function bucle(tiempoActual) {
             if(!activo && !chig.vivo) return;
 
-            // --- LÓGICA DE SINCRONIZACIÓN ---
             const dt = (tiempoActual - ultimoTiempo) / 1000;
             ultimoTiempo = tiempoActual;
-            // El multiplicador "corr" iguala la velocidad de 120Hz a 60Hz
             const corr = dt / (1/60) || 1; 
 
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            
             skyX -= (vel * 0.05) * corr; 
             bgX -= vel * corr;
 
@@ -227,6 +225,7 @@
             ctx.drawImage(imgSuelo, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
 
             if(activo) {
+                // GRAVEDAD Y SALTO CON VALORES ORIGINALES + CORRECCIÓN
                 chig.dy += chig.g * corr; 
                 chig.y += chig.dy * corr;
 
