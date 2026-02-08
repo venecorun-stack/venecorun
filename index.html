@@ -115,9 +115,13 @@
         const touchLayer = document.getElementById("touchLayer");
 
         let activo = false, score = 0, vel = 7, obst = [], bgX = 0, skyX = 0, recordGlobalBD = 0;
-        let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 2.1, salto: -23, suelo: 0, vivo: true, frame: 0, tick: 0 };
+        // Ajuste de gravedad inicial para compensar el sistema de DeltaTime
+        let chig = { x: 80, y: 0, w: 110, h: 110, dy: 0, g: 1.25, salto: -24, suelo: 0, vivo: true, frame: 0, tick: 0 };
         let nivelActual = "";
         let faseAlivioActivada = false;
+
+        // --- SISTEMA DE TIEMPO (NUEVO) ---
+        let ultimoTiempo = 0;
 
         async function postData(body) {
             try { await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(body) }); } catch(e) {}
@@ -185,10 +189,12 @@
         function iniciar() { 
             activo = true; chig.vivo = true; score = 0; vel = 7; obst = []; 
             faseAlivioActivada = false;
+            ultimoTiempo = performance.now();
             document.getElementById("score").innerText = "0";
             nivelActual = "NIVEL MANGO";
             document.getElementById("levelText").innerText = nivelActual;
-            bucle(); spawn(); 
+            requestAnimationFrame(bucle);
+            spawn(); 
         }
 
         function spawn() {
@@ -198,22 +204,35 @@
             setTimeout(spawn, Math.max(1400 / (vel * 0.1), 900));
         }
 
-        function bucle() {
+        function bucle(tiempoActual) {
             if(!activo && !chig.vivo) return;
+
+            // --- LÓGICA DE SINCRONIZACIÓN ---
+            const dt = (tiempoActual - ultimoTiempo) / 1000;
+            ultimoTiempo = tiempoActual;
+            // El multiplicador "corr" iguala la velocidad de 120Hz a 60Hz
+            const corr = dt / (1/60) || 1; 
+
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            skyX -= vel * 0.05; bgX -= vel;
+            
+            skyX -= (vel * 0.05) * corr; 
+            bgX -= vel * corr;
+
             if(skyX <= -window.innerWidth) skyX = 0;
             if(bgX <= -window.innerWidth) bgX = 0;
+            
             ctx.drawImage(imgCielo, skyX, 0, window.innerWidth, window.innerHeight);
             ctx.drawImage(imgCielo, skyX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
             ctx.drawImage(imgSuelo, bgX, 0, window.innerWidth, window.innerHeight);
             ctx.drawImage(imgSuelo, bgX + window.innerWidth - 1, 0, window.innerWidth, window.innerHeight);
 
             if(activo) {
-                chig.dy += chig.g; chig.y += chig.dy;
+                chig.dy += chig.g * corr; 
+                chig.y += chig.dy * corr;
+
                 if(chig.y > chig.suelo) { 
                     chig.y = chig.suelo; chig.dy = 0; 
-                    chig.tick++;
+                    chig.tick += corr;
                     if(chig.tick > (15 / (vel/7))) { chig.frame = (chig.frame + 1) % 4; chig.tick = 0; }
                 } else { chig.frame = 1; }
 
@@ -232,13 +251,14 @@
                     nivelActual = nuevoLvl;
                     document.getElementById("levelText").innerText = nivelActual;
                 }
-                if(score >= 200) vel += 0.002;
+                
+                if(score >= 200) vel += 0.002 * corr;
+
                 for(let i = obst.length - 1; i >= 0; i--) {
-                    obst[i].x -= vel;
+                    obst[i].x -= vel * corr;
                     let bY = chig.suelo + (chig.h - obst[i].h);
                     ctx.drawImage(imgB, obst[i].x, bY, obst[i].w, obst[i].h);
                     
-                    // COLISIÓN MEJORADA (Hitbox más pequeña y justa)
                     if (chig.x + 45 < obst[i].x + obst[i].w - 45 && 
                         chig.x + chig.w - 45 > obst[i].x + 45 && 
                         chig.y + 45 < bY + obst[i].h && 
